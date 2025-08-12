@@ -8,7 +8,6 @@ export interface NavLinkProps {
     className?: string;
 }
 
-/** LinkGroup Props */
 export interface LinkGroupProps {
     header: string;
     className?: string;
@@ -32,7 +31,7 @@ export const NavLink: React.FC<NavLinkProps> = ({ link, label, className }) => {
 
 export const LinkGroup: React.FC<LinkGroupProps> = ({ header, className, children }) => {
     return (
-        <div className={cn("w-full px-4 sm:w-1/2 lg:w-2/12", className)}>
+        <div className={cn("w-1/2 px-4 sm:w-1/2 lg:w-2/12", className)}>
             <div className="mb-5 w-full">
                 <h4 className="mb-5 text-sm font-semibold text-white">
                     {header}
