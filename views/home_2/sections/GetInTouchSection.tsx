@@ -7,7 +7,7 @@ const GetInTouchSection = () => {
     return (
         <div className='relative bg-[#EBEFFFE5]'>
 
-            <Container className='grid lg:grid-cols-2 gap-x-5 gap-y-12 min-h-full pb-12 lg:pb-0 pt-12'>
+            <Container className='relative grid lg:grid-cols-2 gap-x-5 gap-y-12 min-h-full pb-12 lg:pb-0 pt-12 z-[10]'>
 
                 <div className="max-w-lg space-y-4">
 

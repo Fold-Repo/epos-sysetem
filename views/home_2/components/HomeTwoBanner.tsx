@@ -6,7 +6,7 @@ const HomeTwoBanner = () => {
     return (
         <div className="
                 relative flex items-center
-                min-h-[60vh] md:min-h-[92vh]
+                min-h-[80vh] md:min-h-[92vh]
                 bg-[url('/img/banner/1.png')] bg-no-repeat bg-cover bg-top">
 
             {/* ==== Overlay ==== */}
@@ -18,7 +18,7 @@ const HomeTwoBanner = () => {
                         relative z-[1]
                         flex flex-col justify-center text-center text-white
                         mx-auto max-w-lg space-y-6
-                        md:mx-0 md:text-left md:justify-start">
+                        md:mx-0 md:text-left md:justify-start -mt-24 md:-mt-0">
 
                     <h2 className="
                             font-pangaia font-semibold
