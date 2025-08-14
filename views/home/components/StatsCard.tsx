@@ -12,7 +12,7 @@ const StatsCard = () => {
     return (
         <div
             className="
-            flex flex-col sm:flex-row sm:flex-wrap 
+            flex flex-col sm:flex-row sm:flex-wrap w-full
             sm:items-center gap-4 sm:gap-6 justify-center sm:justify-between
             bg-black/20 p-4 border border-white/10 backdrop-blur-lg rounded-md">
             {stats.map(({ icon: Icon, color, text }, index) => (

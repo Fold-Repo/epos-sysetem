@@ -1,6 +1,6 @@
 "use client"
 
-import { HeroVideoDialog, SegmentedTabs } from '@/components'
+import { Container, HeroVideoDialog, SegmentedTabs } from '@/components'
 import React, { useState } from 'react'
 
 const tabs = [
@@ -15,7 +15,7 @@ const SaleMadeSimple = () => {
     return (
         <div className="py-10">
 
-            <div className="container px-4 sm:px-6 flex flex-col items-center justify-center max-w-3xl mx-auto space-y-10">
+            <Container className="flex flex-col items-center justify-center !max-w-2xl mx-auto space-y-10">
 
                 <SegmentedTabs
                     tabs={tabs}
@@ -29,7 +29,7 @@ const SaleMadeSimple = () => {
                         inventory, and more seamlessly across any outlet.</p>
                 </div>
 
-            </div>
+            </Container>
 
             <div className="relative">
 

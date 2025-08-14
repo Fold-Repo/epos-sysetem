@@ -34,6 +34,7 @@
     "@types/swiper": "^5.4.3",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "tailwind-scrollbar": "^4.0.2",
     "tailwindcss": "^4",
     "tailwindcss-debug-screens": "^3.0.1",
     "typescript": "^5"

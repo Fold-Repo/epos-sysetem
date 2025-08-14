@@ -1,5 +1,5 @@
 import type { NavItemType, NavButtonType, LogoVariantsType } from "./nav";
-import { CustomButtonColorType, FAQItemType, TestimonialType } from "./type";
+import { CustomButtonColorType, FAQItemType, TestimonialType, PricingPlanType } from "./type";
 
 export type {
 
@@ -10,6 +10,7 @@ export type {
 
     CustomButtonColorType,
     FAQItemType,
-    TestimonialType
+    TestimonialType,
+    PricingPlanType
 
 }

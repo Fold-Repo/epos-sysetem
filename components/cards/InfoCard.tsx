@@ -6,12 +6,15 @@ interface InfoCardProps {
     title: string;
     description: string;
     color: string;
+    variant?: "border_b" | "default";
 }
 
-const InfoCard: React.FC<InfoCardProps> = ({ icon, title, description, color }) => {
+const InfoCard: React.FC<InfoCardProps> = ({ icon, title, description, color, variant = "default" }) => {
 
     return (
-        <div className="bg-white rounded-xl px-6 py-10 text-center hover:border hover:border-yellow cursor-pointer">
+        <div className={`bg-white rounded-xl px-6 py-10 text-center cursor-pointer 
+                ${variant === "border_b" ? "border-b-3 border-deep-purple" : "hover:border hover:border-yellow"}
+            `}>
 
             <div className='relative mx-auto mb-7 flex items-center justify-center'
                 style={{

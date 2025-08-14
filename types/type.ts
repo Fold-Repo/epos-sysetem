@@ -7,6 +7,7 @@ export type CustomButtonColorType =
     | "danger"
 
 export type FAQItemType = {
+    category?: string;
     question: string;
     answer: string;
 };
@@ -18,3 +19,13 @@ export type TestimonialType = {
     image: string
     message: string
 }
+
+export type PricingPlanType = {
+  id: number | string;
+  name: string;
+  description: string;
+  price: string;
+  recommended: boolean;
+  custom: boolean;
+  features: string[];
+};
