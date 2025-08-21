@@ -4,7 +4,7 @@ import {
     TextArea, Radio, Checkbox, Label, ErrorMessage
 } from './ui'
 import { Navbar } from './nav'
-import { Footer } from './footer'
+import { Footer, FooterTwo } from './footer'
 import { HeroVideoDialog } from './HeroVideoDialog'
 import { Accordion } from './reusable'
 
@@ -12,6 +12,7 @@ export {
 
     Navbar,
     Footer,
+    FooterTwo,
 
     Container,
     HeroVideoDialog,

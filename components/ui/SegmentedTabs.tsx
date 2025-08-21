@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import React, { useState } from "react";
-import { cn } from "@/lib"; 
+import { cn } from "@/lib";
 
 interface TabItem {
     key: string;
@@ -16,7 +16,9 @@ interface SegmentedTabsProps {
     activeText?: string;
     inactiveText?: string;
     onChange?: (tabKey: string) => void;
-    className?: string; 
+    className?: string;
+    buttonClassName?: string;
+    activePillClassName?: string
 }
 
 export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
@@ -27,6 +29,8 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
     inactiveText = "text-gray-700",
     onChange,
     className,
+    buttonClassName,
+    activePillClassName
 }) => {
     const [active, setActive] = useState(value || tabs[0]?.key);
 
@@ -36,8 +40,9 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
     };
 
     return (
-        <div className={cn(
-                "flex items-center bg-white rounded-full p-1 w-fit border border-[#F59E0B33]",
+        <div
+            className={cn(
+                "flex items-center bg-white rounded-full p-1 border border-[#F59E0B33] scrollbar-hide",
                 className
             )}
             style={{
@@ -49,11 +54,14 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
                     <button
                         key={tab.key}
                         onClick={() => handleClick(tab.key)}
-                        className="relative px-5 py-2 text-xs font-medium rounded-full cursor-pointer">
+                        className={cn(
+                            "relative px-5 py-2 text-xs font-medium rounded-full cursor-pointer",
+                            buttonClassName
+                        )}>
                         {isActive && (
                             <motion.div
                                 layoutId="active-pill"
-                                className={cn("absolute inset-0 rounded-full", activeBg)}
+                                className={cn("absolute inset-0 rounded-full", activeBg, activePillClassName)}
                                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             />
                         )}
