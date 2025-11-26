@@ -9,18 +9,33 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@heroui/react": "^2.8.5",
+    "@hookform/resolvers": "^5.2.2",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.24",
     "next": "16.0.4",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react": "^19.2.0",
+    "react-date-range": "^2.0.1",
+    "react-dom": "19.2.0",
+    "react-hook-form": "^7.66.1",
+    "react-icons": "^5.5.0",
+    "react-otp-input": "^3.1.1",
+    "react-phone-number-input": "^3.4.14",
+    "recharts": "^3.5.0",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
+    "@types/react-date-range": "^1.4.10",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
     "tailwindcss": "^4",
+    "tailwindcss-debug-screens": "^3.0.1",
     "typescript": "^5"
   }
 }

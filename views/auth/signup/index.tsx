@@ -1,0 +1,120 @@
+'use client'
+
+import React, { useState } from 'react'
+import RegStepOne from './RegStepOne';
+import RegStepTwo from './RegStepTwo';
+import RegStepThree from './RegStepThree';
+import RegStepFour from './RegStepFour';
+import Image from 'next/image';
+import { LOGO } from '@/constants';
+import Link from 'next/link';
+import { Stepper } from '@/components';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks';
+
+interface Step {
+    id: number;
+    component: React.FC<{
+        onNextStep?: (data?: any) => void;
+        onPrevStep?: () => void;
+        onSubmit?: (data: any) => void;
+        formData?: Record<string, any>;
+    }>;
+}
+
+const SignUpView = () => {
+
+    const router = useRouter();
+    const [currentStep, setCurrentStep] = useState<number>(1);
+    const [formData, setFormData] = useState<Record<string, any>>({});
+
+    const { showSuccess } = useToast();
+
+    const steps: Step[] = [
+        { id: 1, component: RegStepOne },
+        { id: 2, component: RegStepTwo },
+        { id: 3, component: RegStepThree },
+        { id: 4, component: RegStepFour },
+    ];
+
+    const stepperSteps = [
+        { id: 1, label: 'Business Info' },
+        { id: 2, label: 'Contact Details' },
+        { id: 3, label: 'Products & Services' },
+        { id: 4, label: 'Terms & Agreement' },
+    ];
+
+    const handleNextStep = (stepData?: any) => {
+        if (stepData) {
+            setFormData((prev) => ({ ...prev, ...stepData }));
+        }
+        const currentStepIndex = steps.findIndex(step => step.id === currentStep);
+        if (currentStepIndex < steps.length - 1) {
+            setCurrentStep(steps[currentStepIndex + 1].id);
+        }
+    };
+
+    const handlePrevStep = () => {
+        const currentStepIndex = steps.findIndex(step => step.id === currentStep);
+        if (currentStepIndex > 0) {
+            setCurrentStep(steps[currentStepIndex - 1].id);
+        }
+    };
+
+    const handleFinalSubmit = (stepData: any) => {
+        const allFormData = { ...formData, ...stepData };
+        console.log('Final submission (all form data):', allFormData);
+        showSuccess('Registration successful 🎉');
+        router.push('/verify');
+    };
+
+    const renderStepContent = () => {
+        const currentStepObj = steps.find(step => step.id === currentStep);
+
+        if (currentStepObj) {
+            const StepComponent = currentStepObj.component;
+            return (
+                <StepComponent 
+                    onNextStep={(data) => handleNextStep(data)} 
+                    onPrevStep={handlePrevStep}
+                    onSubmit={handleFinalSubmit}
+                    formData={formData}
+                />
+            );
+        }
+
+        return null;
+    };
+
+    return (
+        <div className="bg-white py-10">
+
+            <div className="space-y-3 pb-8">
+
+                <Link href="/" className='block'>
+                    <Image src={LOGO.logo_1} alt="Logo" width={100} height={48} />
+                </Link>
+
+                <div className="space-y-0.5">
+
+                    <h2 className='text-lg md:text-xl font-medium pt-2'>
+                        Welcome to EPOS
+                    </h2>
+                    <p className='text-sm text-[#6C7278] leading-5'>
+                        Complete your vendor registration to get started
+                    </p>
+
+                </div>
+
+                {/* =============== Progress Bar =============== */}
+                <Stepper steps={stepperSteps} currentStep={currentStep} className='pt-3' />
+
+            </div>
+
+            {renderStepContent()}
+
+        </div>
+    )
+}
+
+export default SignUpView

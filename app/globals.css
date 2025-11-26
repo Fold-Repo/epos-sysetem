@@ -1,26 +1,206 @@
+@import url('https://fonts.cdnfonts.com/css/euclid-circular-a');
+
 @import "tailwindcss";
 
+@plugin "tailwindcss-debug-screens";
+@plugin "@tailwindcss/forms";
+
+
+@plugin './hero.mts';
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
+/* ================= Light Theme (default) ================= */
 :root {
+
+  /* TEXT SIZES */
+  --text-xs: 0.78125rem; /* 12.5px */
+  --text-sm: 0.84375rem; /* 13.5px */
+  --text-base: 0.9375rem; /* 15px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
+  --text-4xl: 2.25rem; /* 36px */
+  --text-5xl: 3rem; /* 48px */
+
+  /* Base surface tokens */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ===== Text Colors ===== */
+  --text-primary: #2a2e45;
+  --text-secondary: #585f81;
+
+  /* ===== Status Colors ===== */
+  --success: #01bf47;
+  --danger: #cb1a14;
+  --error-400: #d42620;
+  --error-500: #cb1a14;
+
+  /* ===== Neutral Colors ===== */
+  --light-gray: #f3f4f6;
+  --med-gray: #e5e7eb;
+
+  /* ===== Base Colors ===== */
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+
+/* ================= Tailwind Theme Tokens ================= */
+
+@theme {
+  
+  /* ================= Primary Colors ================= */
+  --color-primary: #8b5cf6;
+  --color-deep-purple: #581c87;
+  --color-lilac: #c084fc;
+  --color-soft-lilac: #ddd6fe;
+  --color-yellow: #eab308;
+  --color-yellow-hover: #f59e0b;
+  --color-dark: #1E1E1E;
+
+  /* ================= Red Scale (100–900) ================= */
+  --color-red-100: #fad7d7;
+  --color-red-200: #f5b0ae;
+  --color-red-300: #ef8886;
+  --color-red-400: #ea615d;
+  --color-red-500: #e53935;
+  --color-red-600: #b72e2a;
+  --color-red-700: #892220;
+  --color-red-800: #5c1715;
+  --color-red-900: #2e0b0b;
+
+  /* ================= Green Scale (50–900) ================= */
+  --color-green-50: #f5faf5;
+  --color-green-100: #d7ead5;
+  --color-green-200: #aed5aa;
+  --color-green-300: #86c080;
+  --color-green-400: #5dab55;
+  --color-green-500: #35962b;
+  --color-green-600: #2a7822;
+  --color-green-700: #205a1a;
+  --color-green-800: #153c11;
+  --color-green-900: #0b1e09;
+
+  /* ================= Surfaces ================= */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* ================= Fonts ================= */
+  --font-sans: var(--font-sans);
+
+  /* ================= Text Sizes ================= */
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-base);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+  --text-3xl: var(--text-3xl);
+  --text-4xl: var(--text-4xl);
+  --text-5xl: var(--text-5xl);
+  
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ================= Base Body ================= */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Euclid Circular A', sans-serif;
+  font-weight: 300;
+  font-size: var(--text-base);
+}
+
+/* ================= Container ================= */
+.container {
+  @apply w-full mx-auto px-5 lg:px-14 max-w-screen-sm sm:max-w-3xl md:max-w-5xl lg:max-w-7xl xl:max-w-screen-2xl;
+}
+
+/* ================= Utilities ================= */
+@layer utilities {
+}
+
+/* ================= Components ================= */
+@layer components {
+  /* ================= Forms ================= */
+  .form-group {
+    @apply mb-2;
+  }
+
+  .form-control {
+    @apply block w-full px-3 py-2.5 md:py-3 text-[13px] border border-gray-300 bg-white 
+    rounded-lg outline-none transition-colors duration-300 placeholder:text-gray-500;
+  }
+
+  .form-control:focus {
+    @apply border-primary ring-2;
+    border-width: 1px;
+    box-shadow: 0px 1.15px 2.3px 0px #e4e5e73d;
+  }
+
+  .form-control.is-invalid {
+    @apply border-red-500 ring-2 ring-red-500/15;
+  }
+
+  .form-label {
+    @apply block mb-1 text-sm text-dark/70;
+  }
+
+  select.form-control {
+    @apply appearance-none;
+  }
+
+  textarea.form-control {
+    @apply min-h-[120px] resize-y;
+  }
+
+  .PhoneInput input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    font-size: 14px !important;
+    background: none !important;
+  }
+
+  .PhoneInput select {
+    font-size: 13px !important;
+    font-weight: 300 !important;
+  }
+
+  .PhoneInput .PhoneInputCountrySelectArrow {
+    @apply !-mr-2 !ml-4;
+  }
+
+  .PhoneInput .PhoneInputCountryIconImg {
+    display: block;
+    width: 30px !important;
+    height: 22px !important;
+    max-width: 22px;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    margin-top: -4px;
+  }
+
+  .PhoneInput input[type="tel"]:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .PhoneInput .PhoneInputCountryIcon {
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+#react-aria1505729547-_r_5_ {
+  font-size: 11px !important;
 }
