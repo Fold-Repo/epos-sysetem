@@ -1,7 +1,6 @@
 /**
  * Returns a debounced version of the given function.
  * 
- * The function will only be called after the specified delay
  * has passed since the last call.
  * 
  * @param func - Function to debounce.
