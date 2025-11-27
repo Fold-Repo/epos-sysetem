@@ -117,12 +117,12 @@ const PWAInstallPrompt = () => {
                             <div className="flex items-center gap-2 sm:gap-3 flex-1 w-full sm:w-auto">
 
                                 <div className="shrink-0 w-10 h-10 flex items-center justify-center overflow-hidden">
-                                    <Image src="/img/logo/logo.svg" alt="Ravella App" width={40} height={40} className="w-full h-full object-contain" />
+                                    <Image src="/img/logo/logo.svg" alt="EPOS App" width={40} height={40} className="w-full h-full object-contain" />
                                 </div>
 
                                 <div className="f">
                                     <p className="text-gray-800 font-medium text-sm">
-                                        Install Ravella 🚀
+                                        Install EPOS 🚀
                                     </p>
                                     <p className="text-gray-500 text-xs">
                                         Get a better experience with us.

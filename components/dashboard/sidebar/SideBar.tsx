@@ -118,7 +118,7 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen }) => {
                                 <span className="line-clamp-1">Oluwafemi Samson</span>
                             </h2>
                             <p className="text-xs text-secondary">
-                                Control and manage your experience with ravella.
+                                Control and manage your experience with EPOS.
                             </p>
                         </div>
 
