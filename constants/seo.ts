@@ -1,37 +1,39 @@
-export const SITE_URL = 'https://ravella.com';
+export const SITE_URL = 'https://epos.com';
 
-export const SEO_TITLE = 'Ravella';
+export const SEO_TITLE = 'EPOS System';
 
 export const SEO_DESCRIPTION =
-    'Join Ravella - the premier MLM platform for Africans. Build your network, earn rewards, and grow your business with our innovative multi-level marketing system.';
+    'EPOS - Complete sales and inventory management system. Streamline your business operations with our powerful point of sale solution for managing sales, inventory, and transactions.';
 
 export const APP_KEYWORDS = [
-    'Ravella',
-    'MLM',
-    'multi-level marketing',
-    'network marketing',
-    'business opportunity',
-    'affiliate marketing',
-    'direct selling',
-    'ravella.com',
+    'EPOS',
+    'EPOS System',
+    'Point of Sale',
+    'POS System',
+    'Sales Management',
+    'Inventory Management',
+    'POS Software',
+    'Retail Management',
+    'Business Management',
+    'epos.com',
 ];
 
-export const APP_AUTHORS = [{ name: 'Ravella' }];
+export const APP_AUTHORS = [{ name: 'EPOS' }];
 
 export const APP_OPEN_GRAPH = {
-    title: 'Ravella — Premier MLM Platform',
+    title: 'EPOS System — Sales & Inventory Management',
     description:
-        'Ravella is the leading MLM platform empowering Africans to build successful businesses through innovative network marketing opportunities.',
+        'EPOS is a comprehensive sales and inventory management system designed to streamline your business operations with powerful point of sale capabilities.',
     url: SITE_URL,
-    siteName: 'Ravella',
+    siteName: 'EPOS System',
     locale: 'en_US',
     type: 'website',
 };
 
 export const APP_TWITTER = {
     card: 'summary_large_image',
-    title: 'Ravella — Premier MLM Platform',
-    description: 'Join the premier MLM platform for Africans. Build your network and grow your business.',
+    title: 'EPOS System — Sales & Inventory Management',
+    description: 'Complete sales and inventory management system. Streamline your business with powerful POS capabilities.',
 };
 
 export const APP_ROBOTS = { index: true, follow: true };
