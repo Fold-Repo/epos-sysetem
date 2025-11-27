@@ -12,12 +12,8 @@ import {
 } from 'recharts'
 import { cn } from '@/lib'
 
-interface AreaChartProps {
-    // Data
-    data: Record<string, unknown>[]
+interface AreaSeries {
     dataKey: string
-    xAxisKey: string
-    // Colors
     strokeColor?: string
     fillColor?: string
     gradientId?: string
@@ -26,7 +22,32 @@ interface AreaChartProps {
     gradientOpacityStart?: number
     gradientOpacityEnd?: number
     strokeWidth?: number
-    // Dots
+    showDots?: boolean
+    dotSize?: number
+    activeDotSize?: number
+    chartType?: 'monotone' | 'linear' | 'natural' | 'step'
+    baseValue?: number | 'dataMin' | 'dataMax' | 'auto' // Base value for area (number or special values)
+    stackId?: string // For stacking multiple areas - areas with same stackId will stack
+    hide?: boolean // Hide/show the series
+}
+
+interface AreaChartProps {
+    // Data
+    data: Record<string, unknown>[]
+    dataKey?: string // For backward compatibility
+    xAxisKey: string
+    // Multiple series support
+    series?: AreaSeries[]
+    // Colors (for single series - backward compatibility)
+    strokeColor?: string
+    fillColor?: string
+    gradientId?: string
+    gradientColorStart?: string
+    gradientColorEnd?: string
+    gradientOpacityStart?: number
+    gradientOpacityEnd?: number
+    strokeWidth?: number
+    // Dots (for single series - backward compatibility)
     showDots?: boolean
     dotSize?: number
     activeDotSize?: number
@@ -44,7 +65,7 @@ interface AreaChartProps {
     customTooltip?: React.ComponentType<Record<string, unknown>>
     showTooltip?: boolean
     tooltipCursor?: Record<string, unknown>
-    // Chart
+    // Chart (for single series - backward compatibility)
     chartType?: 'monotone' | 'linear' | 'natural' | 'step'
     height?: number | string
     className?: string
@@ -56,7 +77,8 @@ const AreaChart: React.FC<AreaChartProps> = ({
     data,
     dataKey,
     xAxisKey,
-    // Colors
+    series,
+    // Colors (for single series - backward compatibility)
     strokeColor = '#D97706',
     gradientId = 'colorGradient',
     gradientColorStart,
@@ -64,7 +86,7 @@ const AreaChart: React.FC<AreaChartProps> = ({
     gradientOpacityStart = 0.2,
     gradientOpacityEnd = 0,
     strokeWidth = 2.5,
-    // Dots
+    // Dots (for single series - backward compatibility)
     showDots = true,
     dotSize = 4,
     activeDotSize = 6,
@@ -82,7 +104,7 @@ const AreaChart: React.FC<AreaChartProps> = ({
     customTooltip,
     showTooltip = true,
     tooltipCursor = { stroke: strokeColor, strokeWidth: 1, strokeDasharray: '5 5' },
-    // Chart
+    // Chart (for single series - backward compatibility)
     chartType = 'monotone',
     height = 300,
     className,
@@ -90,8 +112,27 @@ const AreaChart: React.FC<AreaChartProps> = ({
     margin
 }) => {
 
-    const fillColor = gradientColorStart || strokeColor
-    const gradientEndColor = gradientColorEnd || strokeColor
+    // Determine if using multiple series or single series (backward compatibility)
+    const isMultiSeries = series && series.length > 0;
+    
+    // Prepare series data - either from series prop or single series from props
+    const chartSeries: AreaSeries[] = isMultiSeries 
+        ? series 
+        : [{
+            dataKey: dataKey || 'value',
+            strokeColor,
+            fillColor: gradientColorStart || strokeColor,
+            gradientId,
+            gradientColorStart,
+            gradientColorEnd,
+            gradientOpacityStart,
+            gradientOpacityEnd,
+            strokeWidth,
+            showDots,
+            dotSize,
+            activeDotSize,
+            chartType
+        }];
 
     // Auto-adjust margin based on Y-axis visibility
     const chartMargin = margin || {
@@ -113,10 +154,20 @@ const AreaChart: React.FC<AreaChartProps> = ({
             <ResponsiveContainer width="100%" height={containerHeight}>
                 <RechartsAreaChart data={data} margin={chartMargin} className={className}>
                     <defs>
-                        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={fillColor} stopOpacity={gradientOpacityStart} />
-                            <stop offset="95%" stopColor={gradientEndColor} stopOpacity={gradientOpacityEnd} />
-                        </linearGradient>
+                        {chartSeries.map((seriesItem, index) => {
+                            const seriesGradientId = seriesItem.gradientId || `${gradientId}-${index}`;
+                            const fillColor = seriesItem.gradientColorStart || seriesItem.strokeColor || strokeColor;
+                            const gradientEndColor = seriesItem.gradientColorEnd || seriesItem.strokeColor || strokeColor;
+                            const opacityStart = seriesItem.gradientOpacityStart ?? gradientOpacityStart;
+                            const opacityEnd = seriesItem.gradientOpacityEnd ?? gradientOpacityEnd;
+                            
+                            return (
+                                <linearGradient key={seriesGradientId} id={seriesGradientId} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={fillColor} stopOpacity={opacityStart} />
+                                    <stop offset="95%" stopColor={gradientEndColor} stopOpacity={opacityEnd} />
+                                </linearGradient>
+                            );
+                        })}
                     </defs>
 
                     {showGrid && (
@@ -157,15 +208,41 @@ const AreaChart: React.FC<AreaChartProps> = ({
                         />
                     )}
 
-                    <Area
-                        type={chartType}
-                        dataKey={dataKey}
-                        stroke={strokeColor}
-                        strokeWidth={strokeWidth}
-                        fill={`url(#${gradientId})`}
-                        dot={showDots ? { fill: strokeColor, strokeWidth: 0, r: dotSize } : false}
-                        activeDot={showDots ? { r: activeDotSize, fill: strokeColor, stroke: '#fff', strokeWidth: 2 } : false}
-                    />
+                    {chartSeries.map((seriesItem, index) => {
+                        // Skip rendering if series is hidden
+                        if (seriesItem.hide) {
+                            return null;
+                        }
+
+                        const seriesGradientId = seriesItem.gradientId || `${gradientId}-${index}`;
+                        const seriesStrokeColor = seriesItem.strokeColor || strokeColor;
+                        const seriesStrokeWidth = seriesItem.strokeWidth ?? strokeWidth;
+                        const seriesShowDots = seriesItem.showDots ?? showDots;
+                        const seriesDotSize = seriesItem.dotSize ?? dotSize;
+                        const seriesActiveDotSize = seriesItem.activeDotSize ?? activeDotSize;
+                        const seriesChartType = seriesItem.chartType ?? chartType;
+                        
+                        const areaProps: any = {
+                            key: seriesItem.dataKey,
+                            type: seriesChartType,
+                            dataKey: seriesItem.dataKey,
+                            stroke: seriesStrokeColor,
+                            strokeWidth: seriesStrokeWidth,
+                            fill: `url(#${seriesGradientId})`,
+                            dot: seriesShowDots ? { fill: seriesStrokeColor, strokeWidth: 0, r: seriesDotSize } : false,
+                            activeDot: seriesShowDots ? { r: seriesActiveDotSize, fill: seriesStrokeColor, stroke: '#fff', strokeWidth: 2 } : false,
+                        };
+                        
+                        // Add optional props only if they are defined
+                        if (seriesItem.stackId) {
+                            areaProps.stackId = seriesItem.stackId;
+                        }
+                        if (seriesItem.baseValue !== undefined) {
+                            areaProps.baseValue = seriesItem.baseValue;
+                        }
+                        
+                        return <Area {...areaProps} />;
+                    })}
                 </RechartsAreaChart>
             </ResponsiveContainer>
         </div>

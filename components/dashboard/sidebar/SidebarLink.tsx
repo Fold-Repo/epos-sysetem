@@ -18,12 +18,16 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ href, icon, text, isActive, o
     };
 
     return (
-        <Link href={href} className={`text-xs my-0 flex items-center whitespace-nowrap rounded-xl text-[#0B1221] transition-all mb-1 gap-x-2 py-2 px-4 
-            ${isActive ? 'bg-white font-medium text-secondary shadow-[0px_0px_0px_1px_#653424,0px_0px_0px_3px_#6534244D]' : ''}`} onClick={handleClick}>
+        <Link href={href} className={`text-xs my-0 flex items-center whitespace-nowrap rounded-xl text-dark 
+            transition-all mb-0.5 gap-x-2 py-2.5 px-3 
+            ${isActive ? 'bg-deep-purple text-white mt-1' : ''}`}
+            onClick={handleClick}>
 
-            {icon}
+            <div className="shink-0">
+                {icon}
+            </div>
 
-            <span className="duration-300 opacity-100 pointer-events-none text-xs">
+            <span className="duration-300 pointer-events-none">
                 {text}
             </span>
 

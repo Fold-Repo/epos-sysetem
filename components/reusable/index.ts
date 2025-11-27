@@ -7,6 +7,7 @@ import TabNavigation from './TabNavigation';
 import Pagination from './Pagination';
 import FilterTabs from './FilterTabs';
 import Stepper from './Stepper';
+import DashboardCard from './DashboardCard';
 
 export {
     SearchInput,
@@ -17,5 +18,6 @@ export {
     TabNavigation,
     Pagination,
     FilterTabs,
-    Stepper
+    Stepper,
+    DashboardCard
 }

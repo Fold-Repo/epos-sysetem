@@ -1,3 +1,5 @@
 export * from './ENDPOINT'
 export * from './seo'
 export * from './logo'
+export * from './dashboard-link'
+export * from './chart-colors'

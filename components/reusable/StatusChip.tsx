@@ -4,7 +4,7 @@ import React from 'react'
 import { Chip } from '@heroui/react'
 import { cn } from '@/lib'
 
-type StatusType = 'active' | 'trial' | 'inactive' | 'completed' | 'posted' | 'processed'
+type StatusType = 'completed' | 'pending' | 'paid' | 'cancelled'
 
 type StatusChipProps = {
     status: StatusType
@@ -16,29 +16,21 @@ type StatusChipProps = {
 }
 
 const statusConfig: Record<StatusType, { label: string; className: string }> = {
-    active: {
-        label: 'Active',
-        className: 'bg-success/10 text-success border border-success/20'
-    },
-    trial: {
-        label: 'Trial',
-        className: 'bg-[#B45309]/10 text-[#B45309] border border-[#B45309]/20'
-    },
-    inactive: {
-        label: 'Inactive',
-        className: 'bg-[#0B99FF]/10 text-[#0B99FF] border border-[#0B99FF]/20'
-    },
     completed: {
         label: 'Completed',
         className: 'bg-[#E4FBEF] text-success'
     },
-    posted: {
-        label: 'Posted',
-        className: 'bg-blue-100 text-blue-600'
+    pending: {
+        label: 'Pending',
+        className: 'bg-yellow-50 text-yellow-600'
     },
-    processed: {
-        label: 'Processed',
-        className: 'bg-amber-100 text-amber-600'
+    paid: {
+        label: 'Paid',
+        className: 'bg-[#E4FBEF] text-success'
+    },
+    cancelled: {
+        label: 'Cancelled',
+        className: 'bg-red-100 text-red-600'
     }
 }
 

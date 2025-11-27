@@ -5,7 +5,6 @@ import { Button } from '@heroui/react'
 
 type PaginationProps = {
     currentPage: number
-    totalPages: number
     totalItems: number
     itemsPerPage: number
     onPageChange: (page: number) => void
@@ -17,7 +16,6 @@ type PaginationProps = {
 
 const Pagination: React.FC<PaginationProps> = ({
     currentPage,
-    totalPages,
     totalItems,
     itemsPerPage,
     onPageChange,
@@ -26,6 +24,7 @@ const Pagination: React.FC<PaginationProps> = ({
     previousLabel = 'Previous',
     nextLabel = 'Next'
 }) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
     const startItem = (currentPage - 1) * itemsPerPage + 1
     const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 

@@ -1,7 +1,7 @@
 
 export const formatCurrency = (
     amount: number,
-    currency: string = "NGN"
+    currency: string = "GBP"
 ): string => {
     const locale: string = typeof navigator !== "undefined" ? navigator.language : "en-NG";
 
