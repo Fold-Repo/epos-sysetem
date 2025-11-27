@@ -8,6 +8,7 @@ type MetricCardProps = {
   icon?: ReactNode
   colorClass?: string
   bgColorClass?: string
+  useColorForDescription?: boolean
   children?: ReactNode
   className?: string
 }
@@ -19,24 +20,28 @@ const MetricCard = ({
   icon,
   colorClass = 'text-secondary',
   bgColorClass,
+  useColorForDescription = false,
   children,
   className
 }: MetricCardProps) => {
 
   const getBgColorClass = (textClass: string): string => {
-    if (textClass === 'text-secondary') {
-      return 'bg-secondary/10';
+    if (!textClass) return '';
+    
+    if (textClass.startsWith('text-')) {
+      const colorPart = textClass.replace('text-', '');
+      if (colorPart.startsWith('[')) {
+        return '';
+      }
+      return `bg-${colorPart}/10`;
     }
-    if (textClass === 'text-success') {
-      return 'bg-success/10';
-    }
-    if (textClass.startsWith('text-[')) {
-      return '';
-    }
+    
     return '';
   }
 
   const getBgColorStyle = (textClass: string): React.CSSProperties | undefined => {
+    if (!textClass) return undefined;
+    
     if (textClass.startsWith('text-[')) {
       const colorMatch = textClass.match(/text-\[(.*?)\]/);
       if (colorMatch) {
@@ -55,16 +60,16 @@ const MetricCard = ({
   const bgColorStyle = bgColorClass ? undefined : getBgColorStyle(colorClass);
 
   return (
-    <div className={cn("p-3 2xl:p-4 rounded-xl border border-[#E6E9EF] space-y-1", className)}>
+    <div className={cn("bg-white p-3 2xl:p-4 rounded-xl border border-slate-100 space-y-1", className)}>
 
       <div className="flex items-center justify-between">
 
-        <h3 className={cn("text-xs 2xl:text-sm", colorClass)}>
+        <h3 className="text-xs 2xl:text-sm text-gray-500">
           {title}
         </h3>
 
         {icon && (
-          <div className={cn("p-1.5 rounded-lg", computedBgColorClass || undefined)}
+          <div className={cn("p-2 rounded-md", computedBgColorClass || undefined)}
             style={bgColorStyle}>
             <div className={colorClass}>
               {icon}
@@ -74,10 +79,11 @@ const MetricCard = ({
 
       </div>
 
-      <h2 className='text-[15px] font-semibold text-text-color'>{value}</h2>
+      <h2 className='text-xl font-semibold text-black'>{value}</h2>
 
       {description && (
-        <p className="text-xs text-slate-400 font-light">{description}</p>
+        <p className={`text-xs pt-1 ${useColorForDescription && colorClass ? colorClass : 'text-gray-400'}`}>     {description}
+        </p>
       )}
 
       {children}

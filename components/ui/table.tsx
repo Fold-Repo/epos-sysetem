@@ -38,7 +38,7 @@ const TableHead: React.FC<{
     scope?: "col" | "row";
 }> = ({ children, className = '', scope = "col" }) => {
     return (
-        <th scope={scope} className={cn("px-4 py-2.5 bg-[#F4F6F8] text-left whitespace-nowrap font-normal", className)}>
+        <th scope={scope} className={cn("px-6 py-3 bg-[#F4F6F8] text-left whitespace-nowrap font-normal", className)}>
             {children}
         </th>
     );
@@ -78,7 +78,7 @@ const TableCell: React.FC<{
     colSpan?: number;
 }> = ({ children, className = '', colSpan }) => {
     return (
-        <td colSpan={colSpan} className={cn("px-4 py-2 text-xs whitespace-nowrap", className)}>
+        <td colSpan={colSpan} className={cn("px-6 py-3 text-xs whitespace-nowrap", className)}>
             {children}
         </td>
     );

@@ -22,7 +22,7 @@ const BreadCrumb = ({
   className,
 }: BreadCrumbProps) => {
   return (
-    <div className={cn("px-5 py-3 bg-[#F4F6F8] border-y border-[#6C72781A] space-y-2", className)}>
+    <div className={cn("px-3 py-3 bg-[#F4F6F8] border-y border-[#6C72781A] space-y-2", className)}>
 
       {items.length > 0 && (
         <ol className="flex items-center gap-x-0.5 text-slate-400 text-xs">
@@ -63,7 +63,7 @@ const BreadCrumb = ({
             <h2 className='text-base font-medium text-text-color'>{title}</h2>
           )}
           {description && (
-            <p className='text-xs text-slate-400'>{description}</p>
+            <p className='text-xs text-dark/70'>{description}</p>
           )}
         </div>
       )}

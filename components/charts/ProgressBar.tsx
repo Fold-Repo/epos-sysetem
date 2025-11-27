@@ -8,7 +8,7 @@ interface ProgressBarProps {
     label: string
     amount: number | string
     percentage: number
-    color?: 'orange' | 'green' | 'blue' | string
+    color?: 'orange' | 'green' | 'blue' | 'yellow' | 'purple' | 'purpleLight' | 'purpleDark' | string
     className?: string
     labelClassName?: string
     amountClassName?: string
@@ -26,12 +26,20 @@ const gradients = {
     orange: 'linear-gradient(270deg, #DCB085 0%, rgba(220, 176, 133, 0) 111.11%)',
     green: 'linear-gradient(270deg, #008027 0%, rgba(0, 128, 39, 0) 111.11%)',
     blue: 'linear-gradient(270deg, #277EFF 0%, rgba(39, 126, 255, 0) 111.11%)',
+    yellow: 'linear-gradient(270deg, #fbbf24 0%, rgba(251, 191, 36, 0) 111.11%)',
+    purple: 'linear-gradient(270deg, #a78bfa 0%, rgba(167, 139, 250, 0) 111.11%)',
+    purpleLight: 'linear-gradient(270deg, #c084fc 0%, rgba(192, 132, 252, 0) 111.11%)',
+    purpleDark: 'linear-gradient(270deg, #7c3aed 0%, rgba(124, 58, 237, 0) 111.11%)',
 }
 
 const dotColors = {
     orange: '#DCB085',
     green: '#008027',
     blue: '#277EFF',
+    yellow: '#fbbf24',
+    purple: '#a78bfa',
+    purpleLight: '#c084fc',
+    purpleDark: '#7c3aed',
 }
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -65,7 +73,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
             transition={{ duration: 0.5, delay: animationDelay, ease: "easeOut" }}>
 
             <motion.div 
-                className="flex items-center justify-between mb-2"
+                className="flex items-center justify-between mb-1"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: animationDelay + 0.2, duration: 0.3 }}>
@@ -91,7 +99,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
             </motion.div>
 
-            <div className={cn("w-full h-5.5 bg-[#F5F6F7] overflow-hidden", barClassName)}>
+            <div className={cn("w-full h-5 bg-[#F5F6F7] overflow-hidden", barClassName)}>
                 <motion.div 
                     className="h-full"
                     style={{ background: gradientStyle }}

@@ -1,9 +1,10 @@
-import React from 'react'
+;import { DashboardView } from "@/views";
+import { Metadata } from "next";
 
-const page = () => {
-    return (
-        <div>page</div>
-    )
+export const metadata: Metadata = {
+    title: "Dashboard",
+};
+
+export default async function page() {
+    return <DashboardView />;
 }
-
-export default page
