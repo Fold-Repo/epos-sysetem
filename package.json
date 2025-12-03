@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^5.2.2",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.24",
+    "iconsax-reactjs": "^0.0.8",
     "next": "16.0.4",
     "react": "^19.2.0",
     "react-date-range": "^2.0.1",
@@ -23,6 +24,7 @@
     "react-otp-input": "^3.1.1",
     "react-phone-number-input": "^3.4.14",
     "recharts": "^3.5.0",
+    "swiper": "^12.0.3",
     "yup": "^1.7.1"
   },
   "devDependencies": {
@@ -32,6 +34,7 @@
     "@types/react": "^19",
     "@types/react-date-range": "^1.4.10",
     "@types/react-dom": "^19",
+    "@types/swiper": "^6.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
     "tailwindcss": "^4",

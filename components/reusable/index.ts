@@ -8,6 +8,7 @@ import Pagination from './Pagination';
 import FilterTabs from './FilterTabs';
 import Stepper from './Stepper';
 import DashboardCard from './DashboardCard';
+import Accordion from './Accordion';
 
 export {
     SearchInput,
@@ -19,5 +20,6 @@ export {
     Pagination,
     FilterTabs,
     Stepper,
-    DashboardCard
+    DashboardCard,
+    Accordion
 }
