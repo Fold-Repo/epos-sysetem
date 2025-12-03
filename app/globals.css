@@ -1,4 +1,13 @@
+/* =========================================================
+  📦 IMPORTS & PLUGINS
+   ========================================================= */
+@import url('https://fonts.cdnfonts.com/css/pp-pangaia');
 @import url('https://fonts.cdnfonts.com/css/euclid-circular-a');
+
+@import 'swiper/css';
+@import 'swiper/css/navigation';
+@import 'swiper/css/pagination';
+
 
 @import "tailwindcss";
 
@@ -14,15 +23,24 @@
 :root {
 
   /* TEXT SIZES */
-  --text-xs: 0.78125rem; /* 12.5px */
-  --text-sm: 0.84375rem; /* 13.5px */
-  --text-base: 0.9375rem; /* 15px */
-  --text-lg: 1.125rem; /* 18px */
-  --text-xl: 1.25rem; /* 20px */
-  --text-2xl: 1.5rem; /* 24px */
-  --text-3xl: 1.875rem; /* 30px */
-  --text-4xl: 2.25rem; /* 36px */
-  --text-5xl: 3rem; /* 48px */
+  --text-xs: 0.78125rem;
+  /* 12.5px */
+  --text-sm: 0.84375rem;
+  /* 13.5px */
+  --text-base: 0.9375rem;
+  /* 15px */
+  --text-lg: 1.125rem;
+  /* 18px */
+  --text-xl: 1.25rem;
+  /* 20px */
+  --text-2xl: 1.5rem;
+  /* 24px */
+  --text-3xl: 1.875rem;
+  /* 30px */
+  --text-4xl: 2.25rem;
+  /* 36px */
+  --text-5xl: 3rem;
+  /* 48px */
 
   /* Base surface tokens */
   --background: #ffffff;
@@ -45,13 +63,16 @@
   /* ===== Base Colors ===== */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ===== Fonts ===== */
+  --font-pangaia: 'PP Pangaia', serif;
 }
 
 
 /* ================= Tailwind Theme Tokens ================= */
 
 @theme {
-  
+
   /* ================= Primary Colors ================= */
   --color-primary: #8b5cf6;
   --color-deep-purple: #581c87;
@@ -90,6 +111,7 @@
 
   /* ================= Fonts ================= */
   --font-sans: var(--font-sans);
+  --font-pangaia: var(--font-pangaia);
 
   /* ================= Text Sizes ================= */
   --text-xs: var(--text-xs);
@@ -101,7 +123,7 @@
   --text-3xl: var(--text-3xl);
   --text-4xl: var(--text-4xl);
   --text-5xl: var(--text-5xl);
-  
+
 }
 
 @theme inline {
@@ -124,19 +146,18 @@ body {
 }
 
 /* ================= Utilities ================= */
-@layer utilities {
-}
+@layer utilities {}
 
 /* ================= Components ================= */
 @layer components {
+
   /* ================= Forms ================= */
   .form-group {
     @apply mb-2;
   }
 
   .form-control {
-    @apply block w-full px-3 py-2.5 md:py-3 text-[13px] border border-gray-300 bg-white 
-    rounded-lg outline-none transition-colors duration-300 placeholder:text-gray-500;
+    @apply block w-full px-3 py-2.5 md:py-3 text-[13px] border border-gray-300 bg-white rounded-lg outline-none transition-colors duration-300 placeholder:text-gray-500;
   }
 
   .form-control:focus {
