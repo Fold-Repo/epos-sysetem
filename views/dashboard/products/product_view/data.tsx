@@ -1,0 +1,150 @@
+import { ProductType } from '@/types';
+
+
+export const productsData: ProductType[] = [
+    {
+        id: '1',
+        name: 'Wireless Bluetooth Headphones',
+        code: 'WBH-001',
+        description: 'High-quality wireless headphones with noise cancellation',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100',
+        brand: 'TechSound',
+        category: 'Electronics',
+        price: 129.99,
+        unit: 'piece',
+        stock: 45,
+        created_at: '2024-01-15'
+    },
+    {
+        id: '2',
+        name: 'Cotton T-Shirt',
+        code: 'CTS-002',
+        description: 'Comfortable 100% cotton t-shirt in various colors',
+        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100',
+        brand: 'FashionWear',
+        category: 'Clothing',
+        price: 24.99,
+        unit: 'piece',
+        stock: 120,
+        created_at: '2024-01-20'
+    },
+    {
+        id: '3',
+        name: 'Organic Coffee Beans',
+        code: 'OCB-003',
+        description: 'Premium organic coffee beans, 500g pack',
+        image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=100',
+        brand: 'CoffeeHouse',
+        category: 'Food & Beverages',
+        price: 18.50,
+        unit: 'pack',
+        stock: 30,
+        created_at: '2024-02-01'
+    },
+    {
+        id: '4',
+        name: 'Garden Tool Set',
+        code: 'GTS-004',
+        description: 'Complete garden tool set with 10 pieces',
+        image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=100',
+        brand: 'GardenPro',
+        category: 'Home & Garden',
+        price: 89.99,
+        unit: 'set',
+        stock: 15,
+        created_at: '2024-02-10'
+    },
+    {
+        id: '5',
+        name: 'Running Shoes',
+        code: 'RS-005',
+        description: 'Lightweight running shoes with cushioned sole',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100',
+        brand: 'SportMax',
+        category: 'Sports',
+        price: 79.99,
+        unit: 'pair',
+        stock: 25,
+        created_at: '2024-02-15'
+    },
+    {
+        id: '6',
+        name: 'Programming Book',
+        code: 'PB-006',
+        description: 'Complete guide to modern web development',
+        image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=100',
+        brand: 'TechBooks',
+        category: 'Books',
+        price: 39.99,
+        unit: 'piece',
+        stock: 50,
+        created_at: '2024-02-20'
+    },
+    {
+        id: '7',
+        name: 'Smart Watch Pro',
+        code: 'SWP-007',
+        description: 'Advanced smartwatch with fitness tracking and notifications',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100',
+        brand: 'TechSound',
+        category: 'Electronics',
+        price: 199.99,
+        unit: 'piece',
+        stock: 30,
+        created_at: '2024-02-25'
+    },
+    {
+        id: '8',
+        name: 'Laptop Stand',
+        code: 'LS-008',
+        description: 'Ergonomic aluminum laptop stand for better posture',
+        image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=100',
+        brand: 'TechSound',
+        category: 'Electronics',
+        price: 49.99,
+        unit: 'piece',
+        stock: 60,
+        created_at: '2024-03-01'
+    },
+    {
+        id: '9',
+        name: 'Mechanical Keyboard',
+        code: 'MK-009',
+        description: 'RGB mechanical keyboard with blue switches',
+        image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=100',
+        brand: 'TechSound',
+        category: 'Electronics',
+        price: 89.99,
+        unit: 'piece',
+        stock: 35,
+        created_at: '2024-03-05'
+    },
+    {
+        id: '10',
+        name: 'Wireless Mouse',
+        code: 'WM-010',
+        description: 'Ergonomic wireless mouse with long battery life',
+        image: 'https://images.unsplash.com/photo-1527814050087-3793815479db?w=100',
+        brand: 'TechSound',
+        category: 'Electronics',
+        price: 29.99,
+        unit: 'piece',
+        stock: 80,
+        created_at: '2024-03-10'
+    },
+    {
+        id: '11',
+        name: 'USB-C Hub',
+        code: 'UCH-011',
+        description: 'Multi-port USB-C hub with HDMI and card reader',
+        image: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=100',
+        brand: 'TechSound',
+        category: 'Electronics',
+        price: 39.99,
+        unit: 'piece',
+        stock: 50,
+        created_at: '2024-03-15'
+    }
+];
+
+

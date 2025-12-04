@@ -1,5 +1,7 @@
 import DashboardView from "./home";
+import ProductsView from "./products";
 
 export {
-    DashboardView
+    DashboardView,
+    ProductsView
 }

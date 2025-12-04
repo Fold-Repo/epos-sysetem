@@ -6,6 +6,8 @@ export { default as Radio } from './Radio';
 export { default as Select } from './Select';
 export { default as TextArea } from './TextArea';
 export { default as FileUpload } from './FileUpload';
+export { default as CustomAutocomplete } from './CustomAutocomplete';
 export { default as Label } from './Label';
 export { default as ErrorMessage } from './ErrorMessage';
 export { createFileLabel, createInputLabel } from './labelHelpers';
+export type { Option } from './CustomAutocomplete';

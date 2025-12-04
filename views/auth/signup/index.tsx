@@ -5,6 +5,7 @@ import RegStepOne from './RegStepOne';
 import RegStepTwo from './RegStepTwo';
 import RegStepThree from './RegStepThree';
 import RegStepFour from './RegStepFour';
+import RegStepFive from './RegStepFive';
 import Image from 'next/image';
 import { LOGO } from '@/constants';
 import Link from 'next/link';
@@ -35,13 +36,15 @@ const SignUpView = () => {
         { id: 2, component: RegStepTwo },
         { id: 3, component: RegStepThree },
         { id: 4, component: RegStepFour },
+        { id: 5, component: RegStepFive },
     ];
 
     const stepperSteps = [
         { id: 1, label: 'Business Info' },
         { id: 2, label: 'Contact Details' },
         { id: 3, label: 'Products & Services' },
-        { id: 4, label: 'Terms & Agreement' },
+        { id: 4, label: 'Password' },
+        { id: 5, label: 'Terms & Agreement' },
     ];
 
     const handleNextStep = (stepData?: any) => {

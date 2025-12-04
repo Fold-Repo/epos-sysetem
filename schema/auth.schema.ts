@@ -40,24 +40,27 @@ export const registrationStepTwoSchema = yup.object({
     phoneNumber: yup
         .string()
         .required('Phone Number is required'),
-    alternatePhone: yup
+    postcode: yup
+        .string()
+        .required('Postcode is required'),
+    selectedAddress: yup
+        .string()
+        .required('Please select an address'),
+    line1: yup
+        .string()
+        .notRequired()
+        .default(undefined),
+    line2: yup
+        .string()
+        .notRequired()
+        .default(undefined),
+    town: yup
         .string()
         .notRequired()
         .default(undefined),
     city: yup
         .string()
         .required('City is required'),
-    state: yup
-        .string()
-        .required('State is required'),
-    zipCode: yup
-        .string()
-        .notRequired()
-        .default(undefined),
-    businessAddress: yup
-        .string()
-        .required('Business Address is required')
-        .min(5, 'Business Address must be at least 5 characters'),
 }).required();
 
 export type RegistrationStepTwoFormData = yup.InferType<typeof registrationStepTwoSchema>;
@@ -81,6 +84,21 @@ export const registrationStepThreeSchema = yup.object({
 export type RegistrationStepThreeFormData = yup.InferType<typeof registrationStepThreeSchema>;
 
 export const registrationStepFourSchema = yup.object({
+    password: yup
+        .string()
+        .required('Password is required')
+        .min(8, 'Password must be at least 8 characters')
+        .matches(/\d/, 'Password must contain at least one number')
+        .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+        .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+        .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character'),
+    confirmPassword: yup
+        .string()
+        .required('Please confirm your password')
+        .oneOf([yup.ref('password')], 'Passwords must match'),
+}).required();
+
+export const registrationStepFiveSchema = yup.object({
     agreeToTerms: yup
         .boolean()
         .required('You must agree to the Terms and Conditions')
@@ -94,6 +112,8 @@ export const registrationStepFourSchema = yup.object({
         .required('You must certify that the information is accurate')
         .oneOf([true], 'You must certify that the information is accurate'),
 }).required();
+
+export type RegistrationStepFiveFormData = yup.InferType<typeof registrationStepFiveSchema>;
 
 export type RegistrationStepFourFormData = yup.InferType<typeof registrationStepFourSchema>;
 

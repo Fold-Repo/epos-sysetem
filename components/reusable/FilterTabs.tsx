@@ -83,7 +83,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
                                     isLast && 'rounded-r-lg border-r-0',
                                     !isFirst && '-ml-px',
                                     isActive
-                                        ? 'bg-amber-50 text-secondary font-medium'
+                                        ? 'bg-primary/20 text-secondary font-medium'
                                         : 'bg-white text-gray-500 hover:bg-gray-50',
                                     tabClassName
                                 )}
