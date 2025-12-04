@@ -3,6 +3,7 @@
 import { FilterBar, DashboardCard, StackIcon, TableComponent, TableCell, Pagination } from '@/components'
 import { Chip, Image } from '@heroui/react'
 import { getStockAlertData } from '@/data'
+import { getStockCountColor } from '@/utils'
 import React, { useState } from 'react'
 
 const columns = [
@@ -86,14 +87,14 @@ const StockAlert = () => {
                             </TableCell>
                             <TableCell>
                                 <span className='text-xs text-dark'>
-                                    <span className={item.quantity < item.alertQuantity ? 'text-orange-500' : 'text-blue-500'}>
+                                    <span className={`font-medium ${getStockCountColor(item.quantity)}`}>
                                         {item.quantity}
                                     </span> {item.quantityUnit}
                                 </span>
                             </TableCell>
                             <TableCell>
                                 <span className='text-xs text-dark'>
-                                    <span className="text-orange-500">
+                                    <span className={`font-medium ${getStockCountColor(item.alertQuantity)}`}>
                                         {item.alertQuantity}
                                     </span> {item.alertQuantityUnit}
                                 </span>

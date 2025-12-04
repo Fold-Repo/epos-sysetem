@@ -10,6 +10,9 @@ export const API_BASE_URL = BASE_URL[currentEnv];
 
 export const ENDPOINT = {
 
-    
+    ADDRESS: {
+        AUTOCOMPLETE: '/autocomplete',
+        GET: '/get',
+    },
 
 } as const;

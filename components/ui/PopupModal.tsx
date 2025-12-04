@@ -23,6 +23,7 @@ const PopupModal = ({
     children,
     showCloseButton = true,
     title,
+    description,
     icon,
     footer,
     radius = "lg",
@@ -41,6 +42,7 @@ const PopupModal = ({
     placement?: "center" | "auto" | "top" | "top-center" | "bottom" | "bottom-center" | undefined;
     showCloseButton?: boolean;
     title?: string | ReactNode;
+    description?: string | ReactNode;
     icon?: ReactNode;
     footer?: ReactNode;
     radius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
@@ -88,16 +90,21 @@ const PopupModal = ({
                         {title && (
                             <ModalHeader className={`bg-[#F6F8FA] border border-[#E2E4E9] relative 
                                 flex items-center justify-between py-3 ${headerClassName}`}>
-                                <div className="flex items-center gap-2 pr-10">
-                                    {icon && <span className="shrink-0">{icon}</span>}
-                                    <h2 className='text-sm font-medium text-text-color'>{title}</h2>
+                                <div className="flex-1 pr-10">
+                                    <div className="flex items-center gap-2">
+                                        {icon && <span className="shrink-0">{icon}</span>}
+                                        <h2 className='text-base font-medium text-text-color'>{title}</h2>
+                                    </div>
+                                    {description && (
+                                        <p className='text-xs font-normal text-gray-500 mt-0.5'>{description}</p>
+                                    )}
                                 </div>
 
                                 {showCloseButton && (
                                     <Button size='sm' radius='full' isIconOnly 
                                         onPress={onClose} 
                                         variant="light"
-                                        className='text-text-color bg-gray-200'>
+                                        className='text-text-color bg-gray-200 shrink-0'>
                                         <XMarkIcon className='size-4' />
                                     </Button>
                                 )}

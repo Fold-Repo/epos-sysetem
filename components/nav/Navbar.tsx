@@ -33,7 +33,7 @@ const Navbar = () => {
                         />
                     </Link>
 
-                    <div className="hidden md:flex gap-x-10 lg:gap-x-16 text-xs text-white font-medium">
+                    <div className="hidden md:flex gap-x-10 lg:gap-x-16 text-sm text-white font-medium">
                         {NAV_CONSTANT.NAV_ITEMS.map((item) => (
                             <Link
                                 key={item.href}
@@ -55,7 +55,7 @@ const Navbar = () => {
                             <Link
                                 key={btn.href}
                                 href={btn.href}
-                                className="hidden md:block text-xs font-medium text-white">
+                                className="hidden md:block text-sm font-medium text-white">
                                 {btn.label}
                             </Link>
                         ) : (

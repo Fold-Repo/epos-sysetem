@@ -30,6 +30,7 @@ type MenuDropdownProps = {
     menuClassName?: string;
     itemClassName?: string;
     className?: string;
+    trigger?: ReactNode;
 };
 
 const MenuDropdown: React.FC<MenuDropdownProps> = ({
@@ -43,7 +44,8 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({
     showChevron = true,
     menuClassName,
     itemClassName,
-    className
+    className,
+    trigger
 }) => {
 
     const [internalLabel, setInternalLabel] = useState(label || items[0]?.label || "Select");
@@ -70,24 +72,26 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({
             onOpenChange={(open) => setIsOpen(open)}>
 
             <DropdownTrigger>
-                <Button
-                    aria-label={`Select ${internalLabel}`}
-                    startContent={startContent}
-                    endContent={
-                        endContent ? endContent : (
-                            showChevron && (
-                                <ChevronDownIcon
-                                    className={cn(
-                                        "size-3.5 transition-transform duration-300",
-                                        isOpen ? "rotate-180" : "rotate-0"
-                                    )}
-                                />
+                {trigger ? trigger : (
+                    <Button
+                        aria-label={`Select ${internalLabel}`}
+                        startContent={startContent}
+                        endContent={
+                            endContent ? endContent : (
+                                showChevron && (
+                                    <ChevronDownIcon
+                                        className={cn(
+                                            "size-3.5 transition-transform duration-300",
+                                            isOpen ? "rotate-180" : "rotate-0"
+                                        )}
+                                    />
+                                )
                             )
-                        )
-                    }
-                    className={cn("text-[12px] border-0 h-auto text-text-color rounded-lg p-2 bg-white", triggerClassName)}>
-                    {internalLabel}
-                </Button>
+                        }
+                        className={cn("text-[12px] border-0 h-auto text-text-color rounded-lg p-2 bg-white", triggerClassName)}>
+                        {internalLabel}
+                    </Button>
+                )}
             </DropdownTrigger>
 
             <DropdownMenu

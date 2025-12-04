@@ -3,17 +3,22 @@
 import { InternetCheck } from '@/utils'
 import { PWAInstallPrompt } from '@/components'
 import { HeroUIProvider, ToastProvider } from '@heroui/react'
+import { ReactQueryProvider } from './ReactQueryProvider'
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <HeroUIProvider>
 
-            <ToastProvider placement='top-right' toastOffset={10} />
+            <ReactQueryProvider>
 
-            {children}
+                <ToastProvider placement='top-right' toastOffset={10} />
 
-            <InternetCheck />
-            {/* <PWAInstallPrompt /> */}
+                {children}
+
+                <InternetCheck />
+                {/* <PWAInstallPrompt /> */}
+
+            </ReactQueryProvider>
 
         </HeroUIProvider>
     )

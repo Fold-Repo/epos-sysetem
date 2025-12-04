@@ -9,6 +9,7 @@ import FilterTabs from './FilterTabs';
 import Stepper from './Stepper';
 import DashboardCard from './DashboardCard';
 import Accordion from './Accordion';
+import PasswordRequirements from './PasswordRequirements';
 
 export {
     SearchInput,
@@ -21,5 +22,6 @@ export {
     FilterTabs,
     Stepper,
     DashboardCard,
-    Accordion
+    Accordion,
+    PasswordRequirements
 }

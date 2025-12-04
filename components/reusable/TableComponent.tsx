@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Table,
     TableBody,
@@ -52,7 +52,20 @@ export const TableComponent = <T,>({
     skeletonRowCount = 10,
 
 }: FlexibleTableProps<T>) => {
+    
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    
+    // Use refs to store function references that might change on every render
+    const onSelectionChangeRef = useRef(onSelectionChange);
+    const rowKeyRef = useRef(rowKey);
+    const dataRef = useRef(data);
+
+    // Update refs when props change
+    useEffect(() => {
+        onSelectionChangeRef.current = onSelectionChange;
+        rowKeyRef.current = rowKey;
+        dataRef.current = data;
+    });
 
     const isAllSelected = data.length > 0 && selectedIds.length === data.length;
 
@@ -71,11 +84,13 @@ export const TableComponent = <T,>({
     };
 
     useEffect(() => {
-        if (onSelectionChange) {
-            const selectedItems = data.filter((item) => selectedIds.includes(rowKey(item)));
-            onSelectionChange(selectedItems);
+        if (onSelectionChangeRef.current) {
+            const selectedItems = dataRef.current.filter((item) => 
+                selectedIds.includes(rowKeyRef.current(item))
+            );
+            onSelectionChangeRef.current(selectedItems);
         }
-    }, [selectedIds, data, rowKey, onSelectionChange]);
+    }, [selectedIds]);
 
     return (
         <div className={className}>
@@ -87,14 +102,14 @@ export const TableComponent = <T,>({
                                 <CheckBox
                                     checked={isAllSelected}
                                     onChange={handleSelectAll}
-                                    className="bg-[#F4F6F8] border-[#E1E3E8]"
+                                    className="bg-[#F4F6F8] border-1 border-[#E1E3E8]"
                                 />
                             </TableHead>
                         )}
                         {columns.map((col, index) => (
                             <TableHead
                                 key={col.key}
-                                className={`${col.className} ${withCheckbox && index === 0 ? '' : ''}`}>
+                                className={col.className || ''}>
                                 {col.title}
                             </TableHead>
                         ))}
@@ -132,8 +147,7 @@ export const TableComponent = <T,>({
                                     key={id} 
                                     className={withCheckbox ? 'gap-x-1' : ''}
                                     onClick={onRowClick ? () => onRowClick(item, index) : undefined}
-                                    style={onRowClick ? { cursor: 'pointer' } : undefined}
-                                >
+                                    style={onRowClick ? { cursor: 'pointer' } : undefined}>
                                     {withCheckbox && (
                                         <TableCell className={`w-10 ${checkboxClassName}`}>
                                             <CheckBox
