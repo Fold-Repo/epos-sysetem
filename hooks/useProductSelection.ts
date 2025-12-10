@@ -9,7 +9,7 @@ export interface BaseProductItem {
     code: string
     stock: number
     unit: string
-    [key: string]: any // Allow additional properties
+    [key: string]: any
 }
 
 interface UseProductSelectionOptions<T extends BaseProductItem> {
