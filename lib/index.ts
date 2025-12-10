@@ -1,7 +1,8 @@
 import { cn } from "./classname"
-import { formatCurrency } from "./formatCurrency"
+import { formatCurrency, getCurrencySymbol } from "./formatCurrency"
 
 export { 
     cn,
-    formatCurrency
+    formatCurrency,
+    getCurrencySymbol
 }

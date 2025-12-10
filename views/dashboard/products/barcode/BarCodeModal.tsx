@@ -54,10 +54,10 @@ const BarCodeModal: React.FC<BarCodeModalProps> = ({
             footer={
                 <div className="flex justify-end gap-3">
                     <Button variant="bordered" onPress={onClose}
-                        className="text-xs h-9 px-8">
+                        className="text-xs h-9 px-6">
                         Close
                     </Button>
-                    <Button color="secondary" onPress={onPrint} className="text-xs h-9 px-8">
+                    <Button color="secondary" onPress={onPrint} className="text-xs h-9 px-6">
                         Print
                     </Button>
                 </div>

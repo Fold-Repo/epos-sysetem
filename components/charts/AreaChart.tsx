@@ -223,7 +223,6 @@ const AreaChart: React.FC<AreaChartProps> = ({
                         const seriesChartType = seriesItem.chartType ?? chartType;
                         
                         const areaProps: any = {
-                            key: seriesItem.dataKey,
                             type: seriesChartType,
                             dataKey: seriesItem.dataKey,
                             stroke: seriesStrokeColor,
@@ -241,7 +240,7 @@ const AreaChart: React.FC<AreaChartProps> = ({
                             areaProps.baseValue = seriesItem.baseValue;
                         }
                         
-                        return <Area {...areaProps} />;
+                        return <Area key={seriesItem.dataKey} {...areaProps} />;
                     })}
                 </RechartsAreaChart>
             </ResponsiveContainer>

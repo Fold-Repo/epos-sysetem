@@ -66,7 +66,7 @@ const AddVariationModal = ({ isOpen, onClose }: AddVariationModalProps) => {
             title="Add Variation"
             description="Add a new product variation"
             footer={
-                <Button size='sm' type='submit' className='h-10 px-8' color="primary"
+                <Button size='sm' type='submit' className='h-10 px-6' color="primary"
                     onPress={onClose}>Save Variation</Button>
             }>
 

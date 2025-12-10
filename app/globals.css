@@ -136,7 +136,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Euclid Circular A', sans-serif;
-  font-weight: 400;
+  font-weight: 300;
   font-size: var(--text-base);
 }
 
@@ -174,9 +174,9 @@ body {
     @apply block mb-1 text-sm text-dark/70;
   }
 
-  select.form-control {
+  /* select.form-control {
     @apply appearance-none;
-  }
+  } */
 
   textarea.form-control {
     @apply min-h-[120px] resize-y;

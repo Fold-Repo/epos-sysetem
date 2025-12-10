@@ -13,6 +13,7 @@ type BreadCrumbProps = {
   title?: string
   description?: string
   className?: string
+  endContent?: React.ReactNode
 }
 
 const BreadCrumb = ({
@@ -20,12 +21,31 @@ const BreadCrumb = ({
   title,
   description,
   className,
+  endContent,
 }: BreadCrumbProps) => {
   return (
-    <div className={cn("px-3 py-3 bg-[#F4F6F8] border-y border-[#6C72781A] space-y-2", className)}>
+    <div className={cn("px-3 py-3 bg-[#F4F6F8] border-y border-[#6C72781A] space-y-0.5", className)}>
+
+      {(title || description || endContent) && (
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            {title && (
+              <h2 className='text-sm font-medium text-text-color'>{title}</h2>
+            )}
+            {description && (
+              <p className='text-xs text-dark/70'>{description}</p>
+            )}
+          </div>
+          {endContent && (
+            <div className="shrink-0 ml-auto">
+              {endContent}
+            </div>
+          )}
+        </div>
+      )}
 
       {items.length > 0 && (
-        <ol className="flex items-center gap-x-0.5 text-slate-400 text-xs">
+        <ol className="flex items-center gap-x-0.5 text-slate-400 text-[12px]">
           {items.map((item, index) => {
 
             const isLast = index === items.length - 1
@@ -33,7 +53,7 @@ const BreadCrumb = ({
 
             return (
               <li key={index} className="inline-flex items-center">
-                {isFirst && <ArrowLeftIcon className="size-4 mr-1" />}
+                {isFirst && <ArrowLeftIcon className="size-3.5 mr-1" />}
                 {item.href ? (
                   <Link className="flex items-center hover:text-text-color focus:outline-none 
                     focus:text-text-color transition-colors" href={item.href}>
@@ -55,17 +75,6 @@ const BreadCrumb = ({
             )
           })}
         </ol>
-      )}
-
-      {(title || description) && (
-        <div className="space-y-1">
-          {title && (
-            <h2 className='text-base font-medium text-text-color'>{title}</h2>
-          )}
-          {description && (
-            <p className='text-xs text-dark/70'>{description}</p>
-          )}
-        </div>
       )}
 
     </div>
