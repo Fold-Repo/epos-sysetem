@@ -18,7 +18,7 @@ const AddBrandModal = ({ isOpen, onClose }: AddBrandModalProps) => {
             title="Add Brand"
             description="Add a new product brand"
             footer={
-                <Button size='sm' type='submit' className='h-10 px-8' color="primary" 
+                <Button size='sm' type='submit' className='h-10 px-6' color="primary" 
                 onPress={onClose}>Save Brand</Button>
             }>
 

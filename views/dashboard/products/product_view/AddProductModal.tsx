@@ -20,7 +20,7 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
             title="Create Product"
             description="Add a new product to the system"
             footer={
-                <Button type='submit' className='px-8' color="primary" onPress={onClose}>Save Product</Button>
+                <Button type='submit' className='px-6' color="primary" onPress={onClose}>Save Product</Button>
             }>
 
             <div className="flex flex-col lg:grid grid-cols-1 lg:grid-cols-2 gap-y-2 gap-x-3 p-3">

@@ -12,6 +12,8 @@ export interface ProductType {
     price: number;
     unit: string;
     stock: number;
+    discount?: number;
+    tax?: number;
     created_at: string | Date;
 }
 

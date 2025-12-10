@@ -18,7 +18,7 @@ const AddUnitModal = ({ isOpen, onClose }: AddUnitModalProps) => {
             title="Add Unit"
             description="Add a new product unit"
             footer={
-                <Button size='sm' type='submit' className='h-10 px-8' color="primary" 
+                <Button size='sm' type='submit' className='h-10 px-6' color="primary" 
                 onPress={onClose}>Save Unit</Button>
             }>
 

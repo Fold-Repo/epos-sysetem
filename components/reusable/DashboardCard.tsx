@@ -35,7 +35,7 @@ const DashboardCard = ({
           <div className="flex items-center gap-x-1.5">
             {title && (
               <h2 className={cn(
-                'text-[15px] font-medium',
+                'text-sm font-medium',
                 titleClassName
               )}>
                 {title}

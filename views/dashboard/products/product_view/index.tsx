@@ -2,7 +2,7 @@ import { FilterBar, Pagination, StackIcon, TrashIcon, useDisclosure } from '@/co
 import { DeleteModal } from '@/components/modal'
 import { useState, useEffect } from 'react'
 import ProductTable from './ProductTable'
-import { productsData } from './data'
+import { productsData } from '@/data'
 import { ProductType } from '@/types'
 import AddProductModal from './AddProductModal'
 import ViewProductModal from './ViewProductModal'

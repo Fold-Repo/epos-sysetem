@@ -13,6 +13,8 @@ export const productsData: ProductType[] = [
         price: 129.99,
         unit: 'piece',
         stock: 45,
+        discount: 5,
+        tax: 10,
         created_at: '2024-01-15'
     },
     {
@@ -26,6 +28,8 @@ export const productsData: ProductType[] = [
         price: 24.99,
         unit: 'piece',
         stock: 120,
+        discount: 0,
+        tax: 8,
         created_at: '2024-01-20'
     },
     {
@@ -39,6 +43,8 @@ export const productsData: ProductType[] = [
         price: 18.50,
         unit: 'pack',
         stock: 30,
+        discount: 2,
+        tax: 5,
         created_at: '2024-02-01'
     },
     {
@@ -52,6 +58,8 @@ export const productsData: ProductType[] = [
         price: 89.99,
         unit: 'set',
         stock: 15,
+        discount: 10,
+        tax: 12,
         created_at: '2024-02-10'
     },
     {
@@ -65,6 +73,8 @@ export const productsData: ProductType[] = [
         price: 79.99,
         unit: 'pair',
         stock: 25,
+        discount: 0,
+        tax: 10,
         created_at: '2024-02-15'
     },
     {
@@ -78,6 +88,8 @@ export const productsData: ProductType[] = [
         price: 39.99,
         unit: 'piece',
         stock: 50,
+        discount: 5,
+        tax: 0,
         created_at: '2024-02-20'
     },
     {
@@ -91,6 +103,8 @@ export const productsData: ProductType[] = [
         price: 199.99,
         unit: 'piece',
         stock: 30,
+        discount: 8,
+        tax: 15,
         created_at: '2024-02-25'
     },
     {
@@ -104,6 +118,8 @@ export const productsData: ProductType[] = [
         price: 49.99,
         unit: 'piece',
         stock: 60,
+        discount: 0,
+        tax: 10,
         created_at: '2024-03-01'
     },
     {
@@ -117,6 +133,8 @@ export const productsData: ProductType[] = [
         price: 89.99,
         unit: 'piece',
         stock: 35,
+        discount: 3,
+        tax: 12,
         created_at: '2024-03-05'
     },
     {
@@ -130,6 +148,8 @@ export const productsData: ProductType[] = [
         price: 29.99,
         unit: 'piece',
         stock: 80,
+        discount: 0,
+        tax: 8,
         created_at: '2024-03-10'
     },
     {
@@ -143,6 +163,8 @@ export const productsData: ProductType[] = [
         price: 39.99,
         unit: 'piece',
         stock: 50,
+        discount: 0,
+        tax: 10,
         created_at: '2024-03-15'
     }
 ];

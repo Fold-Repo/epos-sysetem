@@ -4,7 +4,7 @@ import { CustomAutocomplete, Input, Select, TableComponent, TableCell, Label } f
 import React, { useState, useRef } from "react"
 import { TrashIcon } from "@/components/icons"
 import { Button, Switch, useDisclosure } from "@heroui/react"
-import { productsData } from "../product_view/data"
+import { productsData } from "@/data"
 import BarCodeModal from "./BarCodeModal"
 import BarcodeLabels from "./BarcodeLabels"
 
@@ -33,7 +33,6 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
     const [barcodeProducts, setBarcodeProducts] = useState<BarcodeProduct[]>([])
     const [selectedProductId, setSelectedProductId] = useState<string>("")
     const [paperSize, setPaperSize] = useState<string>("A4")
-    const [warehouse, setWarehouse] = useState<string>("")
     const { isOpen: isPreviewOpen, onOpen: onPreviewOpen, onClose: onPreviewClose } = useDisclosure()
     const printRef = useRef<HTMLDivElement>(null)
 
@@ -95,7 +94,6 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
         setBarcodeProducts([])
         setSelectedProductId("")
         setPaperSize("A4")
-        setWarehouse("")
         setShowOptions({
             storeName: true,
             productName: false,
@@ -309,17 +307,6 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
             {/* ================================ FORM ================================ */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3">
 
-                <Select 
-                    name="warehouse" 
-                    label="Warehouse"
-                    value={warehouse}
-                    onChange={(e) => setWarehouse(e.target.value)}>
-                    <option value="" disabled>Select Warehouse</option>
-                    <option value="1">Warehouse 1</option>
-                    <option value="2">Warehouse 2</option>
-                    <option value="3">Warehouse 3</option>
-                </Select>
-
                 <CustomAutocomplete
                     name="product"
                     label="Product"
@@ -398,18 +385,18 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
             {/* ================================ BUTTONS ================================ */}
             <div className="flex justify-end gap-4 mt-5">
 
-                <Button className="text-xs h-9 px-8" radius="sm" color="success"
+                <Button className="text-xs h-9 px-6" radius="sm" color="success"
                     onPress={onPreviewOpen}
                     isDisabled={barcodeProducts.length === 0 || !paperSize}>
                     Preview
                 </Button>
 
-                <Button className="text-xs h-9 px-8" radius="sm" 
+                <Button className="text-xs h-9 px-6" radius="sm" 
                     color="danger" onPress={handleReset}>
                     Reset
                 </Button>
 
-                <Button className="text-xs h-9 px-8" radius="sm" color="secondary" onPress={handlePrint}
+                <Button className="text-xs h-9 px-6" radius="sm" color="secondary" onPress={handlePrint}
                     isDisabled={barcodeProducts.length === 0 || !paperSize}>
                     Print
                 </Button>

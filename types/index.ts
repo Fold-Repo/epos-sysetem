@@ -7,3 +7,6 @@ export * from './category.type';
 export * from './variation.type';
 export * from './brand.type';
 export * from './unit.type';
+export * from './adjustment.type';
+export * from './customer.type';
+export * from './quotations.type';

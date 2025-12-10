@@ -1,5 +1,5 @@
 export const sizeClasses: Record<string, string> = {
-    sm: "h-10",
+    sm: "py-1 h-9 text-xs",
     md: "h-11",
     lg: "h-12",
 };
