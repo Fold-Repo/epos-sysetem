@@ -18,9 +18,9 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ href, icon, text, isActive, o
     };
 
     return (
-        <Link href={href} className={`text-xs my-0 flex items-center whitespace-nowrap rounded-xl text-dark 
+        <Link href={href} className={`text-xs my-0 flex items-center whitespace-nowrap rounded-lg text-dark 
             transition-all mb-0.5 gap-x-2 py-2.5 px-3 
-            ${isActive ? 'bg-deep-purple text-white mt-1' : ''}`}
+            ${isActive ? 'bg-primary text-white mt-1' : ''}`}
             onClick={handleClick}>
 
             <div className="shink-0">

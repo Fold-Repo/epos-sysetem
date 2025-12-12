@@ -50,14 +50,6 @@ const SalesView = () => {
         }
     ]
 
-    const handleBulkDelete = () => {
-        if (selectedSales.length > 0) {
-            setIsBulkDelete(true)
-            setDeleteSaleId(undefined)
-            onDeleteModalOpen()
-        }
-    }
-
     const handleDelete = (saleId: string) => {
         setDeleteSaleId(saleId)
         setIsBulkDelete(false)
