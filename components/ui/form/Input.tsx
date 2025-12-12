@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { cn } from "@/lib";
 import Label from "./Label";
 import ErrorMessage from "./ErrorMessage";
@@ -64,6 +64,17 @@ const Input: React.FC<InputProps> = ({
         }
         return value ?? "";
     });
+
+    // Sync displayValue with value prop when it changes
+    useEffect(() => {
+        if (isCurrency && value !== undefined) {
+            const formatted = formatCurrency(String(value));
+            setDisplayValue(formatted);
+        } else if (!isCurrency) {
+            // For non-currency inputs, we don't use displayValue, but we should still sync
+            // The value prop is used directly in inputValue
+        }
+    }, [value, isCurrency]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let rawValue = e.target.value;

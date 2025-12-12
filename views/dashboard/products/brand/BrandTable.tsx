@@ -3,8 +3,8 @@ import { ProductBrandType } from '@/types/brand.type'
 import { EllipsisVerticalIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { TrashIcon } from '@/components/icons'
-import { Chip } from '@heroui/react'
 import Image from 'next/image'
+import { StatusChip } from '@/components'
 
 interface BrandTableProps {
     data: ProductBrandType[]
@@ -66,13 +66,10 @@ const BrandTable = ({ data, onSelectionChange, onDelete }: BrandTableProps) => {
                 </TableCell>
 
                 <TableCell>
-                    <Chip size="sm"
-                        variant="flat"
-                        className={brand.status === 'active' 
-                            ? 'bg-green-50 text-green-600' 
-                            : 'bg-gray-100 text-gray-600'}>
-                        {brand.status === 'active' ? 'Active' : 'Inactive'}
-                    </Chip>
+                    <StatusChip 
+                        status={brand.status} 
+                        label={brand.status === 'active' ? 'Active' : 'Inactive'}
+                    />
                 </TableCell>
 
                 <TableCell>

@@ -10,3 +10,8 @@ export * from './unit.type';
 export * from './adjustment.type';
 export * from './customer.type';
 export * from './quotations.type';
+export * from './transfer.type';
+export * from './supplier.type';
+export * from './purchase.type';
+export * from './user.type';
+export * from './sale.type';

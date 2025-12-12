@@ -29,7 +29,7 @@ export interface DashboardLink {
     href: string;
     icon: React.ReactNode;
     text: string;
-    permissionKey?: string; // Permission key to check (e.g., 'manageProducts', 'manageDashboard')
+    permissionKey?: string;
 }
 
 export interface DashboardSection {
@@ -72,45 +72,15 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 permissionKey: PermissionKey.MANAGE_ADJUSTMENTS
             },
             {
-                href: `${root}/quotations`,
-                icon: <DocumentTextIcon className='size-5' />,
-                text: 'Quotations',
-                permissionKey: PermissionKey.MANAGE_QUOTATIONS
-            },
-            {
                 href: `${root}/transfers`,
                 icon: <TruckIcon className='size-5' />,
                 text: 'Transfers',
                 permissionKey: PermissionKey.MANAGE_TRANSFERS
             },
-            {
-                href: `${root}/people`,
-                icon: <UsersIcon className='size-5' />,
-                text: 'People',
-                permissionKey: PermissionKey.MANAGE_USERS
-            },
-            {
-                href: `${root}/reports`,
-                icon: <ChartBarIcon className='size-5' />,
-                text: 'Reports',
-                permissionKey: PermissionKey.MANAGE_REPORTS
-            },
-            {
-                href: `${root}/roles-permissions`,
-                icon: <KeyIcon className='size-5' />,
-                text: 'Roles/Permissions',
-                permissionKey: PermissionKey.MANAGE_ROLES_PERMISSIONS
-            },
-            {
-                href: `${root}/templates`,
-                icon: <DocumentDuplicateIcon className='size-5' />,
-                text: 'Templates',
-                permissionKey: PermissionKey.MANAGE_EMAIL_TEMPLATES
-            },
         ],
     },
     {
-        title: 'Sales',
+        title: 'Sales & Orders',
         links: [
             {
                 href: `${root}/sales`,
@@ -124,6 +94,17 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 text: 'Purchases',
                 permissionKey: PermissionKey.MANAGE_PURCHASES
             },
+            {
+                href: `${root}/quotations`,
+                icon: <DocumentTextIcon className='size-5' />,
+                text: 'Quotations',
+                permissionKey: PermissionKey.MANAGE_QUOTATIONS
+            },
+        ],
+    },
+    {
+        title: 'Financial',
+        links: [
             {
                 href: `${root}/payment-methods`,
                 icon: <BanknotesIcon className='size-5' />,
@@ -141,6 +122,34 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 icon: <ReceiptRefundIcon className='size-5' />,
                 text: 'Expenses',
                 permissionKey: PermissionKey.MANAGE_EXPENSES
+            },
+        ],
+    },
+    {
+        title: 'People & Access',
+        links: [
+            {
+                href: `${root}/people`,
+                icon: <UsersIcon className='size-5' />,
+                text: 'People',
+                permissionKey: PermissionKey.MANAGE_USERS
+            },
+            {
+                href: `${root}/roles-permissions`,
+                icon: <KeyIcon className='size-5' />,
+                text: 'Roles/Permissions',
+                permissionKey: PermissionKey.MANAGE_ROLES_PERMISSIONS
+            },
+        ],
+    },
+    {
+        title: 'Reports & Analytics',
+        links: [
+            {
+                href: `${root}/reports`,
+                icon: <ChartBarIcon className='size-5' />,
+                text: 'Reports',
+                permissionKey: PermissionKey.MANAGE_REPORTS
             },
         ],
     },
@@ -165,70 +174,76 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 text: 'Dual Screen Settings',
                 permissionKey: PermissionKey.MANAGE_DUAL_SCREEN_SETTINGS
             },
+            {
+                href: `${root}/templates`,
+                icon: <DocumentDuplicateIcon className='size-5' />,
+                text: 'Templates',
+                permissionKey: PermissionKey.MANAGE_EMAIL_TEMPLATES
+            },
         ],
     },
 ];
 
 export const DASHBOARD_SECTIONS: DashboardSection[] = getDashboardSections(DASHBOARD_ROOT);
 
-export const getSalesDashboardSections = (root: string): DashboardSection[] => [
-    {
-        title: 'Main',
-        links: [
-            {
-                href: root,
-                icon: <HomeIcon className='size-5' />,
-                text: 'Dashboard',
-                permissionKey: PermissionKey.MANAGE_DASHBOARD
-            },
-        ],
-    },
-    {
-        title: 'Sales',
-        links: [
-            {
-                href: `${root}/sales`,
-                icon: <ChartPieIcon className='size-5' />,
-                text: 'Sales',
-                permissionKey: PermissionKey.MANAGE_SALES
-            },
-            {
-                href: `${root}/purchases`,
-                icon: <TagIcon className='size-5' />,
-                text: 'Purchases',
-                permissionKey: PermissionKey.MANAGE_PURCHASES
-            },
-            {
-                href: `${root}/payment-methods`,
-                icon: <BanknotesIcon className='size-5' />,
-                text: 'Payment Methods',
-                permissionKey: PermissionKey.MANAGE_PAYMENT_METHODS
-            },
-            {
-                href: `${root}/currencies`,
-                icon: <CurrencyDollarIcon className='size-5' />,
-                text: 'Currencies',
-                permissionKey: PermissionKey.MANAGE_CURRENCY
-            },
-            {
-                href: `${root}/expenses`,
-                icon: <ReceiptRefundIcon className='size-5' />,
-                text: 'Expenses',
-                permissionKey: PermissionKey.MANAGE_EXPENSES
-            },
-        ],
-    },
-    {
-        title: 'Settings',
-        links: [
-            {
-                href: `${root}/settings`,
-                icon: <Cog6ToothIcon className='size-5' />,
-                text: 'Settings',
-                permissionKey: PermissionKey.MANAGE_SETTINGS
-            },
-        ],
-    },
-];
+// export const getSalesDashboardSections = (root: string): DashboardSection[] => [
+//     {
+//         title: 'Main',
+//         links: [
+//             {
+//                 href: root,
+//                 icon: <HomeIcon className='size-5' />,
+//                 text: 'Dashboard',
+//                 permissionKey: PermissionKey.MANAGE_DASHBOARD
+//             },
+//         ],
+//     },
+//     {
+//         title: 'Sales',
+//         links: [
+//             {
+//                 href: `${root}/sales`,
+//                 icon: <ChartPieIcon className='size-5' />,
+//                 text: 'Sales',
+//                 permissionKey: PermissionKey.MANAGE_SALES
+//             },
+//             {
+//                 href: `${root}/purchases`,
+//                 icon: <TagIcon className='size-5' />,
+//                 text: 'Purchases',
+//                 permissionKey: PermissionKey.MANAGE_PURCHASES
+//             },
+//             {
+//                 href: `${root}/payment-methods`,
+//                 icon: <BanknotesIcon className='size-5' />,
+//                 text: 'Payment Methods',
+//                 permissionKey: PermissionKey.MANAGE_PAYMENT_METHODS
+//             },
+//             {
+//                 href: `${root}/currencies`,
+//                 icon: <CurrencyDollarIcon className='size-5' />,
+//                 text: 'Currencies',
+//                 permissionKey: PermissionKey.MANAGE_CURRENCY
+//             },
+//             {
+//                 href: `${root}/expenses`,
+//                 icon: <ReceiptRefundIcon className='size-5' />,
+//                 text: 'Expenses',
+//                 permissionKey: PermissionKey.MANAGE_EXPENSES
+//             },
+//         ],
+//     },
+//     {
+//         title: 'Settings',
+//         links: [
+//             {
+//                 href: `${root}/settings`,
+//                 icon: <Cog6ToothIcon className='size-5' />,
+//                 text: 'Settings',
+//                 permissionKey: PermissionKey.MANAGE_SETTINGS
+//             },
+//         ],
+//     },
+// ];
 
-export const SALES_DASHBOARD_SECTIONS: DashboardSection[] = getSalesDashboardSections(SALES_DASHBOARD_ROOT);
+// export const SALES_DASHBOARD_SECTIONS: DashboardSection[] = getSalesDashboardSections(SALES_DASHBOARD_ROOT);
