@@ -4,56 +4,81 @@ import React from 'react'
 import { Chip } from '@heroui/react'
 import { cn } from '@/lib'
 
-type StatusType = 'completed' | 'pending' | 'paid' | 'cancelled'
-
-type StatusChipProps = {
-    status: StatusType
+interface StatusChipProps {
+    status?: string
+    label?: string
     size?: 'sm' | 'md' | 'lg'
+    radius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
     variant?: 'flat' | 'solid' | 'bordered'
     className?: string
-    label?: string
-    children?: React.ReactNode
 }
 
-const statusConfig: Record<StatusType, { label: string; className: string }> = {
-    completed: {
-        label: 'Completed',
-        className: 'bg-[#E4FBEF] text-success'
-    },
-    pending: {
-        label: 'Pending',
-        className: 'bg-yellow-50 text-yellow-600'
-    },
-    paid: {
-        label: 'Paid',
-        className: 'bg-[#E4FBEF] text-success'
-    },
-    cancelled: {
-        label: 'Cancelled',
-        className: 'bg-red-100 text-red-600'
+const getStatusColor = (status?: string): string => {
+    if (!status) return 'bg-gray-100 text-gray-600'
+    
+    const normalizedStatus = status.toLowerCase()
+    
+    switch (normalizedStatus) {
+        case 'sent':
+            return 'bg-blue-100 text-blue-600'
+        case 'draft':
+            return 'bg-gray-100 text-gray-600'
+        case 'approved':
+            return 'bg-green-100 text-green-600'
+        case 'rejected':
+            return 'bg-red-100 text-red-600'
+        case 'pending':
+            return 'bg-yellow-100 text-yellow-600'
+        case 'paid':
+            return 'bg-green-100 text-green-600'
+        case 'cancelled':
+        case 'canceled':
+            return 'bg-red-100 text-red-600'
+        case 'completed':
+            return 'bg-green-100 text-green-600'
+        case 'in-transit':
+        case 'in transit':
+            return 'bg-blue-100 text-blue-600'
+        case 'ongoing':
+            return 'bg-blue-100 text-blue-600'
+        case 'active':
+            return 'bg-green-50 text-green-600'
+        case 'inactive':
+            return 'bg-gray-100 text-gray-600'
+        case 'received':
+            return 'bg-green-100 text-green-600'
+        case 'orders':
+            return 'bg-purple-100 text-purple-600'
+        case 'unpaid':
+            return 'bg-red-100 text-red-600'
+        case 'partial':
+            return 'bg-yellow-100 text-yellow-600'
+        default:
+            return 'bg-gray-100 text-gray-600'
     }
 }
 
 const StatusChip = ({ 
-    status, 
-    size = 'sm', 
-    variant = 'flat',
-    className,
+    status,
     label,
-    children
+    size = 'sm',
+    radius = 'sm',
+    variant = 'flat',
+    className
 }: StatusChipProps) => {
-    const config = statusConfig[status]
-    const displayLabel = children || label || config.label
+    
+    const displayLabel = label || status || ''
+    const colorClass = getStatusColor(status)
 
     return (
-        <Chip
+        <Chip 
             size={size}
+            radius={radius === 'xl' ? 'lg' : radius}
             variant={variant}
-            className={cn('text-[11px]', config.className, className)}>
+            className={cn('text-[12px] px-2 capitalize', colorClass, className)}>
             {displayLabel}
         </Chip>
     )
 }
 
 export default StatusChip
-

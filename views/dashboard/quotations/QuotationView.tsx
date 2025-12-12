@@ -128,8 +128,7 @@ const QuotationView = () => {
                     <Button 
                         onPress={() => router.push('/dashboard/quotations/create')} 
                         size='sm' 
-                        className='px-4 bg-primary text-white h-9'
-                    >
+                        className='px-4 bg-primary text-white h-9'>
                         Create Quotation
                     </Button>
                 }
@@ -172,7 +171,6 @@ const QuotationView = () => {
                         onDelete={handleDelete}
                         onDownloadPDF={(quotationId) => {
                             console.log('Download PDF for quotation:', quotationId)
-                            // TODO: Implement PDF download
                         }}
                     />
 

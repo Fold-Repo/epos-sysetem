@@ -5,10 +5,10 @@ export const metadata: Metadata = {
     title: "Quotations",
 };
 
-const AdjustmentsLayout = ({ children }: { children: React.ReactNode }) => {
+const QuotationsLayout = ({ children }: { children: React.ReactNode }) => {
     return (
         <>{children}</>
     )
 }
 
-export default AdjustmentsLayout
+export default QuotationsLayout
