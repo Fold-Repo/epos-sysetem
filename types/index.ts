@@ -15,3 +15,7 @@ export * from './supplier.type';
 export * from './purchase.type';
 export * from './user.type';
 export * from './sale.type';
+export * from './payment-method.type';
+export * from './currency.type';
+export * from './expense-category.type';
+export * from './expense.type';

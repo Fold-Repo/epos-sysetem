@@ -63,12 +63,21 @@ const ProductsView = () => {
                 return null
         }
     }
+    
     return (
         <>
 
             <DashboardBreadCrumb
                 title='Products'
                 description="Manage your products here. Add, edit, and delete products as needed."
+                endContent={
+                    getButtonTitle(activeTab || '') && (
+                    <Button size='sm' className='px-4 bg-primary text-white h-9'
+                        onPress={handleAddClick}>
+                            {getButtonTitle(activeTab || '')}
+                        </Button>
+                    )
+                }
             />
 
             <div className="p-3">
@@ -93,15 +102,6 @@ const ProductsView = () => {
                                 updateQueryParams({ tab: key })
                             }}
                         />
-
-                        {getButtonTitle(activeTab || '') && (
-                            <div className="ml-auto">
-                                <Button onPress={handleAddClick} size='sm' className='text-xs px-4 
-                                bg-secondary text-white py-4.5'>
-                                    {getButtonTitle(activeTab || '')}
-                                </Button>
-                            </div>
-                        )}
 
                     </div>
 
