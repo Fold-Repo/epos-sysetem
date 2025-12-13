@@ -116,7 +116,9 @@ const SalesForm = ({
             }
         })
 
-    const customerOptions = customersData.map(c => ({ value: c.id, label: c.name }))
+    const customerOptions = customersData
+        .filter(c => c.id !== undefined)
+        .map(c => ({ value: String(c.id!), label: c.name }))
 
     // =========================
     // LOAD INITIAL DATA (EDIT MODE)

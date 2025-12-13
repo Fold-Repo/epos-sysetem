@@ -99,7 +99,9 @@ const PurchaseForm = ({
             }
         })
 
-    const supplierOptions = suppliersData.map(s => ({ value: s.id, label: s.name }))
+    const supplierOptions = suppliersData
+        .filter(s => s.id !== undefined)
+        .map(s => ({ value: String(s.id!), label: s.name }))
 
     // =========================
     // LOAD INITIAL DATA (EDIT MODE)

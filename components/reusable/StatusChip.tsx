@@ -75,7 +75,7 @@ const StatusChip = ({
             size={size}
             radius={radius === 'xl' ? 'lg' : radius}
             variant={variant}
-            className={cn('text-[12px] px-2 capitalize', colorClass, className)}>
+            className={cn('text-[11px] px-2 capitalize', colorClass, className)}>
             {displayLabel}
         </Chip>
     )

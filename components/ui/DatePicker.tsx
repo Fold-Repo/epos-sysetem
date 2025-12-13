@@ -114,14 +114,14 @@ const DatePicker: React.FC<Props> = ({
                                 moveRangeOnFirstSelection={false}
                                 ranges={dateRange}
                                 showDateDisplay={false}
-                                rangeColors={["#7A6233"]}
+                                rangeColors={["#8b5cf6"]}
                             />
                         ) : (
                             <Calendar
                                 date={date}
                                 onChange={handleSingleDateChange}
                                 showDateDisplay={false}
-                                color="#7A6233"
+                                color="#8b5cf6"
                             />
                         )}
                     </div>
