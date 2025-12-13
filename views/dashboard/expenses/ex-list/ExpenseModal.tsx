@@ -100,15 +100,19 @@ const ExpenseModal = ({
         }
     }
 
-    const userOptions = usersData.map(user => ({
-        value: user.id,
-        label: user.name
-    }))
+    const userOptions = usersData
+        .filter(user => user.id !== undefined)
+        .map(user => ({
+            value: String(user.id!),
+            label: user.name
+        }))
 
-    const categoryOptions = expenseCategoriesData.map(category => ({
-        value: category.id,
-        label: category.name
-    }))
+    const categoryOptions = expenseCategoriesData
+        .filter(category => category.id !== undefined)
+        .map(category => ({
+            value: String(category.id!),
+            label: category.name
+        }))
 
     return (
         <PopupModal
@@ -161,10 +165,7 @@ const ExpenseModal = ({
                             placeholder="Choose Expense Category"
                             radius="lg"
                             inputSize="sm"
-                            options={categoryOptions.map(opt => ({
-                                value: String(opt.value),
-                                label: opt.label
-                            }))}
+                            options={categoryOptions}
                             value={watch('expenseCategoryId')}
                             onChange={(value) => {
                                 if (typeof value === 'string') {

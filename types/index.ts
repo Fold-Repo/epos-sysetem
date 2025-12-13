@@ -19,3 +19,4 @@ export * from './payment-method.type';
 export * from './currency.type';
 export * from './expense-category.type';
 export * from './expense.type';
+export * from './role.type';

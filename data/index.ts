@@ -17,3 +17,4 @@ export * from './payment-methods';
 export * from './currencies';
 export * from './expense-categories';
 export * from './expenses';
+export * from './roles';
