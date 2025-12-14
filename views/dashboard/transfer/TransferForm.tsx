@@ -93,7 +93,9 @@ const TransferForm = ({
             }
         })
 
-    const storeOptions = storesData.map(s => ({ value: s.id, label: s.name }))
+    const storeOptions = storesData
+        .filter(s => s.id !== undefined)
+        .map(s => ({ value: String(s.id!), label: s.name }))
 
     // =========================
     // LOAD INITIAL DATA (EDIT MODE)

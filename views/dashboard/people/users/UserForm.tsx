@@ -106,10 +106,12 @@ const UserForm = ({
         }
     }
 
-    const storeOptions = storesData.map(store => ({
-        value: store.id,
-        label: store.name
-    }))
+    const storeOptions = storesData
+        .filter(store => store.id !== undefined)
+        .map(store => ({
+            value: String(store.id!),
+            label: store.name
+        }))
 
     return (
         <DashboardCard bodyClassName='p-5'>
