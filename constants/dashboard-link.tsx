@@ -161,25 +161,13 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 icon: <Cog6ToothIcon className='size-5' />,
                 text: 'Settings',
                 permissionKey: PermissionKey.MANAGE_SETTINGS
-            },
-            {
-                href: `${root}/languages`,
-                icon: <LanguageIcon className='size-5' />,
-                text: 'Languages',
-                permissionKey: PermissionKey.MANAGE_LANGUAGES
-            },
-            {
-                href: `${root}/dual-screen-settings`,
-                icon: <ComputerDesktopIcon className='size-5' />,
-                text: 'Dual Screen Settings',
-                permissionKey: PermissionKey.MANAGE_DUAL_SCREEN_SETTINGS
-            },
-            {
-                href: `${root}/templates`,
-                icon: <DocumentDuplicateIcon className='size-5' />,
-                text: 'Templates',
-                permissionKey: PermissionKey.MANAGE_EMAIL_TEMPLATES
-            },
+            }
+            // {
+            //     href: `${root}/templates`,
+            //     icon: <DocumentDuplicateIcon className='size-5' />,
+            //     text: 'Templates',
+            //     permissionKey: PermissionKey.MANAGE_EMAIL_TEMPLATES
+            // },
         ],
     },
 ];
