@@ -39,15 +39,29 @@ export const canView = (
  * @param permissions - User permissions object
  * @returns Filtered array of links
  */
-export const filterLinksByPermissions = <T extends { permissionKey?: string }>(
+export const filterLinksByPermissions = <T extends { permissionKey?: string; children?: T[] }>(
   links: T[],
   permissions: UserPermissions | null | undefined
 ): T[] => {
   if (!permissions) return links;
   
   return links.filter(link => {
-    if (!link.permissionKey) return true;
-    return canView(permissions, link.permissionKey);
+    if (!link.permissionKey) {
+      // If no permission key, check if it has children and filter them
+      if (link.children) {
+        const filteredChildren = filterLinksByPermissions(link.children, permissions);
+        return filteredChildren.length > 0;
+      }
+      return true;
+    }
+    const hasPermission = canView(permissions, link.permissionKey);
+    
+    // If link has children, filter them too
+    if (hasPermission && link.children) {
+      (link as any).children = filterLinksByPermissions(link.children, permissions);
+    }
+    
+    return hasPermission;
   });
 };
 

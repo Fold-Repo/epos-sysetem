@@ -126,18 +126,13 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
                                         <div className="items-center block w-full h-auto grow basis-full pt-3">
                                             <ul className="flex flex-col pl-0 mb-0 list-none">
                                                 {filteredLinks.map((link, linkIndex) => {
-                                                    const isActive = link.href === root
-                                                        ? pathname === root
-                                                        : pathname === link.href || pathname.startsWith(link.href + '/')
-
                                                     return (
                                                         <li key={linkIndex} className="w-full">
                                                             <SidebarLink
-                                                                href={link.href}
-                                                                icon={link.icon}
-                                                                text={link.text}
-                                                                isActive={isActive}
+                                                                link={link}
                                                                 onClick={handleLinkClick}
+                                                                root={root}
+                                                                pathname={pathname}
                                                             />
                                                         </li>
                                                     )
