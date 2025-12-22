@@ -28,7 +28,7 @@ const getStatusColor = (status?: string): string => {
         case 'rejected':
             return 'bg-red-100 text-red-600'
         case 'pending':
-            return 'bg-yellow-100 text-yellow-600'
+            return 'bg-blue-100 text-blue-600'
         case 'paid':
             return 'bg-green-100 text-green-600'
         case 'cancelled':
@@ -51,6 +51,8 @@ const getStatusColor = (status?: string): string => {
             return 'bg-purple-100 text-purple-600'
         case 'unpaid':
             return 'bg-red-100 text-red-600'
+        case 'overdue':
+            return 'bg-purple-100 text-purple-600'
         case 'partial':
             return 'bg-yellow-100 text-yellow-600'
         default:

@@ -11,6 +11,7 @@ export * from "./sales";
 export * from "./people";
 export * from "./roles";
 export * from "./stores";
+export * from "./reports";
 export { default as CreateUserView } from "./people/users/create";
 export { default as EditUserView } from "./people/users/edit";
 export { default as CreateRoleView } from "./roles/create";

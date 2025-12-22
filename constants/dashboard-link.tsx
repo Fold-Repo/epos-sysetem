@@ -30,6 +30,7 @@ export interface DashboardLink {
     icon: React.ReactNode;
     text: string;
     permissionKey?: string;
+    children?: DashboardLink[];
 }
 
 export interface DashboardSection {
@@ -149,7 +150,69 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 href: `${root}/reports`,
                 icon: <ChartBarIcon className='size-5' />,
                 text: 'Reports',
-                permissionKey: PermissionKey.MANAGE_REPORTS
+                permissionKey: PermissionKey.MANAGE_REPORTS,
+                children: [
+                    {
+                        href: `${root}/reports/sales`,
+                        icon: <ChartPieIcon className='size-4' />,
+                        text: 'Sales Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/purchase`,
+                        icon: <TagIcon className='size-4' />,
+                        text: 'Purchase Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/inventory`,
+                        icon: <CubeIcon className='size-4' />,
+                        text: 'Inventory Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/customer`,
+                        icon: <UsersIcon className='size-4' />,
+                        text: 'Customer Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/products`,
+                        icon: <CubeIcon className='size-4' />,
+                        text: 'Products Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/expenses`,
+                        icon: <ReceiptRefundIcon className='size-4' />,
+                        text: 'Expenses Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/tax`,
+                        icon: <DocumentTextIcon className='size-4' />,
+                        text: 'Tax Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/profit-loss`,
+                        icon: <ChartBarIcon className='size-4' />,
+                        text: 'Profit & Loss',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/annual`,
+                        icon: <DocumentDuplicateIcon className='size-4' />,
+                        text: 'Annual Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                    {
+                        href: `${root}/reports/register`,
+                        icon: <DocumentTextIcon className='size-4' />,
+                        text: 'Register Report',
+                        permissionKey: PermissionKey.MANAGE_REPORTS
+                    },
+                ]
             },
         ],
     },
