@@ -1,12 +1,12 @@
 'use client'
 
-import { FilterBar, Pagination, StackIcon, TrashIcon, useDisclosure } from '@/components'
+import { FilterBar, Pagination, useDisclosure } from '@/components'
 import { DeleteModal } from '@/components/modal'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import CategoryTable from './CategoryTable'
-import { categoriesData } from './data'
-import { ProductCategoryType } from '@/types/category.type'
+import { Category } from '@/types/category.type'
 import AddCategoryModal from './AddCategoryModal'
+import { useGetCategories, useDeleteCategory } from '@/services'
 
 interface ProductCategoryViewProps {
     onAddClick?: (handler: () => void) => void
@@ -16,88 +16,59 @@ const ProductCategoryView = ({ onAddClick }: ProductCategoryViewProps) => {
     
     const { isOpen: isAddModalOpen, onOpen: onAddModalOpen, onClose: onAddModalClose } = useDisclosure()
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
-    const [deleteCategoryId, setDeleteCategoryId] = useState<string | undefined>(undefined)
-    const [isBulkDelete, setIsBulkDelete] = useState(false)
-    const [selectedCategories, setSelectedCategories] = useState<ProductCategoryType[]>([])
+    const [deleteCategoryId, setDeleteCategoryId] = useState<number | undefined>(undefined)
+    const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined)
+    const [searchValue, setSearchValue] = useState('')
+    const { data: categories, isLoading } = useGetCategories()
+    const deleteCategoryMutation = useDeleteCategory()
 
     useEffect(() => {
         if (onAddClick) {
             onAddClick(() => {
+                setEditingCategory(undefined)
                 onAddModalOpen()
             })
         }
     }, [onAddClick, onAddModalOpen])
 
-    const handleBulkDelete = () => {
-        if (selectedCategories.length > 0) {
-            setIsBulkDelete(true)
-            setDeleteCategoryId(undefined)
-            onDeleteModalOpen()
-        }
-    }
+    // ==============================
+    // Filtered categories
+    // ==============================
+    const filteredCategories = useMemo(() => {
+        if (!searchValue.trim()) return categories
+        
+        const searchLower = searchValue.toLowerCase()
+        return categories.filter(category => 
+            category.category_name.toLowerCase().includes(searchLower)
+        )
+    }, [categories, searchValue])
 
-    const handleDeleteCategory = (categoryId: string) => {
+    const handleDeleteCategory = (categoryId: number) => {
         setDeleteCategoryId(categoryId)
-        setIsBulkDelete(false)
         onDeleteModalOpen()
     }
 
-    const confirmDelete = async () => {
-        if (isBulkDelete && selectedCategories.length > 0) {
-            // ===========================
-            // Delete categories logic here
-            // ===========================
-            // await deleteCategories(selectedCategories.map(c => c.id))
-            setSelectedCategories([])
-        } else if (deleteCategoryId) {
-            // ===========================
-            // Delete category logic here
-            // ===========================
-            // await deleteCategory(deleteCategoryId)
-        }
+    const handleEdit = (category: Category) => {
+        setEditingCategory(category)
+        onAddModalOpen()
     }
 
-    const filterItems = [
-        ...(selectedCategories.length > 0 ? [{
-            type: 'button' as const,
-            label: 'Delete',
-            icon: <TrashIcon className="size-4 text-slate-400" />,
-            onPress: handleBulkDelete
-        }] : []),
-        {
-            type: 'dropdown' as const,
-            label: 'Status: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Active', key: 'active' },
-                { label: 'Inactive', key: 'inactive' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Status changed:', key)
-            }
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Sort By: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'Name (A-Z)', key: 'name_asc' },
-                { label: 'Name (Z-A)', key: 'name_desc' },
-                { label: 'Product Count (High to Low)', key: 'count_desc' },
-                { label: 'Product Count (Low to High)', key: 'count_asc' },
-                { label: 'Newest First', key: 'newest' },
-                { label: 'Oldest First', key: 'oldest' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Sort changed:', key)
-            }
+    const confirmDelete = async () => {
+        if (deleteCategoryId) {
+            return new Promise<void>((resolve) => {
+                deleteCategoryMutation.mutate(deleteCategoryId, {
+                    onSuccess: () => {
+                        onDeleteModalClose()
+                        setDeleteCategoryId(undefined)
+                        resolve()
+                    },
+                    onError: () => {
+                        resolve()
+                    }
+                })
+            })
         }
-    ]
+    }
 
     return (
         <>
@@ -105,34 +76,44 @@ const ProductCategoryView = ({ onAddClick }: ProductCategoryViewProps) => {
             <FilterBar
                 searchInput={{
                     placeholder: 'Search by category name',
-                    className: 'w-full md:w-72'
+                    className: 'w-full md:w-72',
+                    onSearch: (value) => setSearchValue(value)
                 }}
-                items={filterItems}
             />
 
             {/* ================= TABLE ================= */}
             <CategoryTable
-                data={categoriesData}
-                selectedCategories={selectedCategories}
-                onSelectionChange={setSelectedCategories}
+                data={filteredCategories}
+                isLoading={isLoading}
+                onEdit={handleEdit}
                 onDelete={handleDeleteCategory}
             />
 
             <Pagination
                 currentPage={1}
-                totalItems={100}
+                totalItems={filteredCategories?.length || 0}
                 itemsPerPage={25}
                 onPageChange={() => { }}
                 showingText="Categories"
             />
 
-            <AddCategoryModal isOpen={isAddModalOpen} onClose={onAddModalClose} />
+            <AddCategoryModal 
+                isOpen={isAddModalOpen} 
+                onClose={() => {
+                    setEditingCategory(undefined)
+                    onAddModalClose()
+                }}
+                initialData={editingCategory}
+            />
 
             <DeleteModal
-                title={isBulkDelete ? `categories (${selectedCategories.length})` : "category"}
+                title="category"
                 open={isDeleteModalOpen}
                 setOpen={(value) => {
-                    if (!value) onDeleteModalClose()
+                    if (!value) {
+                        onDeleteModalClose()
+                        setDeleteCategoryId(undefined)
+                    }
                 }}
                 onDelete={confirmDelete}
             />

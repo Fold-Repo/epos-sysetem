@@ -40,46 +40,48 @@ const RegStepOne: React.FC<RegStepOneProps> = ({ onNextStep, formData }) => {
                     formGroupClass='col-span-2'
                     label={createInputLabel({ name: "Business Name", required: true })}
                     placeholder="Enter your business name"
-                    {...register('businessName')}
-                    error={errors.businessName?.message as string}
+                    {...register('businessname')}
+                    error={errors.businessname?.message as string}
                 />
 
                 <Select
                     label={createInputLabel({ name: "Type of Business", required: true })}
-                    {...register('businessType')}
-                    error={errors.businessType?.message as string}>
+                    {...register('businesstype')}
+                    error={errors.businesstype?.message as string}>
                     <option value="" disabled selected>Select business type</option>
-                    <option value="sole-proprietorship">Sole Proprietorship</option>
-                    <option value="partnership">Partnership</option>
-                    <option value="corporation">Corporation</option>
-                    <option value="llc">Limited Liability Company (LLC)</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Wholesale">Wholesale</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Service">Service</option>
+                    <option value="Other">Other</option>
                 </Select>
 
                 <Input
-                    label={createInputLabel({ name: "Tax Identification Number", required: true })}
-                    placeholder="If any"
-                    {...register('taxId')}
-                    error={errors.taxId?.message as string}
+                    label={createInputLabel({ name: "Tax Identification Number (TIN)", required: true })}
+                    placeholder="Enter your tax identification number"
+                    {...register('tin')}
+                    error={errors.tin?.message as string}
                 />
 
                 <Input
                     formGroupClass='col-span-2'
                     label={createInputLabel({ name: "Website (Optional)", required: false })}
-                    placeholder="If any"
+                    placeholder="Enter your website"
                     {...register('website')}
+                    type="url"
                     error={errors.website?.message as string}
                 />
 
                 <Input
                     formGroupClass='col-span-2'
-                    label={createInputLabel({ name: "Business registration number", required: false })}
+                    label={createInputLabel({ name: "Business registration number", required: true })}
                     placeholder="Business registration number"
-                    {...register('businessRegistrationNumber')}
-                    error={errors.businessRegistrationNumber?.message as string}
+                    {...register('business_registration_number')}
+                    error={errors.business_registration_number?.message as string}
                 />
             </div>
 
-            <Button type="submit" radius='md' className='bg-deep-purple text-white w-full 
+            <Button type="submit" radius='md' className='bg-primary text-white w-full 
             mt-7 text-xs h-11' isLoading={isSubmitting}>
                 Next
             </Button>

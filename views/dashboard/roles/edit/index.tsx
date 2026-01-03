@@ -2,14 +2,15 @@
 
 import { DashboardBreadCrumb, DashboardCard } from '@/components'
 import RoleForm from '../RoleForm'
-import { useToast, useGoBack } from '@/hooks'
-import { rolesData } from '@/data/roles'
+import { useGoBack } from '@/hooks'
+import { useUpdateRole, useGetRolePermissionsList, useGetRolePermissions, transformPermissionsToAPI } from '@/services'
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { RoleType } from '@/types'
+import { Spinner } from '@heroui/react'
 
 interface RoleFormData {
     name: string
+    description: string
     permissions: {
         [key: string]: {
             view: boolean
@@ -24,10 +25,14 @@ const EditRoleView = () => {
     const params = useParams()
     const roleId = params?.id as string
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
+    const { data: permissionsData } = useGetRolePermissionsList()
+    const { data: roleData, isLoading: isLoadingPermissions } = useGetRolePermissions(roleId)
+    const updateRoleMutation = useUpdateRole()
+
     const [initialData, setInitialData] = useState<{
+        id?: number
         name?: string
+        description?: string
         permissions?: {
             [key: string]: {
                 view: boolean
@@ -39,76 +44,58 @@ const EditRoleView = () => {
     } | undefined>(undefined)
 
     useEffect(() => {
-        // Find role by ID
-        const role = rolesData.find(r => String(r.id) === String(roleId))
-        
-        if (role) {
-            // Mock permissions data - in real app, this would come from API
-            const mockPermissions: {
-                [key: string]: {
-                    view: boolean
-                    create: boolean
-                    update: boolean
-                    delete: boolean
-                }
-            } = {}
-            
-            // Set some default permissions based on role name
-            const permissionKeys = [
-                'manageDashboard', 'manageProducts', 'manageUsers', 
-                'manageRoles', 'manageReports', 'manageSettings'
-            ]
-            
-            permissionKeys.forEach(key => {
-                mockPermissions[key] = {
-                    view: true,
-                    create: role.name === 'Admin' || role.name === 'Manager',
-                    update: role.name === 'Admin' || role.name === 'Manager',
-                    delete: role.name === 'Admin'
-                }
-            })
-            
+        if (roleData && roleId) {
+            // ==============================
+            // Set initial data with fetched role data and permissions
+            // ==============================
             setInitialData({
-                name: role.name,
-                permissions: mockPermissions
+                id: Number(roleId),
+                name: roleData.name,
+                description: roleData.description || '',
+                permissions: roleData.permissions || {}
             })
         }
-        
-        setIsLoading(false)
-    }, [roleId])
+    }, [roleData, roleId])
 
     const handleSubmit = (formData: RoleFormData) => {
         try {
-            console.log('Update role:', roleId, formData)
-            showSuccess('Role updated', 'Role updated successfully.')
-            goBack()
+            if (!permissionsData?.data) {
+                console.error('Permissions data not available')
+                return
+            }
+
+            if (!roleId) {
+                console.error('Role ID not available')
+                return
+            }
+
+            const apiPermissions = transformPermissionsToAPI(formData.permissions, permissionsData.data)
+
+            const payload = {
+                name: formData.name,
+                description: formData.description,
+                permissions: apiPermissions
+            }
+
+            updateRoleMutation.mutate({
+                id: Number(roleId),
+                roleData: payload
+            }, {
+                onSuccess: () => {
+                    goBack()
+                }
+            })
         } catch (error) {
-            showError('Failed to update role', 'Please try again later.')
+            console.error('Form submission error:', error)
         }
     }
 
-    if (isLoading) {
-        return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">Loading...</div>
-                </DashboardCard>
-            </div>
-        )
-    }
-
-    if (!initialData) {
-        return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">Role not found</div>
-                </DashboardCard>
-            </div>
-        )
-    }
+    if (isLoadingPermissions) 
+        return <Spinner className='flex items-center justify-center min-h-[80vh]' color='primary' size='lg' />
 
     return (
         <>
+
             <DashboardBreadCrumb
                 items={[
                     { label: 'Roles & Permissions', href: '/dashboard/roles-permissions' },
@@ -118,14 +105,9 @@ const EditRoleView = () => {
             />
 
             <div className="p-3 space-y-2">
-                <RoleForm
-                    mode="edit"
-                    initialData={initialData}
-                    onSubmit={handleSubmit}
-                    onCancel={goBack}
-                    submitButtonText="Update"
-                />
+                <RoleForm mode="edit" initialData={initialData} onSubmit={handleSubmit} onCancel={goBack} submitButtonText="Update" isLoading={updateRoleMutation.isPending} />
             </div>
+
         </>
     )
 }

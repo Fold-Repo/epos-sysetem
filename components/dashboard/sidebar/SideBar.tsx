@@ -5,10 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { Button } from '@heroui/react';
+import { Button, useDisclosure } from '@heroui/react';
 import SidebarLink from './SidebarLink';
 import { LOGO, DashboardSection } from '@/constants';
-import { LogoutIcon } from '@/components/icons';
+import { LogoutIcon, LogoutModal } from '@/components';
 import { UserPermissions } from '@/types';
 import { filterLinksByPermissions } from '@/utils';
 
@@ -25,6 +25,7 @@ interface SidebarProps {
 const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, permissions }) => {
 
     const pathname = usePathname()
+    const { isOpen: isLogoutOpen, onOpen: openLogoutModal, onClose: closeLogoutModal } = useDisclosure()
     
     // ===============================================
     // Expanded Sections
@@ -150,7 +151,9 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
                     {/*  ================= LOGOUT ================= */}
                     <div className="px-5 py-2.5 w-full mt-auto border-t border-[#0B12211A]">
 
-                        <Button fullWidth variant="light" className='flex items-center justify-start'>
+                        <Button fullWidth variant="light" 
+                            className='flex items-center justify-start'
+                            onPress={openLogoutModal}>
                             <LogoutIcon className="text-[#0B1221]" />
                             <span className="text-sm text-text-color">Logout</span>
                         </Button>
@@ -160,6 +163,8 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
                 </div>
 
             </aside>
+
+            <LogoutModal open={isLogoutOpen} close={closeLogoutModal} />
 
         </>
     )

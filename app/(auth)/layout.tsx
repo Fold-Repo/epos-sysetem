@@ -2,7 +2,7 @@
 
 import { Chip } from '@heroui/react'
 import { usePathname } from 'next/navigation'
-import React from 'react'
+import React, { Suspense } from 'react'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
 
@@ -13,7 +13,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const layer_one = signupLayoutPaths.some(path => pathname?.includes(path))
 
     return (
-        <>
+        <Suspense>
             {layer_one ? (
                 <div className='relative flex flex-col lg:flex-row min-h-screen'>
 
@@ -88,7 +88,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     </div>
                 </div>
             )}
-        </>
+        </Suspense>
     )
 }
 

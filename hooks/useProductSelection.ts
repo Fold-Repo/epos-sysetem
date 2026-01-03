@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useCallback } from 'react'
 import { useToast } from './useToast'
 import { ProductType } from '@/types'

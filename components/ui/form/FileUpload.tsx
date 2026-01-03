@@ -40,6 +40,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     onChange,
     accept,
     value,
+    multiple = true,
     ...props
 }) => {
     
@@ -71,7 +72,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 newFiles.push(file);
             });
 
-            const updatedFiles = [...files, ...newFiles];
+            // If multiple is false, replace files instead of appending
+            const updatedFiles = multiple ? [...files, ...newFiles] : newFiles;
             setFiles(updatedFiles);
             
             // Update the input element's files
@@ -129,7 +131,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 className="hidden"
                 onChange={handleChange}
                 accept={acceptValue}
-                multiple
+                multiple={multiple}
                 {...props}
             />
 

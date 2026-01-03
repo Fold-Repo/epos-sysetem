@@ -16,6 +16,7 @@ export { default as CreateUserView } from "./people/users/create";
 export { default as EditUserView } from "./people/users/edit";
 export { default as CreateRoleView } from "./roles/create";
 export { default as EditRoleView } from "./roles/edit";
+export { default as CreateProductView } from "./products/create";
 export { default as SettingsView } from "./settings";
 
 export {

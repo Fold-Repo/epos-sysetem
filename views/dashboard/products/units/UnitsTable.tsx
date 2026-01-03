@@ -1,31 +1,33 @@
 import { TableCell, TableComponent, MenuDropdown } from '@/components'
-import { ProductUnitType } from '@/types/unit.type'
+import { Unit } from '@/types/unit.type'
 import { EllipsisVerticalIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { TrashIcon } from '@/components/icons'
 
 interface UnitsTableProps {
-    data: ProductUnitType[]
-    selectedUnits?: ProductUnitType[]
-    onSelectionChange?: (selected: ProductUnitType[]) => void
-    onDelete?: (unitId: string) => void
+    data: Unit[]
+    isLoading?: boolean
+    onEdit?: (unit: Unit) => void
+    onDelete?: (unitId: number) => void
 }
 
 const columns = [
-    { key: 'name', title: 'Name', className: 'px-0' },
-    { key: 'shortName', title: 'Short Name' },
-    { key: 'baseName', title: 'Base Name' },
-    { key: 'created_at', title: 'Created On' },
+    { key: 'name', title: 'Name' },
+    { key: 'short_name', title: 'Short Name' },
     { key: 'actions', title: 'Action' }
 ]
 
-// Helper function to get initial letter(s) for icon
+// ==============================
+// Helper functions
+// ==============================
 const getInitials = (name: string): string => {
     if (name.length <= 2) return name.toUpperCase()
     return name.substring(0, 2).toUpperCase()
 }
 
-// Helper function to get color based on name
+// ==============================
+// Helper functions
+// ==============================
 const getColorForName = (name: string): string => {
     const colors = [
         'bg-purple-500',
@@ -39,17 +41,19 @@ const getColorForName = (name: string): string => {
     return colors[index]
 }
 
-const UnitsTable = ({ data, onSelectionChange, onDelete }: UnitsTableProps) => {
+const UnitsTable = ({ data, isLoading = false, onEdit, onDelete }: UnitsTableProps) => {
 
-    const renderRow = (unit: ProductUnitType) => {
+    const renderRow = (unit: Unit) => {
+
         const initials = getInitials(unit.name)
         const colorClass = getColorForName(unit.name)
         
         return (
             <>
-                <TableCell className='px-0'>
+                <TableCell>
                     <div className="flex items-center gap-2">
-                        <div className={`${colorClass} size-8 rounded flex items-center justify-center text-white text-xs font-medium`}>
+                        <div className={`${colorClass} size-8 rounded-lg flex items-center justify-center 
+                        text-white text-[11px] font-medium`}>
                             {initials}
                         </div>
                         <span className='text-xs font-medium'>
@@ -59,33 +63,7 @@ const UnitsTable = ({ data, onSelectionChange, onDelete }: UnitsTableProps) => {
                 </TableCell>
 
                 <TableCell>
-                    <span className='text-xs'>{unit.shortName}</span>
-                </TableCell>
-
-                <TableCell>
-                    <span className='text-xs'>{unit.baseName}</span>
-                </TableCell>
-
-                <TableCell>
-                    <span className='text-xs'>
-                        {unit.created_at instanceof Date
-                            ? unit.created_at.toLocaleString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                            })
-                            : new Date(unit.created_at).toLocaleString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                            })}
-                    </span>
+                    <span className='text-xs'>{unit.short_name}</span>
                 </TableCell>
 
                 <TableCell>
@@ -110,7 +88,7 @@ const UnitsTable = ({ data, onSelectionChange, onDelete }: UnitsTableProps) => {
                         ]}
                         onChange={(key) => {
                             if (key === 'edit') {
-                                console.log('Edit unit:', unit)
+                                onEdit?.(unit)
                             } else if (key === 'delete') {
                                 onDelete?.(unit.id)
                             }
@@ -126,11 +104,10 @@ const UnitsTable = ({ data, onSelectionChange, onDelete }: UnitsTableProps) => {
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => item.id}
+            rowKey={(item) => String(item.id)}
             renderRow={renderRow}
-            withCheckbox={true}
-            onSelectionChange={onSelectionChange}
-            loading={false}
+            withCheckbox={false}
+            loading={isLoading}
         />
     )
 }

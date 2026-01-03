@@ -12,6 +12,9 @@ import Link from 'next/link';
 import { Stepper } from '@/components';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks';
+import { register } from '@/services';
+import { getErrorMessage, setCookie } from '@/utils';
+import { EMAIL_ADDRESS_KEY } from '@/types';
 
 interface Step {
     id: number;
@@ -20,16 +23,18 @@ interface Step {
         onPrevStep?: () => void;
         onSubmit?: (data: any) => void;
         formData?: Record<string, any>;
+        loading?: boolean;
     }>;
 }
 
 const SignUpView = () => {
 
     const router = useRouter();
+    const [loading, setLoading] = useState<boolean>(false);
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [formData, setFormData] = useState<Record<string, any>>({});
 
-    const { showSuccess } = useToast();
+    const { showSuccess, showError } = useToast();
 
     const steps: Step[] = [
         { id: 1, component: RegStepOne },
@@ -64,11 +69,50 @@ const SignUpView = () => {
         }
     };
 
-    const handleFinalSubmit = (stepData: any) => {
-        const allFormData = { ...formData, ...stepData };
-        console.log('Final submission (all form data):', allFormData);
-        showSuccess('Registration successful 🎉');
-        router.push('/verify');
+    const handleFinalSubmit = async (stepData: any) => {
+        try {
+
+            const allFormData = { ...formData, ...stepData };
+            
+            const payload = {
+                businessname: allFormData.businessname,
+                businesstype: allFormData.businesstype,
+                tin: allFormData.tin,
+                website: allFormData.website || null,
+                business_registration_number: allFormData.business_registration_number || null,
+                firstname: allFormData.firstname,
+                lastname: allFormData.lastname,
+                email: allFormData.email,
+                password: allFormData.password,
+                phone: allFormData.phone,
+                altphone: allFormData.altphone || null,
+                product_service: allFormData.product_service,
+                product_description: allFormData.product_description,
+                product_brochure: null,
+                terms_condition: allFormData.terms_condition,
+                certify_correct_data: allFormData.certify_correct_data,
+                role: allFormData.role || 'business',
+                position: allFormData.position || 'Owner',
+                addressline1: allFormData.addressline1,
+                addressline2: allFormData.addressline2 || null,
+                addressline3: allFormData.addressline3 || null,
+                city: allFormData.city,
+                postcode: allFormData.postcode,
+            };
+
+            setLoading(true);
+
+            const response = await register(payload);
+            setCookie(EMAIL_ADDRESS_KEY, allFormData.email);
+            showSuccess(response.data.message || 'Registration successful! Please verify your email.');
+            router.replace('/verify');
+
+        } catch (error) {
+            const errorMessage = getErrorMessage(error);
+            showError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const renderStepContent = () => {
@@ -82,6 +126,7 @@ const SignUpView = () => {
                     onPrevStep={handlePrevStep}
                     onSubmit={handleFinalSubmit}
                     formData={formData}
+                    loading={loading}
                 />
             );
         }

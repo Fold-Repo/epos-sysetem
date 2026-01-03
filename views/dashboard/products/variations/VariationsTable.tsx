@@ -1,52 +1,32 @@
 import { TableCell, TableComponent, MenuDropdown } from '@/components'
-import { ProductVariationType, VariationTypeItem } from '@/types/variation.type'
+import { Variation } from '@/types/variation.type'
 import { EllipsisVerticalIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { TrashIcon } from '@/components/icons'
 import { Chip } from '@heroui/react'
+import moment from 'moment'
 
 interface VariationsTableProps {
-    data: ProductVariationType[]
-    selectedVariations?: ProductVariationType[]
-    onSelectionChange?: (selected: ProductVariationType[]) => void
-    onDelete?: (variationId: string) => void
+    data: Variation[]
+    isLoading?: boolean
+    onEdit?: (variation: Variation) => void
+    onDelete?: (variationId: number) => void
 }
 
 const columns = [
-    { key: 'variation', title: 'Variation Name', className: 'px-0' },
-    { key: 'types', title: 'Variation Types' },
+    { key: 'variation', title: 'Variation Name' },
+    { key: 'types', title: 'Options' },
     { key: 'created_at', title: 'Date Created' },
-    { key: 'last_modified', title: 'Last modified' },
+    { key: 'updated_at', title: 'Last Modified' },
     { key: 'actions', title: 'Action' }
 ]
 
-// Helper function to determine text color based on background color
-const getContrastColor = (hexColor: string): string => {
-    // Remove # if present
-    const hex = hexColor.replace('#', '')
-    // Convert to RGB
-    const r = parseInt(hex.substring(0, 2), 16)
-    const g = parseInt(hex.substring(2, 4), 16)
-    const b = parseInt(hex.substring(4, 6), 16)
-    // Calculate luminance
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-    // Return white for dark colors, black for light colors
-    return luminance > 0.5 ? '#000000' : '#FFFFFF'
-}
+const VariationsTable = ({ data, isLoading = false, onEdit, onDelete }: VariationsTableProps) => {
 
-const VariationsTable = ({ data, onSelectionChange, onDelete }: VariationsTableProps) => {
-
-    const getVariationDisplay = (item: VariationTypeItem) => {
-        if (typeof item === 'string') {
-            return { name: item, color: undefined }
-        }
-        return { name: item.name, color: item.color }
-    }
-
-    const renderRow = (variation: ProductVariationType) => {
+    const renderRow = (variation: Variation) => {
         return (
             <>
-                <TableCell className='px-0'>
+                <TableCell>
                     <span className='text-xs font-medium'>
                         {variation.name}
                     </span>
@@ -54,40 +34,29 @@ const VariationsTable = ({ data, onSelectionChange, onDelete }: VariationsTableP
 
                 <TableCell>
                     <div className="flex flex-wrap gap-1.5">
-                        {variation.variationTypes.map((item, index) => {
-                            const { name, color } = getVariationDisplay(item)
-                            const isColor = variation.type === 'Color' && color
-                            
-                            return (
-                                <Chip 
-                                    key={index} 
-                                    size="sm" 
-                                    variant="flat"
-                                    style={isColor ? { 
-                                        backgroundColor: color,
-                                        color: getContrastColor(color)
-                                    } : undefined}
-                                    className={!isColor ? 'bg-gray-100 text-gray-700' : ''}>
-                                    {name}
-                                </Chip>
-                            )
-                        })}
+                        {variation.options.map((option) => (
+                            <Chip 
+                                key={option.id} 
+                                size="sm" 
+                                variant="flat"
+                                className='bg-gray-100 text-gray-700'>
+                                {option.option}
+                            </Chip>
+                        ))}
                     </div>
                 </TableCell>
 
                 <TableCell>
                     <span className='text-xs'>
-                        {variation.created_at instanceof Date
-                            ? variation.created_at.toLocaleDateString()
-                            : new Date(variation.created_at).toLocaleDateString()}
+                        {moment(variation.created_at).format('lll')}
                     </span>
                 </TableCell>
 
                 <TableCell>
                     <span className='text-xs'>
-                        {variation.last_modified instanceof Date
-                            ? variation.last_modified.toLocaleDateString()
-                            : new Date(variation.last_modified).toLocaleDateString()}
+                        {variation.updated_at 
+                            ? moment(variation.updated_at).format('lll')
+                            : '-'}
                     </span>
                 </TableCell>
 
@@ -113,7 +82,7 @@ const VariationsTable = ({ data, onSelectionChange, onDelete }: VariationsTableP
                         ]}
                         onChange={(key) => {
                             if (key === 'edit') {
-                                console.log('Edit variation:', variation)
+                                onEdit?.(variation)
                             } else if (key === 'delete') {
                                 onDelete?.(variation.id)
                             }
@@ -129,11 +98,10 @@ const VariationsTable = ({ data, onSelectionChange, onDelete }: VariationsTableP
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => item.id}
+            rowKey={(item) => String(item.id)}
             renderRow={renderRow}
-            withCheckbox={true}
-            onSelectionChange={onSelectionChange}
-            loading={false}
+            withCheckbox={false}
+            loading={isLoading}
         />
     )
 }

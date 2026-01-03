@@ -1,43 +1,73 @@
 "use client"
 
-import { useState, useEffect } from 'react';
-import { PermissionKey, UserPermissions } from '@/types';
+import { useEffect, useState } from 'react';
+import { UserPermissions } from '@/types';
+import { useAppDispatch, useAppSelector, selectPermissions, setPermissions } from '@/store';
+import { getPermissions } from '@/services';
 
 /**
- * Hook to manage user permissions
- * In a real app, you would fetch this from your API/auth context
+ * Hook to manage user permissions with Redux
+ * Fetches permissions and stores them in Redux state
  */
 export const usePermissions = () => {
 
-  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
-  const [loading, setLoading] = useState(true);
+  // ===============================================
+  // Redux State
+  // ===============================================
+  const dispatch = useAppDispatch();
+  const permissions = useAppSelector(selectPermissions);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    
     // ===============================================
     // Fetch Permissions
     // ===============================================
     const fetchPermissions = async () => {
       try {
-        // TODO: Replace with actual API call or get from auth context
-        // Example: Fetch from API or get from auth context
-        // const response = await fetch('/api/user/permissions');
-        // const data = await response.json();
-        // setPermissions(data.permissions);
+        setLoading(true);
         
-        // For now, return null (no permissions filtering)
-        // When you have permissions, uncomment above and remove this:
-        setPermissions(null);
+        const response = await getPermissions();
+        
+        // Extract permissions from the first role in the data array
+        if (response.status === 200 && response.data && response.data.length > 0) {
+          const rawPermissions = response.data[0].permissions;
+          
+          // Convert all permission keys from snake_case to camelCase
+          // e.g., "manage_adjustments" -> "manageAdjustments"
+          const permissions: UserPermissions = {};
+          Object.keys(rawPermissions).forEach(key => {
+            const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+            permissions[camelKey] = rawPermissions[key];
+          });
+          
+          dispatch(setPermissions(permissions));
+        } else {
+          dispatch(setPermissions(null));
+        }
       } catch (error) {
         console.error('Error fetching permissions:', error);
-        setPermissions(null);
+        dispatch(setPermissions(null));
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPermissions();
-  }, []);
+    dispatch(setPermissions(null));
 
-  return { permissions, loading, setPermissions };
+    // ===============================================
+    // Fetch Permissions if not already loaded
+    // ===============================================
+    // if (permissions === null) {
+    //   fetchPermissions();
+    // }
+
+  }, [dispatch]);
+
+  return { 
+    permissions, 
+    loading, 
+    setPermissions: (perms: UserPermissions | null) => dispatch(setPermissions(perms))
+  };
 };
 

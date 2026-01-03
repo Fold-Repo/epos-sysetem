@@ -76,7 +76,7 @@ const ChangePasswordModal = ({ open, close }: ChangePasswordModalProps) => {
                         />
                     </div>
 
-                    <Button type="submit" fullWidth radius='md' className='text-xs bg-deep-purple text-white'
+                    <Button type="submit" fullWidth radius='md' className='text-xs bg- text-white'
                     isLoading={isSubmitting}>
                         Change Password
                     </Button>

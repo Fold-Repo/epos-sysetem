@@ -4,26 +4,25 @@ import { createInputLabel, Input, PopupModal, TextArea, PhoneInput } from '@/com
 import { Button } from '@heroui/react'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { SupplierType } from '@/types'
+import { Supplier } from '@/types/supplier.type'
 import { useEffect } from 'react'
-import { useToast } from '@/hooks'
 import { supplierSchema, SupplierFormData } from '@/schema'
+import { useCreateSupplier, useUpdateSupplier } from '@/services'
 
 interface SupplierModalProps {
     isOpen: boolean
     onClose: () => void
-    mode?: 'add' | 'edit'
-    initialData?: SupplierType
+    initialData?: Supplier
 }
 
 const SupplierModal = ({
     isOpen,
     onClose,
-    mode = 'add',
     initialData
 }: SupplierModalProps) => {
 
-    const { showSuccess } = useToast()
+    const createSupplierMutation = useCreateSupplier()
+    const updateSupplierMutation = useUpdateSupplier()
 
     const {
         register,
@@ -38,8 +37,6 @@ const SupplierModal = ({
             name: initialData?.name || '',
             email: initialData?.email || '',
             phone: initialData?.phone || '',
-            country: initialData?.country || '',
-            city: initialData?.city || '',
             address: initialData?.address || ''
         }
     })
@@ -50,8 +47,6 @@ const SupplierModal = ({
                 name: initialData?.name || '',
                 email: initialData?.email || '',
                 phone: initialData?.phone || '',
-                country: initialData?.country || '',
-                city: initialData?.city || '',
                 address: initialData?.address || ''
             })
         }
@@ -59,15 +54,31 @@ const SupplierModal = ({
 
     const handleFormSubmit = async (data: SupplierFormData) => {
         try {
-            if (mode === 'edit' && initialData) {
-                console.log('Update supplier:', initialData.id, data)
-                showSuccess('Supplier updated', 'Supplier updated successfully.')
-            } else {
-                console.log('Create supplier:', data)
-                showSuccess('Supplier created', 'Supplier created successfully.')
+            const payload = {
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                address: data.address
             }
-            onClose()
-            reset()
+
+            if (initialData) {
+                updateSupplierMutation.mutate({
+                    id: initialData.supplier_id,
+                    supplierData: payload
+                }, {
+                    onSuccess: () => {
+                        onClose()
+                        reset()
+                    }
+                })
+            } else {
+                createSupplierMutation.mutate(payload, {
+                    onSuccess: () => {
+                        onClose()
+                        reset()
+                    }
+                })
+            }
         } catch (error) {
             console.error('Form submission error:', error)
         }
@@ -81,8 +92,8 @@ const SupplierModal = ({
             onClose={onClose}
             placement="center"
             className='max-h-[95vh]'
-            title={mode === 'edit' ? 'Edit Supplier' : 'Add Supplier'}
-            description={mode === 'edit' ? 'Update supplier information' : 'Add a new supplier'}
+            title={initialData ? 'Edit Supplier' : 'Add Supplier'}
+            description={initialData ? 'Update supplier information' : 'Add a new supplier'}
             bodyClassName='p-5'
             footer={
                 <Button
@@ -90,14 +101,14 @@ const SupplierModal = ({
                     type='submit'
                     className='h-10 px-6'
                     color="primary"
-                    isLoading={isSubmitting}
+                    isLoading={isSubmitting || createSupplierMutation.isPending || updateSupplierMutation.isPending}
                     onPress={() => {
                         const form = document.querySelector('form')
                         if (form) {
                             form.requestSubmit()
                         }
                     }}>
-                    {mode === 'edit' ? 'Update Supplier' : 'Save Supplier'}
+                    {initialData ? 'Update Supplier' : 'Save Supplier'}
                 </Button>
             }>
 
@@ -116,19 +127,28 @@ const SupplierModal = ({
                         />
 
                         <Input
-                            label="Email:"
+                            label={createInputLabel({
+                                name: "Email",
+                                required: true
+                            })}
                             type="email"
                             placeholder="Enter Email"
                             {...register('email')}
                             error={errors.email?.message as string}
                         />
+                    </div>
 
+                    {/* Right Column */}
+                    <div className="space-y-4">
                         <Controller
                             name="phone"
                             control={control}
                             render={({ field }) => (
                                 <PhoneInput
-                                    label="Phone:"
+                                    label={createInputLabel({
+                                        name: "Phone",
+                                        required: true
+                                    })}
                                     placeholder="Enter Phone"
                                     value={field.value || ''}
                                     onChange={field.onChange}
@@ -136,26 +156,12 @@ const SupplierModal = ({
                                 />
                             )}
                         />
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="space-y-4">
-                        <Input
-                            label="Country:"
-                            placeholder="Enter Country"
-                            {...register('country')}
-                            error={errors.country?.message as string}
-                        />
-
-                        <Input
-                            label="City:"
-                            placeholder="Enter City"
-                            {...register('city')}
-                            error={errors.city?.message as string}
-                        />
 
                         <TextArea
-                            label="Address:"
+                            label={createInputLabel({
+                                name: "Address",
+                                required: true
+                            })}
                             placeholder="Enter Address"
                             {...register('address')}
                             error={errors.address?.message as string}

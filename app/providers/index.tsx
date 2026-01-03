@@ -1,24 +1,29 @@
 'use client'
 
 import { InternetCheck } from '@/utils'
-import { PWAInstallPrompt } from '@/components'
 import { HeroUIProvider, ToastProvider } from '@heroui/react'
 import { ReactQueryProvider } from './ReactQueryProvider'
+import { store } from '@/store'
+import { Provider } from 'react-redux'
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <HeroUIProvider>
 
-            <ReactQueryProvider>
+            <Provider store={store}>
 
-                <ToastProvider placement='top-right' toastOffset={10} />
+                <ReactQueryProvider>
 
-                {children}
+                    <ToastProvider placement='top-right' toastOffset={10} />
 
-                <InternetCheck />
-                {/* <PWAInstallPrompt /> */}
+                    {children}
 
-            </ReactQueryProvider>
+                    <InternetCheck />
+                    {/* <PWAInstallPrompt /> */}
+
+                </ReactQueryProvider>
+
+            </Provider>
 
         </HeroUIProvider>
     )

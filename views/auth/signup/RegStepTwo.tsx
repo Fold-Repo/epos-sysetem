@@ -81,9 +81,9 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
         setShowAddressDropdown(false)
         setShowAddressFields(false)
         setValue('selectedAddress', '')
-        setValue('line1', '')
-        setValue('line2', '')
-        setValue('town', '')
+        setValue('addressline1', '')
+        setValue('addressline2', '')
+        setValue('addressline3', '')
         setValue('city', '')
     }
 
@@ -138,9 +138,9 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
             // ===========================================
             // Auto-populate Form Fields with Address Details
             // ===========================================
-            setValue('line1', addressDetails.line_1 || '')
-            setValue('line2', addressDetails.line_2 || '')
-            setValue('town', addressDetails.town_or_city || addressDetails.locality || '')
+            setValue('addressline1', addressDetails.line_1 || '')
+            setValue('addressline2', addressDetails.line_2 || '')
+            setValue('addressline3', addressDetails.line_3 || '')
             setValue('city', addressDetails.town_or_city || addressDetails.locality || '')
         }
     }, [addressDetails, setValue])
@@ -170,14 +170,23 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
             <div className="flex flex-col lg:grid grid-cols-1 lg:grid-cols-2 gap-3">
 
                 {/* =========================================== */}
-                {/* Primary Contact Person */}
+                {/* First Name */}
                 {/* =========================================== */}
                 <Input
-                    formGroupClass='col-span-2'
-                    label={createInputLabel({ name: "Primary Contact Person", required: true })}
-                    placeholder="Enter primary contact person"
-                    {...register('primaryContactPerson')}
-                    error={errors.primaryContactPerson?.message}
+                    label={createInputLabel({ name: "First Name", required: true })}
+                    placeholder="Enter first name"
+                    {...register('firstname')}
+                    error={errors.firstname?.message}
+                />
+
+                {/* =========================================== */}
+                {/* Last Name */}
+                {/* =========================================== */}
+                <Input
+                    label={createInputLabel({ name: "Last Name", required: true })}
+                    placeholder="Enter last name"
+                    {...register('lastname')}
+                    error={errors.lastname?.message}
                 />
 
                 {/* =========================================== */}
@@ -187,15 +196,15 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
                     label={createInputLabel({ name: "Email Address", required: true })}
                     placeholder="Enter email address"
                     type="email"
-                    {...register('emailAddress')}
-                    error={errors.emailAddress?.message}
+                    {...register('email')}
+                    error={errors.email?.message}
                 />
 
                 {/* =========================================== */}
                 {/* Phone Number */}
                 {/* =========================================== */}
                 <Controller
-                    name="phoneNumber"
+                    name="phone"
                     control={control}
                     render={({ field }) => (
                         <PhoneInput
@@ -203,7 +212,25 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
                             placeholder="Enter phone number"
                             value={field.value || ''}
                             onChange={field.onChange}
-                            error={errors.phoneNumber?.message}
+                            error={errors.phone?.message}
+                        />
+                    )}
+                />
+
+                {/* =========================================== */}
+                {/* Alternative Phone Number */}
+                {/* =========================================== */}
+                <Controller
+                    name="altphone"
+                    control={control}
+                    render={({ field }) => (
+                        <PhoneInput
+                            formGroupClass='col-span-2'
+                            label={createInputLabel({ name: "Alternative Phone Number (Optional)", required: false })}
+                            placeholder="Enter alternative phone number"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            error={errors.altphone?.message}
                         />
                     )}
                 />
@@ -231,16 +258,17 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
                         name="selectedAddress"
                         control={control}
                         render={({ field }) => (
-                            <Select 
+                            <Select
                                 formGroupClass='col-span-2'
                                 label={createInputLabel({ name: "Address", required: true })}
-                                {...field} 
+                                value={field.value || ''}
                                 onChange={(e) => {
                                     field.onChange(e)
                                     handleAddressSelect(e)
                                 }}
-                                error={errors.selectedAddress?.message}
-                            >
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                error={errors.selectedAddress?.message} >
                                 <option value="" disabled>Select Address</option>
                                 {addressSuggestions.map((suggestion, index) => (
                                     <option key={index} value={suggestion.id}>
@@ -255,43 +283,39 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
                 {/* =========================================== */}
                 {/* Address Fields */}
                 {/* =========================================== */}
-                {showAddressFields && addressDetails && (
-                    <>
+                <>
 
-                        <Input
-                            label='Line 1'
-                            placeholder="Enter line 1"
-                            {...register('line1')}
-                            error={errors.line1?.message}
-                            disabled
-                        />
+                    <Input
+                        formGroupClass='col-span-2'
+                        label='Address Line 1'
+                        placeholder="Enter address line 1"
+                        {...register('addressline1')}
+                        error={errors.addressline1?.message}
+                    />
 
-                        <Input
-                            label='Line 2'
-                            placeholder="Enter line 2"
-                            {...register('line2')}
-                            error={errors.line2?.message}
-                            disabled
-                        />
+                    <Input
+                        label='Address Line 2 (Optional)'
+                        placeholder="Enter address line 2"
+                        {...register('addressline2')}
+                        error={errors.addressline2?.message}
+                    />
 
-                        <Input
-                            label='Town'
-                            placeholder="Enter town"
-                            {...register('town')}
-                            error={errors.town?.message}
-                            disabled
-                        />
+                    <Input
+                        label='Address Line 3 (Optional)'
+                        placeholder="Enter address line 3"
+                        {...register('addressline3')}
+                        error={errors.addressline3?.message}
+                    />
 
-                        <Input
-                            label='City'
-                            placeholder="Enter city"
-                            {...register('city')}
-                            error={errors.city?.message}
-                            disabled
-                        />
-                        
-                    </>
-                )}
+                    <Input
+                        formGroupClass='col-span-2'
+                        label='City'
+                        placeholder="Enter city"
+                        {...register('city')}
+                        error={errors.city?.message}
+                    />
+                    
+                </>
             </div>
 
             {/* =========================================== */}
@@ -305,7 +329,7 @@ const RegStepTwo: React.FC<RegStepTwoProps> = ({ onNextStep, onPrevStep, formDat
                     Previous
                 </Button>
 
-                <Button type="submit" radius='md' className='bg-deep-purple text-white flex-1 
+                <Button type="submit" radius='md' className='bg-primary text-white flex-1 
                 text-xs h-11' isLoading={isSubmitting}>
                     Save & Next
                 </Button>

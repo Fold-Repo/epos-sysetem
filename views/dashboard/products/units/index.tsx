@@ -1,12 +1,12 @@
 'use client'
 
-import { FilterBar, Pagination, StackIcon, TrashIcon, useDisclosure } from '@/components'
+import { FilterBar, Pagination, useDisclosure } from '@/components'
 import { DeleteModal } from '@/components/modal'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import UnitsTable from './UnitsTable'
-import { unitsData } from './data'
-import { ProductUnitType } from '@/types/unit.type'
+import { Unit } from '@/types/unit.type'
 import AddUnitModal from './AddUnitModal'
+import { useGetUnits, useDeleteUnit } from '@/services'
 
 interface ProductUnitsViewProps {
     onAddClick?: (handler: () => void) => void
@@ -16,111 +16,105 @@ const ProductUnitsView = ({ onAddClick }: ProductUnitsViewProps) => {
     
     const { isOpen: isAddModalOpen, onOpen: onAddModalOpen, onClose: onAddModalClose } = useDisclosure()
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
-    const [deleteUnitId, setDeleteUnitId] = useState<string | undefined>(undefined)
-    const [isBulkDelete, setIsBulkDelete] = useState(false)
-    const [selectedUnits, setSelectedUnits] = useState<ProductUnitType[]>([])
+    const [deleteUnitId, setDeleteUnitId] = useState<number | undefined>(undefined)
+    const [editingUnit, setEditingUnit] = useState<Unit | undefined>(undefined)
+    const [searchValue, setSearchValue] = useState('')
+    const { data: units, isLoading } = useGetUnits()
+    const deleteUnitMutation = useDeleteUnit()
 
     useEffect(() => {
         if (onAddClick) {
             onAddClick(() => {
+                setEditingUnit(undefined)
                 onAddModalOpen()
             })
         }
     }, [onAddClick, onAddModalOpen])
 
-    const handleBulkDelete = () => {
-        if (selectedUnits.length > 0) {
-            setIsBulkDelete(true)
-            setDeleteUnitId(undefined)
-            onDeleteModalOpen()
-        }
-    }
+    // ==============================
+    // Filtered units
+    // ==============================
+    const filteredUnits = useMemo(() => {
+        if (!searchValue.trim()) return units
+        
+        const searchLower = searchValue.toLowerCase()
+        return units.filter(unit => 
+            unit.name.toLowerCase().includes(searchLower) ||
+            unit.short_name.toLowerCase().includes(searchLower)
+        )
+    }, [units, searchValue])
 
-    const handleDeleteUnit = (unitId: string) => {
+    const handleDeleteUnit = (unitId: number) => {
         setDeleteUnitId(unitId)
-        setIsBulkDelete(false)
         onDeleteModalOpen()
     }
 
-    const confirmDelete = async () => {
-        if (isBulkDelete && selectedUnits.length > 0) {
-            // ===========================
-            // Delete units logic here
-            // ===========================
-            console.log('Delete units:', selectedUnits.map(u => u.id))
-            // await deleteUnits(selectedUnits.map(u => u.id))
-            setSelectedUnits([])
-        } else if (deleteUnitId) {
-            // ===========================
-            // Delete unit logic here
-            // ===========================
-            console.log('Delete unit with id:', deleteUnitId)
-            // await deleteUnit(deleteUnitId)
-        }
-        onDeleteModalClose()
+    const handleEdit = (unit: Unit) => {
+        setEditingUnit(unit)
+        onAddModalOpen()
     }
 
-    const filterItems = [
-        ...(selectedUnits.length > 0 ? [{
-            type: 'button' as const,
-            label: 'Delete',
-            icon: <TrashIcon className="size-4 text-slate-400" />,
-            onPress: handleBulkDelete
-        }] : []),
-        {
-            type: 'dropdown' as const,
-            label: 'Sort By: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'Name (A-Z)', key: 'name_asc' },
-                { label: 'Name (Z-A)', key: 'name_desc' },
-                { label: 'Base Name (A-Z)', key: 'base_asc' },
-                { label: 'Base Name (Z-A)', key: 'base_desc' },
-                { label: 'Newest First', key: 'newest' },
-                { label: 'Oldest First', key: 'oldest' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Sort changed:', key)
-            }
+    const confirmDelete = async () => {
+        if (deleteUnitId) {
+            return new Promise<void>((resolve) => {
+                deleteUnitMutation.mutate(deleteUnitId, {
+                    onSuccess: () => {
+                        onDeleteModalClose()
+                        setDeleteUnitId(undefined)
+                        resolve()
+                    },
+                    onError: () => {
+                        resolve()
+                    }
+                })
+            })
         }
-    ]
+    }
 
     return (
         <>
             {/* ================= FILTER BAR ================= */}
             <FilterBar
                 searchInput={{
-                    placeholder: 'Search by unit name',
-                    className: 'w-full md:w-72'
+                    placeholder: 'Search by unit name or short name',
+                    className: 'w-full md:w-72',
+                    onSearch: (value) => setSearchValue(value)
                 }}
-                items={filterItems}
             />
 
             {/* ================= TABLE ================= */}
             <UnitsTable
-                data={unitsData}
-                selectedUnits={selectedUnits}
-                onSelectionChange={setSelectedUnits}
+                data={filteredUnits}
+                isLoading={isLoading}
+                onEdit={handleEdit}
                 onDelete={handleDeleteUnit}
             />
 
             <Pagination
                 currentPage={1}
-                totalItems={100}
+                totalItems={filteredUnits?.length || 0}
                 itemsPerPage={25}
                 onPageChange={() => { }}
                 showingText="Units"
             />
 
-            <AddUnitModal isOpen={isAddModalOpen} onClose={onAddModalClose} />
+            <AddUnitModal 
+                isOpen={isAddModalOpen} 
+                onClose={() => {
+                    setEditingUnit(undefined)
+                    onAddModalClose()
+                }}
+                initialData={editingUnit}
+            />
 
             <DeleteModal
-                title={isBulkDelete ? `units (${selectedUnits.length})` : "unit"}
+                title="unit"
                 open={isDeleteModalOpen}
                 setOpen={(value) => {
-                    if (!value) onDeleteModalClose()
+                    if (!value) {
+                        onDeleteModalClose()
+                        setDeleteUnitId(undefined)
+                    }
                 }}
                 onDelete={confirmDelete}
             />

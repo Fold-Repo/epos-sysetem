@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckBox, createInputLabel } from '@/components'
+import { CheckBox } from '@/components'
 import { CheckIcon } from '@/components/icons'
 import { Button } from '@heroui/react'
 import React from 'react'
@@ -12,6 +12,7 @@ interface RegStepFiveProps {
     onPrevStep?: () => void;
     onSubmit?: (data: any) => void;
     formData?: Record<string, any>;
+    loading?: boolean;
 }
 
 const termsConditions = [
@@ -22,19 +23,18 @@ const termsConditions = [
     "Notify us immediately of any changes to business information, certifications, or contact details.",
 ]
 
-const RegStepFive: React.FC<RegStepFiveProps> = ({ onPrevStep, onSubmit, formData }) => {
+const RegStepFive: React.FC<RegStepFiveProps> = ({ onPrevStep, onSubmit, formData, loading }) => {
     const {
         register,
         handleSubmit,
         control,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm({
         resolver: yupResolver(registrationStepFiveSchema),
         mode: 'onChange',
         defaultValues: {
-            agreeToTerms: false,
-            consentToMarketing: false,
-            certifyInformation: false,
+            terms_condition: '',
+            certify_correct_data: '',
             ...formData,
         }
     })
@@ -53,14 +53,14 @@ const RegStepFive: React.FC<RegStepFiveProps> = ({ onPrevStep, onSubmit, formDat
 
                 <div className="bg-yellow/10 border border-yellow/20 space-y-3 rounded-lg p-3">
                     <div className="space-y-0.5">
-                        <h3 className="text-base font-semibold text-gray-800">
+                        <h3 className="text-sm font-semibold text-gray-800">
                             Terms & Agreement
                         </h3>
-                        <p className="text-sm text-gray-600 mb-1">
+                        <p className="text-xs text-gray-600 mb-1">
                             Vendor Agreement Terms
                         </p>
                     </div>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-xs text-gray-700">
                         By submitting this vendor registration form, you agree to the
                         following terms and conditions:
                     </p>
@@ -69,21 +69,21 @@ const RegStepFive: React.FC<RegStepFiveProps> = ({ onPrevStep, onSubmit, formDat
                 <div className="space-y-3">
                     {termsConditions.map((condition, index) => (
                         <div key={index} className="flex items-start gap-3">
-                            <CheckIcon className="text-[#581C87] shrink-0 mt-0.5" />
-                            <p className="text-sm text-gray-700">{condition}</p>
+                            <CheckIcon className="text-[#581C87] shrink-0 mt-0.5 size-3" />
+                            <p className="text-xs text-gray-700">{condition}</p>
                         </div>
                     ))}
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-4">
 
                     <Controller
-                        name="agreeToTerms"
+                        name="terms_condition"
                         control={control}
                         render={({ field }) => (
                             <CheckBox
                                 formGroupClass='mb-3'
-                                name="agreeToTerms"
+                                name="terms_condition"
                                 label={
                                     <span className="text-sm text-gray-700">
                                         I have read and agree to the {' '}
@@ -92,38 +92,23 @@ const RegStepFive: React.FC<RegStepFiveProps> = ({ onPrevStep, onSubmit, formDat
                                         <strong className="text-deep-purple font-medium">Privacy Policy</strong>
                                     </span>
                                 }
-                                checked={field.value || false}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                error={errors.agreeToTerms?.message}
+                                checked={field.value === 'yes'}
+                                onChange={(e) => field.onChange(e.target.checked ? 'yes' : '')}
+                                error={errors.terms_condition?.message}
                             />
                         )}
                     />
 
                     <Controller
-                        name="consentToMarketing"
+                        name="certify_correct_data"
                         control={control}
                         render={({ field }) => (
                             <CheckBox
-                                formGroupClass='mb-2'
-                                name="consentToMarketing"
-                                label="I consent to receive marketing communications and business updates via email"
-                                checked={field.value || false}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                error={errors.consentToMarketing?.message}
-                            />
-                        )}
-                    />
-
-                    <Controller
-                        name="certifyInformation"
-                        control={control}
-                        render={({ field }) => (
-                            <CheckBox
-                                name="certifyInformation"
+                                name="certify_correct_data"
                                 label="I certify that all information provided is accurate and complete to the best of my knowledge"
-                                checked={field.value || false}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                error={errors.certifyInformation?.message}
+                                checked={field.value === 'yes'}
+                                onChange={(e) => field.onChange(e.target.checked ? 'yes' : '')}
+                                error={errors.certify_correct_data?.message}
                             />
                         )}
                     />
@@ -147,8 +132,8 @@ const RegStepFive: React.FC<RegStepFiveProps> = ({ onPrevStep, onSubmit, formDat
                 <Button 
                     type="submit" 
                     radius='md' 
-                    className='bg-deep-purple text-white flex-1 text-xs h-11'
-                    isLoading={isSubmitting}>
+                    className='bg-primary text-white flex-1 text-xs h-11'
+                    isLoading={loading}>
                     Submit Registration
                 </Button>
 

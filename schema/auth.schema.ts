@@ -1,62 +1,71 @@
 import * as yup from 'yup';
 
 export const registrationStepOneSchema = yup.object({
-    businessName: yup
+    businessname: yup
         .string()
         .required('Business name is required')
         .min(2, 'Business name must be at least 2 characters'),
-    businessType: yup
+    businesstype: yup
         .string()
-        .required('Type of business is required')
-        .oneOf(
-            ['sole-proprietorship', 'partnership', 'corporation', 'llc'],
-            'Please select a valid business type'
-        ),
-    taxId: yup
+        .required('Type of business is required'),
+    tin: yup
         .string()
-        .required('Tax Identification Number is required'),
+        .required('TIN is required')
+        .min(10, 'TIN must be at least 10 characters'),
     website: yup
         .string()
         .url('Please enter a valid website URL')
         .notRequired()
+        .nullable()
         .default(undefined),
-    businessRegistrationNumber: yup
+    business_registration_number: yup
         .string()
-        .notRequired()
-        .default(undefined),
+        .required('Business registration number is required'),
 }).required();
 
 export type RegistrationStepOneFormData = yup.InferType<typeof registrationStepOneSchema>;
 
 export const registrationStepTwoSchema = yup.object({
-    primaryContactPerson: yup
+    firstname: yup
         .string()
-        .required('Primary Contact Person is required')
-        .min(2, 'Primary Contact Person must be at least 2 characters'),
-    emailAddress: yup
+        .required('First name is required')
+        .min(2, 'First name must be at least 2 characters'),
+    lastname: yup
+        .string()
+        .required('Last name is required')
+        .min(2, 'Last name must be at least 2 characters'),
+    email: yup
         .string()
         .required('Email Address is required')
         .email('Please enter a valid email address'),
-    phoneNumber: yup
+    phone: yup
         .string()
         .required('Phone Number is required'),
+    altphone: yup
+        .string()
+        .notRequired()
+        .nullable()
+        .default(undefined),
     postcode: yup
         .string()
         .required('Postcode is required'),
     selectedAddress: yup
         .string()
-        .required('Please select an address'),
-    line1: yup
-        .string()
         .notRequired()
+        .nullable()
         .default(undefined),
-    line2: yup
+    addressline1: yup
+        .string()
+        .required('Address line 1 is required'),
+    addressline2: yup
         .string()
         .notRequired()
+        .nullable()
         .default(undefined),
-    town: yup
+    addressline3: yup
         .string()
         .notRequired()
+        .nullable()
         .default(undefined),
     city: yup
         .string()
@@ -66,16 +75,15 @@ export const registrationStepTwoSchema = yup.object({
 export type RegistrationStepTwoFormData = yup.InferType<typeof registrationStepTwoSchema>;
 
 export const registrationStepThreeSchema = yup.object({
-    categories: yup
-        .array()
-        .of(yup.string())
-        .min(1, 'Please select at least one category')
-        .required('Category of Goods/Services is required'),
-    description: yup
+    product_service: yup
+        .string()
+        .required('Product/Service is required')
+        .min(2, 'Product/Service must be at least 2 characters'),
+    product_description: yup
         .string()
         .required('Brief Description of Products/Services is required')
         .min(10, 'Description must be at least 10 characters'),
-    catalog: yup
+    product_brochure: yup
         .mixed()
         .notRequired()
         .nullable(),
@@ -99,18 +107,14 @@ export const registrationStepFourSchema = yup.object({
 }).required();
 
 export const registrationStepFiveSchema = yup.object({
-    agreeToTerms: yup
-        .boolean()
+    terms_condition: yup
+        .string()
         .required('You must agree to the Terms and Conditions')
-        .oneOf([true], 'You must agree to the Terms and Conditions'),
-    consentToMarketing: yup
-        .boolean()
-        .notRequired()
-        .default(false),
-    certifyInformation: yup
-        .boolean()
+        .oneOf(['yes'], 'You must agree to the Terms and Conditions'),
+    certify_correct_data: yup
+        .string()
         .required('You must certify that the information is accurate')
-        .oneOf([true], 'You must certify that the information is accurate'),
+        .oneOf(['yes'], 'You must certify that the information is accurate'),
 }).required();
 
 export type RegistrationStepFiveFormData = yup.InferType<typeof registrationStepFiveSchema>;
