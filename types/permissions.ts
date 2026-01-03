@@ -32,7 +32,6 @@ export interface PermissionsResponse {
 // Permission Keys
 // ===============================================
 export enum PermissionKey {
-
     // Dashboard
     MANAGE_DASHBOARD = 'manageDashboard',
 
@@ -44,11 +43,10 @@ export enum PermissionKey {
     MANAGE_ADJUSTMENTS = 'manageAdjustments',
     MANAGE_QUOTATIONS = 'manageQuotations',
     MANAGE_TRANSFERS = 'manageTransfers',
-    MANAGE_BRANDS = 'manageBrands',
 
     // People & Users
     MANAGE_USERS = 'manageUsers',
-    MANAGE_CUSTOMERS = 'manageCustomers',
+    MANAGE_SUPPLIERS = 'manageSuppliers',
 
     // Sales
     MANAGE_SALES = 'manageSales',
@@ -62,9 +60,7 @@ export enum PermissionKey {
 
     // Settings & Configuration
     MANAGE_SETTINGS = 'manageSettings',
-    MANAGE_LANGUAGES = 'manageLanguages',
-    MANAGE_DUAL_SCREEN_SETTINGS = 'manageDualScreenSettings',
     MANAGE_ROLES_PERMISSIONS = 'manageRolesPermissions',
-    MANAGE_EMAIL_TEMPLATES = 'manageEmailTemplates',
+
 }
 

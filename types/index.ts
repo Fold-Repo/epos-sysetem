@@ -21,3 +21,5 @@ export * from './expense-category.type';
 export * from './expense.type';
 export * from './role.type';
 export * from './store.type';
+export * from './auth.type';
+export * from './upload.type';

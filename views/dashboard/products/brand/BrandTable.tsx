@@ -1,75 +1,59 @@
 import { TableCell, TableComponent, MenuDropdown } from '@/components'
-import { ProductBrandType } from '@/types/brand.type'
+import { Brand } from '@/types/brand.type'
 import { EllipsisVerticalIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { TrashIcon } from '@/components/icons'
-import Image from 'next/image'
-import { StatusChip } from '@/components'
+import moment from 'moment'
 
 interface BrandTableProps {
-    data: ProductBrandType[]
-    selectedBrands?: ProductBrandType[]
-    onSelectionChange?: (selected: ProductBrandType[]) => void
-    onDelete?: (brandId: string) => void
+    data: Brand[]
+    isLoading?: boolean
+    onEdit?: (brand: Brand) => void
+    onDelete?: (brandId: number) => void
 }
 
 const columns = [
-    { key: 'brand', title: 'Brand', className: 'px-0' },
+    { key: 'brand', title: 'Brand' },
+    { key: 'short_name', title: 'Short Name' },
     { key: 'productCount', title: 'Product Count' },
     { key: 'created_at', title: 'Date Created' },
-    { key: 'last_modified', title: 'Last modified' },
-    { key: 'status', title: 'Status' },
+    { key: 'updated_at', title: 'Last Modified' },
     { key: 'actions', title: 'Action' }
 ]
 
-const BrandTable = ({ data, onSelectionChange, onDelete }: BrandTableProps) => {
+const BrandTable = ({ data, isLoading = false, onEdit, onDelete }: BrandTableProps) => {
 
-    const renderRow = (brand: ProductBrandType) => {
+    const renderRow = (brand: Brand) => {
         return (
             <>
-                <TableCell className='px-0'>
-                    <div className="flex items-center gap-2">
-                        {brand.image && (
-                            <Image 
-                                src={brand.image} 
-                                alt={brand.name}
-                                width={100} 
-                                height={100} 
-                                className='size-9 rounded-md' 
-                                loading='lazy' 
-                            />
-                        )}
-                        <span className='text-xs line-clamp-1'>
-                            {brand.name}
-                        </span>
-                    </div>
+                <TableCell>
+                    <span className='text-xs font-medium line-clamp-1'>
+                        {brand.name}
+                    </span>
                 </TableCell>
 
                 <TableCell>
-                    <span className='text-xs'>{brand.productCount}</span>
+                    <span className='text-xs'>{brand.short_name}</span>
+                </TableCell>
+
+                <TableCell>
+                    <span className='text-xs'>{brand.productCount ?? '-'}</span>
                 </TableCell>
 
                 <TableCell>
                     <span className='text-xs'>
-                        {brand.created_at instanceof Date
-                            ? brand.created_at.toLocaleDateString()
-                            : new Date(brand.created_at).toLocaleDateString()}
+                        {brand.created_at 
+                            ? moment(brand.created_at).format('lll')
+                            : '-'}
                     </span>
                 </TableCell>
 
                 <TableCell>
                     <span className='text-xs'>
-                        {brand.last_modified instanceof Date
-                            ? brand.last_modified.toLocaleDateString()
-                            : new Date(brand.last_modified).toLocaleDateString()}
+                        {brand.updated_at 
+                            ? moment(brand.updated_at).format('lll')
+                            : '-'}
                     </span>
-                </TableCell>
-
-                <TableCell>
-                    <StatusChip 
-                        status={brand.status} 
-                        label={brand.status === 'active' ? 'Active' : 'Inactive'}
-                    />
                 </TableCell>
 
                 <TableCell>
@@ -94,7 +78,7 @@ const BrandTable = ({ data, onSelectionChange, onDelete }: BrandTableProps) => {
                         ]}
                         onChange={(key) => {
                             if (key === 'edit') {
-                                console.log('Edit brand:', brand)
+                                onEdit?.(brand)
                             } else if (key === 'delete') {
                                 onDelete?.(brand.id)
                             }
@@ -110,11 +94,10 @@ const BrandTable = ({ data, onSelectionChange, onDelete }: BrandTableProps) => {
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => item.id}
+            rowKey={(item) => String(item.id)}
             renderRow={renderRow}
-            withCheckbox={true}
-            onSelectionChange={onSelectionChange}
-            loading={false}
+            withCheckbox={false}
+            loading={isLoading}
         />
     )
 }

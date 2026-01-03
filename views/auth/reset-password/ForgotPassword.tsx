@@ -7,6 +7,8 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { forgotPasswordSchema, ForgotPasswordFormData } from '@/schema/auth.schema'
 import { useToast } from '@/hooks'
+import { requestOTP } from '@/services'
+import { getErrorMessage } from '@/utils'
 
 interface ForgotPasswordProps {
     onNextStep?: (data: ForgotPasswordFormData) => void;
@@ -24,11 +26,12 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onNextStep }) => {
 
     const onSubmit = async (data: ForgotPasswordFormData) => {
         try {
-            showSuccess('OTP sent successfully, please check your email.');
+            const response = await requestOTP({ email: data.email });
+            showSuccess(response.data.message || 'OTP sent successfully, please check your email.');
             onNextStep?.(data)
         } catch (error) {
-            console.error('Form submission error:', error)
-            showError('Failed to send OTP, please try again later.');
+            const errorMessage = getErrorMessage(error);
+            showError(errorMessage);
         }
     }
 
@@ -47,7 +50,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onNextStep }) => {
             <Button
                 type="submit"
                 radius='md'
-                className='bg-deep-purple text-white w-full mt-6 text-xs h-11'
+                className='bg-primary text-white w-full mt-6 text-xs h-11'
                 isLoading={isSubmitting}
             >
                 Send Code

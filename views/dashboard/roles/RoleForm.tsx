@@ -1,13 +1,15 @@
 'use client'
 
-import { createInputLabel, Input, CheckBox, TableComponent, TableCell } from '@/components'
+import { createInputLabel, Input, TextArea, CheckBox, TableComponent, TableCell } from '@/components'
 import { Button, Switch } from '@heroui/react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useToast, useGoBack } from '@/hooks'
 import { DashboardCard } from '@/components'
+import { useGetRolePermissionsList } from '@/services'
+import { snakeToCamel, snakeToTitleCase } from '@/utils'
 import * as yup from 'yup'
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 interface PermissionModule {
     key: string
@@ -25,6 +27,7 @@ interface PermissionState {
 
 interface RoleFormData {
     name: string
+    description: string
     permissions: PermissionState
 }
 
@@ -34,43 +37,18 @@ const roleSchema = yup.object({
         .required('Role name is required')
         .min(2, 'Role name must be at least 2 characters')
         .max(100, 'Role name must not exceed 100 characters'),
+    description: yup
+        .string()
+        .max(100, 'Description must not exceed 500 characters')
+        .required('Description is required'),
 }).required()
-
-const permissionModules: PermissionModule[] = [
-    { key: 'manageAdjustments', label: 'Manage Adjustments' },
-    { key: 'manageBrands', label: 'Manage Brands' },
-    { key: 'manageCurrency', label: 'Manage Currency' },
-    { key: 'manageCustomers', label: 'Manage Customers' },
-    { key: 'manageDashboard', label: 'Manage Dashboard' },
-    { key: 'manageEmailTemplates', label: 'Manage Email Templates' },
-    { key: 'manageExpenseCategories', label: 'Manage Expense Categories' },
-    { key: 'manageExpenses', label: 'Manage Expenses' },
-    { key: 'manageLanguage', label: 'Manage Language' },
-    { key: 'managePosScreen', label: 'Manage Pos Screen' },
-    { key: 'manageProductCategories', label: 'Manage Product Categories' },
-    { key: 'manageProducts', label: 'Manage Products' },
-    { key: 'managePurchase', label: 'Manage Purchase' },
-    { key: 'managePurchaseReturn', label: 'Manage Purchase Return' },
-    { key: 'manageQuotations', label: 'Manage Quotations' },
-    { key: 'manageReports', label: 'Manage Reports' },
-    { key: 'manageRoles', label: 'Manage Roles' },
-    { key: 'manageSale', label: 'Manage Sale' },
-    { key: 'manageSaleReturn', label: 'Manage Sale Return' },
-    { key: 'manageSetting', label: 'Manage Setting' },
-    { key: 'manageSmsApis', label: 'Manage Sms Apis' },
-    { key: 'manageSmsTemplates', label: 'Manage Sms Templates' },
-    { key: 'manageSuppliers', label: 'Manage Suppliers' },
-    { key: 'manageTransfers', label: 'Manage Transfers' },
-    { key: 'manageUnits', label: 'Manage Units' },
-    { key: 'manageUsers', label: 'Manage Users' },
-    { key: 'manageVariations', label: 'Manage Variations' },
-    { key: 'manageWarehouses', label: 'Manage Warehouses' },
-]
 
 interface RoleFormProps {
     mode?: 'create' | 'edit'
     initialData?: {
+        id?: number
         name?: string
+        description?: string
         permissions?: PermissionState
     }
     onSubmit?: (data: RoleFormData) => void
@@ -82,36 +60,91 @@ interface RoleFormProps {
 
 const RoleForm = ({ mode = 'create', initialData, onSubmit, onCancel, submitButtonText = mode === 'edit' ? 'Update Role' : 'Save', cancelButtonText = 'Cancel', isLoading = false }: RoleFormProps) => {
 
-    const { showSuccess } = useToast()
     const goBack = useGoBack()
+    const { data: permissionsData, isLoading: isLoadingPermissions } = useGetRolePermissionsList()
     const [allPermissions, setAllPermissions] = useState(false)
 
-    const [permissions, setPermissions] = useState<PermissionState>(() => {
+    const permissionModules: PermissionModule[] = useMemo(() => {
+        if (!permissionsData?.data) return []
+        const uniquePermissions = new Set<string>()
+        permissionsData.data.forEach(item => {
+            if (item.permission) {
+                uniquePermissions.add(item.permission)
+            }
+        })
+        return Array.from(uniquePermissions)
+            .sort()
+            .map(permission => ({
+                key: snakeToCamel(permission),
+                label: snakeToTitleCase(permission)
+            }))
+    }, [permissionsData])
 
+    const [permissions, setPermissions] = useState<PermissionState>(() => {
         if (initialData?.permissions) {
             return initialData.permissions
         }
-
-        const initial: PermissionState = {}
-        permissionModules.forEach(module => {
-            initial[module.key] = {
-                view: false,
-                create: false,
-                update: false,
-                delete: false
-            }
-        })
-
-        return initial
+        return {}
     })
 
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<{ name: string }>({
-        resolver: yupResolver(roleSchema),
+    // Initialize permissions from API data or initialData
+    useEffect(() => {
+        // If we have initialData with permissions (edit mode), use those
+        if (initialData?.permissions && Object.keys(initialData.permissions).length > 0) {
+            setPermissions(initialData.permissions)
+            return
+        }
+
+        // Otherwise, initialize all permissions as false (create mode)
+        if (permissionsData?.data) {
+            const newPermissions: PermissionState = {}
+            permissionsData.data.forEach(item => {
+                if (item.permission) {
+                    // Ignore "create" privilege entries
+                    if (item.privilege === 'create') {
+                        return
+                    }
+
+                    const camelKey = snakeToCamel(item.permission)
+
+                    // Initialize all permissions as false
+                    if (!newPermissions[camelKey]) {
+                        newPermissions[camelKey] = {
+                            view: false,
+                            create: false,
+                            update: false,
+                            delete: false
+                        }
+                    }
+                }
+            })
+            setPermissions(newPermissions)
+        }
+    }, [permissionsData, initialData?.permissions])
+
+    interface FormData {
+        name: string;
+        description: string;
+    }
+
+    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
+        resolver: yupResolver(roleSchema) as any,
         mode: 'onChange',
         defaultValues: {
-            name: initialData?.name || ''
+            name: initialData?.name || '',
+            description: initialData?.description || ''
         }
     })
+
+    // Update form values when initialData changes (for edit mode)
+    useEffect(() => {
+        if (initialData?.name !== undefined || initialData?.description !== undefined) {
+            reset({
+                name: initialData.name || '',
+                description: initialData.description || ''
+            })
+        }
+    }, [initialData?.name, initialData?.description, reset])
 
     const handleAllPermissionsToggle = (checked: boolean) => {
         setAllPermissions(checked)
@@ -128,64 +161,106 @@ const RoleForm = ({ mode = 'create', initialData, onSubmit, onCancel, submitButt
     }
 
     const handleSelectAll = (moduleKey: string) => {
-
-        const modulePermissions = permissions[moduleKey]
+        const modulePermissions = permissions[moduleKey] || {
+            view: false,
+            create: false,
+            update: false,
+            delete: false
+        }
         const allSelected = modulePermissions.view && modulePermissions.create &&
             modulePermissions.update && modulePermissions.delete
 
+        // When toggling on, ensure view is enabled first
+        // When toggling off, disable everything
+        const newState = !allSelected
         setPermissions(prev => ({
             ...prev,
             [moduleKey]: {
-                view: !allSelected,
-                create: !allSelected,
-                update: !allSelected,
-                delete: !allSelected
+                view: newState,
+                create: newState,
+                update: newState,
+                delete: newState
             }
         }))
     }
 
     const handlePermissionChange = (moduleKey: string, action: 'view' | 'create' | 'update' | 'delete', checked: boolean) => {
-        setPermissions(prev => ({
-            ...prev,
-            [moduleKey]: {
-                ...prev[moduleKey],
-                [action]: checked
+        setPermissions(prev => {
+            const currentModulePermissions = prev[moduleKey] || {
+                view: false,
+                create: false,
+                update: false,
+                delete: false
             }
-        }))
+
+            // ==============================
+            // If view is being unchecked, disable all other permissions
+            // ==============================
+            if (action === 'view' && !checked) {
+                return {
+                    ...prev,
+                    [moduleKey]: {
+                        view: false,
+                        create: false,
+                        update: false,
+                        delete: false
+                    }
+                }
+            }
+
+            // ==============================
+            // If create, update, or delete is being checked, automatically enable view
+            // ==============================
+            if ((action === 'create' || action === 'update' || action === 'delete') && checked && !currentModulePermissions.view) {
+                return {
+                    ...prev,
+                    [moduleKey]: {
+                        ...currentModulePermissions,
+                        view: true,
+                        [action]: true
+                    }
+                }
+            }
+
+            // ==============================
+            // Default: just update the specific permission
+            // ==============================
+            return {
+                ...prev,
+                [moduleKey]: {
+                    ...currentModulePermissions,
+                    [action]: checked
+                }
+            }
+        })
     }
 
-    const handleFormSubmit = async (data: { name: string }) => {
+    const handleFormSubmit = async (data: { name: string; description: string }) => {
         try {
-
             const formData: RoleFormData = {
                 name: data.name,
+                description: data.description,
                 permissions
             }
-
-            console.log(formData)
-
+            
             if (onSubmit) {
                 onSubmit(formData)
             } else {
-                showSuccess(
-                    mode === 'edit' ? 'Role updated' : 'Role created',
-                    mode === 'edit' ? 'Role updated successfully.' : 'Role created successfully.'
-                )
-                // if (onCancel) {
-                //     onCancel()
-                // } else {
-                //     // goBack()
-                // }
+                if (onCancel) {
+                    onCancel()
+                } else {
+                    goBack()
+                }
             }
         } catch (error) {
             console.error('Form submission error:', error)
-        }
+        } 
     }
 
     return (
         <DashboardCard bodyClassName='p-5'>
 
-            <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-y-6">
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-y-2">
 
                 <div>
                     <Input label={createInputLabel({
@@ -193,6 +268,19 @@ const RoleForm = ({ mode = 'create', initialData, onSubmit, onCancel, submitButt
                         required: true
                     })} placeholder="Enter Name" {...register('name')}
                         error={errors.name?.message as string}
+                    />
+                </div>
+
+                <div>
+                    <TextArea 
+                        label={createInputLabel({
+                            name: "Description",
+                            required: true
+                        })} 
+                        className='min-h-16 h-full'
+                        placeholder="Enter description" 
+                        {...register('description')}
+                        error={errors.description?.message as string}
                     />
                 </div>
 
@@ -218,6 +306,7 @@ const RoleForm = ({ mode = 'create', initialData, onSubmit, onCancel, submitButt
                     {/* Permissions Table */}
                     {/* ============================================== */}
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
+
                         <TableComponent
                             className=""
                             tableClassName="w-full"
@@ -280,7 +369,7 @@ const RoleForm = ({ mode = 'create', initialData, onSubmit, onCancel, submitButt
                                 )
                             }}
                             withCheckbox={false}
-                            loading={false}
+                            loading={isLoadingPermissions}
                         />
                     </div>
 
@@ -293,7 +382,8 @@ const RoleForm = ({ mode = 'create', initialData, onSubmit, onCancel, submitButt
                         {cancelButtonText}
                     </Button>
 
-                    <Button type="submit" radius='md' className='px-6 bg-primary text-white text-xs h-10' isLoading={isSubmitting || isLoading}>
+                    <Button type="submit" radius='md' className='px-6 bg-primary text-white text-xs h-10' 
+                        isLoading={isSubmitting || isLoading}>
                         {submitButtonText}
                     </Button>
 

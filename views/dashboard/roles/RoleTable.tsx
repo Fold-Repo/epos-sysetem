@@ -8,6 +8,7 @@ import moment from 'moment'
 
 interface RoleTableProps {
     data: RoleType[]
+    isLoading?: boolean
     onEdit?: (role: RoleType) => void
     onDelete?: (roleId: string) => void
 }
@@ -23,6 +24,7 @@ const columns = [
 
 const RoleTable = ({
     data,
+    isLoading,
     onEdit,
     onDelete
 }: RoleTableProps) => {
@@ -47,7 +49,7 @@ const RoleTable = ({
                 <TableCell>
                     <span className='text-xs'>
                         {role.created_at 
-                            ? moment(role.created_at).format('LLL')
+                            ? moment(role.created_at).format('lll')
                             : '-'}
                     </span>
                 </TableCell>
@@ -84,7 +86,7 @@ const RoleTable = ({
             rowKey={(item) => String(item.id || `role-${Math.random()}`)}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={isLoading}
         />
     )
 }

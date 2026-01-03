@@ -2,11 +2,11 @@
 
 import { DashboardBreadCrumb, DashboardCard, FilterBar, Pagination, DeleteModal, useDisclosure } from '@/components'
 import { Button } from '@heroui/react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { StoreType } from '@/types'
 import StoreTable from './StoreTable'
-import { storesData } from '@/data'
 import StoreModal from './StoreModal'
+import { useGetStores, useDeleteStore } from '@/services'
 
 const StoresView = () => {
 
@@ -14,11 +14,37 @@ const StoresView = () => {
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
     const [deleteStoreId, setDeleteStoreId] = useState<string | undefined>(undefined)
     const [editingStore, setEditingStore] = useState<StoreType | undefined>(undefined)
+    const [searchValue, setSearchValue] = useState('')
+    const { data: stores, isLoading } = useGetStores()
+    const deleteStoreMutation = useDeleteStore()
 
-    const confirmDelete = () => {
-        console.log('Delete store:', deleteStoreId)
-        onDeleteModalClose()
-        setDeleteStoreId(undefined)
+    // ==============================
+    // Filtered stores
+    // ==============================
+    const filteredStores = useMemo(() => {
+        if (!searchValue.trim()) return stores
+        
+        const searchLower = searchValue.toLowerCase()
+        return stores.filter(store => 
+            store.name.toLowerCase().includes(searchLower)
+        )
+    }, [stores, searchValue])
+
+    const confirmDelete = async () => {
+        if (deleteStoreId) {
+            return new Promise<void>((resolve) => {
+                deleteStoreMutation.mutate(Number(deleteStoreId), {
+                    onSuccess: () => {
+                        onDeleteModalClose()
+                        setDeleteStoreId(undefined)
+                        resolve()
+                    },
+                    onError: () => {
+                        resolve()
+                    }
+                })
+            })
+        }
     }
 
     const handleStatusChange = (storeId: string, status: 'active' | 'inactive') => {
@@ -51,16 +77,20 @@ const StoresView = () => {
             />
 
             <div className="p-3 space-y-3">
+                
                 <DashboardCard bodyClassName='space-y-4'>
+
                     <FilterBar
                         searchInput={{
                             placeholder: 'Search by name',
-                            className: 'w-full md:w-72'
+                            className: 'w-full md:w-72',
+                            onSearch: (value) => setSearchValue(value)
                         }}
                     />
 
                     <StoreTable
-                        data={storesData}
+                        data={filteredStores}
+                        isLoading={isLoading}
                         onEdit={handleEdit}
                         onDelete={(storeId) => {
                             setDeleteStoreId(storeId)
@@ -71,7 +101,7 @@ const StoresView = () => {
 
                     <Pagination
                         currentPage={1}
-                        totalItems={100}
+                        totalItems={filteredStores?.length || 0}
                         itemsPerPage={25}
                         onPageChange={(page) => {
                             console.log('Page changed:', page)

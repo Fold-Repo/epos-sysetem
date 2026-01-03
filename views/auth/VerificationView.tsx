@@ -9,6 +9,9 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { otpVerificationSchema, OTPVerificationFormData } from '@/schema/auth.schema'
 import OTPInput from 'react-otp-input'
 import { useRouter } from 'next/navigation'
+import { clearCookie, getCookie, getErrorMessage, setCookie } from '@/utils';
+import { EMAIL_ADDRESS_KEY, AUTH_TOKEN_KEY } from '@/types';
+import { requestOTP, verifyAccount } from '@/services';
 
 const VerificationView = () => {
 
@@ -28,33 +31,57 @@ const VerificationView = () => {
 
     const onSubmit = async (data: OTPVerificationFormData) => {
         try {
-            showSuccess('Account verified successfully, please login to your account.');
-            console.log('Verify account API call:', data);
-            router.push('/signin');
+            const email = getCookie(EMAIL_ADDRESS_KEY);
+
+            if (!email) {
+                showError('Email not found. Please try signing up again.');
+                router.push('/signin');
+                return;
+            }
+
+            const response = await verifyAccount({
+                email,
+                token: data.otp
+            });
+
+            setCookie(AUTH_TOKEN_KEY, response.data?.token || '');
+            showSuccess(response.data.message || 'Account verified successfully!');
+            clearCookie(EMAIL_ADDRESS_KEY);
+            router.replace('/dashboard');
+
         } catch (error) {
-            console.error('Form submission error:', error)
-            showError('Failed to verify account, please try again later.');
+            const errorMessage = getErrorMessage(error);
+            showError(errorMessage);
         }
     }
 
     const handleResendCode = async () => {
         try {
-            console.log('Resend OTP API call');
+            const email = getCookie(EMAIL_ADDRESS_KEY);
+
+            if (!email) {
+                showError('Email not found. Please try signing up again.');
+                return;
+            }
+
+            const response = await requestOTP({
+                email,
+                type: 'verify_account'
+            });
+            showSuccess(response.data.message || 'OTP sent successfully.');
             resetCountdown(60);
-            showSuccess('OTP sent successfully 🎉');
         } catch (error) {
-            console.error('Resend OTP error:', error);
-            showError('Failed to send OTP 😭');
+            const errorMessage = getErrorMessage(error);
+            showError(errorMessage);
         }
     }
-
 
     return (
         <div className='max-w-md mx-auto'>
 
             <AuthHeader
                 title="Enter Verification Code"
-                description="We've sent a code to adeoyesolomon2693@gmail.com"
+                description={`We've sent a code to ${getCookie(EMAIL_ADDRESS_KEY) || ''}`}
             />
 
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -74,7 +101,7 @@ const VerificationView = () => {
                                     <React.Fragment key={index}>
                                         <input
                                             {...props}
-                                            className="form-control max-w-10 max-h-10 md:max-w-14 md:max-h-14 text-lg font-medium bg-white border-1.5 border-[#EDF1F3]"
+                                            className={`form-control max-w-10 max-h-10 md:max-w-14 md:max-h-14 text-lg font-medium bg-white border-1.5 border-[#EDF1F3] ${errors.otp ? 'border-red-400' : ''}`}
                                         />
                                     </React.Fragment>
                                 )}
@@ -89,7 +116,7 @@ const VerificationView = () => {
                 <Button
                     type="submit"
                     radius='md'
-                    className='bg-deep-purple text-white text-xs w-full mt-7'
+                    className='bg-primary text-white text-xs w-full mt-7'
                     isLoading={isSubmitting}
                 >
                     Verify Account

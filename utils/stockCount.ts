@@ -14,7 +14,7 @@
  */
 export const getStockCountColor = (
     value: number,
-    highThreshold: number = 50,
+    highThreshold: number = 49,
     mediumThreshold: number = 20
 ): string => {
     if (value > highThreshold) {

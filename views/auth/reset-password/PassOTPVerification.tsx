@@ -8,6 +8,8 @@ import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { otpVerificationSchema, OTPVerificationFormData } from '@/schema/auth.schema'
 import OTPInput from 'react-otp-input'
+import { requestOTP } from '@/services'
+import { getErrorMessage } from '@/utils'
 
 interface PassOTPVerificationProps {
     onNextStep?: (data: OTPVerificationFormData) => void;
@@ -33,22 +35,21 @@ const PassOTPVerification: React.FC<PassOTPVerificationProps> = ({
     });
 
     const onSubmit = async (data: OTPVerificationFormData) => {
-        try {
-            console.log('Verify OTP API call:', { email, ...data });
-            showSuccess('OTP verified successfully, please create a new password.');
-            onNextStep?.(data)
-        } catch (error) {
-            console.error('Form submission error:', error)
-            showError('Failed to verify OTP, please try again later.');
-        }
+        onNextStep?.(data)
     }
 
     const handleResendCode = async () => {
         try {
-            console.log('Resend OTP API call:', { email });
+            if (!email) {
+                showError('Email not found. Please try again.');
+                return;
+            }
+            const response = await requestOTP({ email });
+            showSuccess(response.data.message || 'OTP sent successfully.');
             resetCountdown(60);
         } catch (error) {
-            console.error('Resend OTP error:', error);
+            const errorMessage = getErrorMessage(error);
+            showError(errorMessage);
         }
     }
 
@@ -70,7 +71,7 @@ const PassOTPVerification: React.FC<PassOTPVerificationProps> = ({
                                 <React.Fragment key={index}>
                                     <input 
                                         {...props} 
-                                        className="form-control max-w-10 max-h-10 md:max-w-14 md:max-h-14 text-lg font-medium bg-white border-1.5 border-[#EDF1F3]" 
+                                        className={`form-control max-w-10 max-h-10 md:max-w-14 md:max-h-14 text-lg font-medium bg-white border-1.5 border-[#EDF1F3] ${errors.otp ? 'border-red-400' : ''}`}
                                     />
                                 </React.Fragment>
                             )}
@@ -82,13 +83,8 @@ const PassOTPVerification: React.FC<PassOTPVerificationProps> = ({
                 )}
             </div>
 
-            <Button
-                type="submit"
-                radius='md'
-                className='bg-deep-purple text-white w-full mt-7 text-xs h-11'
-                isLoading={isSubmitting}
-            >
-                Verify Code
+            <Button type="submit" radius='md' className='bg- text-white w-full mt-7 text-xs h-11'>
+                Verify OTP
             </Button>
 
             <div className="space-y-6 mt-8">

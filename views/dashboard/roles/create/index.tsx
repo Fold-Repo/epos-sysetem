@@ -2,10 +2,12 @@
 
 import { DashboardBreadCrumb } from '@/components'
 import RoleForm from '../RoleForm'
-import { useToast, useGoBack } from '@/hooks'
+import { useGoBack } from '@/hooks'
+import { useCreateRole, useGetRolePermissionsList, transformPermissionsToAPI } from '@/services'
 
 interface RoleFormData {
     name: string
+    description: string
     permissions: {
         [key: string]: {
             view: boolean
@@ -17,16 +19,34 @@ interface RoleFormData {
 }
 
 const CreateRoleView = () => {
+
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
+    const { mutate: createRole, isPending } = useCreateRole()
+    const { data: permissionsData } = useGetRolePermissionsList()
 
     const handleSubmit = (formData: RoleFormData) => {
         try {
-            console.log('Create role:', formData)
-            showSuccess('Role created', 'Role created successfully.')
-            goBack()
+
+            if (!permissionsData?.data) {
+                console.error('Permissions data not available')
+                return
+            }
+
+            const apiPermissions = transformPermissionsToAPI(formData.permissions, permissionsData.data)
+
+            const payload = {
+                name: formData.name,
+                description: formData.description,
+                permissions: apiPermissions
+            }
+
+            createRole(payload, {
+                onSuccess: () => {
+                    goBack()
+                }
+            })
         } catch (error) {
-            showError('Failed to create role', 'Please try again later.')
+            console.error('Form submission error:', error)
         }
     }
 
@@ -41,13 +61,15 @@ const CreateRoleView = () => {
             />
 
             <div className="p-3 space-y-2">
-                <RoleForm
-                    mode="create"
-                    onSubmit={handleSubmit}
-                    onCancel={goBack}
+                <RoleForm 
+                    mode="create" 
+                    onSubmit={handleSubmit} 
+                    onCancel={goBack} 
                     submitButtonText="Save"
+                    isLoading={isPending}
                 />
             </div>
+            
         </>
     )
 }

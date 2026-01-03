@@ -8,12 +8,15 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { createPasswordSchema, CreatePasswordFormData } from '@/schema/auth.schema'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks'
+import { resetPassword } from '@/services'
+import { getErrorMessage } from '@/utils'
 
 interface CreatePasswordProps {
     email?: string;
+    token?: string;
 }
 
-const CreatePassword: React.FC<CreatePasswordProps> = ({ email }) => {
+const CreatePassword: React.FC<CreatePasswordProps> = ({ email, token }) => {
 
     const router = useRouter();
     const { showSuccess, showError } = useToast();
@@ -26,12 +29,22 @@ const CreatePassword: React.FC<CreatePasswordProps> = ({ email }) => {
 
     const handleFormSubmit = async (data: CreatePasswordFormData) => {
         try {
-            console.log('Reset password API call:', { email, ...data });
+            if (!email || !token) {
+                showError('Missing email or token. Please try again.');
+                return;
+            }
+
+            const response = await resetPassword({
+                email,
+                password: data.newPassword,
+                token
+            });
+
+            showSuccess(response.data.message || 'Password reset successfully, please login to your account.');
             router.push('/signin');
-            showSuccess('Password reset successfully, please login to your account.');
         } catch (error) {
-            console.error('Form submission error:', error)
-            showError('Failed to reset password, please try again later.');
+            const errorMessage = getErrorMessage(error);
+            showError(errorMessage);
         }
     }
 
@@ -56,7 +69,7 @@ const CreatePassword: React.FC<CreatePasswordProps> = ({ email }) => {
             <Button
                 type="submit"
                 radius='md'
-                className='bg-deep-purple text-white w-full mt-6 text-xs h-11'
+                className='bg-primary text-white w-full mt-6 text-xs h-11'
                 isLoading={isSubmitting}
             >
                 Reset Password

@@ -2,6 +2,8 @@
 
 import { LogoutIcon, PopupModal } from '@/components'
 import { Button } from '@heroui/react'
+import { useRouter } from 'next/navigation'
+import { logout } from '@/utils'
 
 interface LogoutModalProps {
     open: boolean
@@ -9,6 +11,8 @@ interface LogoutModalProps {
 }
 
 const LogoutModal = ({ open, close }: LogoutModalProps) => {
+
+    const router = useRouter()
 
     return (
         <PopupModal
@@ -31,14 +35,18 @@ const LogoutModal = ({ open, close }: LogoutModalProps) => {
                     </p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
 
-                    <Button onPress={close} fullWidth variant='bordered' radius='md'
-                        className='text-deep-purple border-1 border-deep-purple text-xs'>
+                    <Button onPress={close} fullWidth variant='bordered'
+                        radius='md' className='text-deep-purple border-1 border-deep-purple text-xs'>
                         Return to Dashboard
                     </Button>
 
-                    <Button fullWidth radius='md' className='text-xs bg-red-600 text-white' color='danger'>
+                    <Button fullWidth radius='md' className='text-xs bg-red-500 text-white'
+                        color='danger' onPress={async () => {
+                            await logout()
+                            router.push('/signin')
+                        }}>
                         Logout
                     </Button>
 

@@ -2,35 +2,48 @@ import { FilterBar, Pagination, StackIcon, TrashIcon, useDisclosure } from '@/co
 import { DeleteModal } from '@/components/modal'
 import { useState, useEffect } from 'react'
 import ProductTable from './ProductTable'
-import { productsData } from '@/data'
 import { ProductType } from '@/types'
-import AddProductModal from './AddProductModal'
-import ViewProductModal from './ViewProductModal'
+import { useRouter } from 'next/navigation'
+import { useGetProducts, useDeleteProduct } from '@/services'
+import { useQueryParams } from '@/hooks'
 
 interface ProductsListViewProps {
     onAddClick?: (handler: () => void) => void
 }
 
 const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
-    
-    const { isOpen: isAddModalOpen, onOpen: onAddModalOpen, onClose: onAddModalClose } = useDisclosure()
-    const { isOpen: isViewModalOpen, onOpen: onViewModalOpen, onClose: onViewModalClose } = useDisclosure()
+    const router = useRouter()
+    const { searchParams, updateQueryParams } = useQueryParams()
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
-    const [viewProductId, setViewProductId] = useState<string | undefined>(undefined)
     const [deleteProductId, setDeleteProductId] = useState<string | undefined>(undefined)
     const [isBulkDelete, setIsBulkDelete] = useState(false)
+    
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 12
+    
+    const { data, isLoading } = useGetProducts(currentPage, LIMIT)
+    const products = data?.products || []
+    const pagination = data?.pagination
+    const deleteProductMutation = useDeleteProduct()
+    
+    const handlePageChange = (page: number) => {
+        updateQueryParams({ page: page.toString() })
+    }
 
     useEffect(() => {
         if (onAddClick) {
             onAddClick(() => {
-                onAddModalOpen()
+                router.push('/dashboard/products/create')
             })
         }
-    }, [onAddClick, onAddModalOpen])
+    }, [onAddClick, router])
 
     const handleView = (productId: string) => {
-        setViewProductId(productId)
-        onViewModalOpen()
+        router.push(`/dashboard/products/${productId}`)
+    }
+
+    const handleEdit = (productId: string) => {
+        router.push(`/dashboard/products/${productId}/edit`)
     }
 
     const [selectedProducts, setSelectedProducts] = useState<ProductType[]>([])
@@ -52,16 +65,25 @@ const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
     const confirmDelete = async () => {
         if (isBulkDelete && selectedProducts.length > 0) {
             // ===========================
-            // Delete products logic here
+            // Bulk delete products
             // ===========================
-            // await deleteProducts(selectedProducts.map(p => p.id))
+            // TODO: Implement bulk delete if backend supports it
+            // For now, delete one by one
+            for (const product of selectedProducts) {
+                await deleteProductMutation.mutateAsync(Number(product.id))
+            }
             setSelectedProducts([])
+            onDeleteModalClose()
         } else if (deleteProductId) {
-            console.log('Delete product with id:', deleteProductId)
             // ===========================
-            // Delete product logic here
+            // Delete single product
             // ===========================
-            // await deleteProduct(deleteProductId)
+            deleteProductMutation.mutate(Number(deleteProductId), {
+                onSuccess: () => {
+                    onDeleteModalClose()
+                    setDeleteProductId(undefined)
+                }
+            })
         }
     }
 
@@ -176,24 +198,24 @@ const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
 
             {/* ================= TABLE ================= */}
             <ProductTable
-                data={productsData}
+                data={products}
                 selectedProducts={selectedProducts}
                 onSelectionChange={setSelectedProducts}
                 onView={handleView}
+                onEdit={handleEdit}
                 onDelete={handleDeleteProduct}
+                isLoading={isLoading}
             />
 
-            <Pagination
-                currentPage={1}
-                totalItems={100}
-                itemsPerPage={25}
-                onPageChange={() => { }}
-                showingText="Products"
-            />
-
-            <AddProductModal isOpen={isAddModalOpen} onClose={onAddModalClose} />
-            
-            <ViewProductModal isOpen={isViewModalOpen} onClose={onViewModalClose} productId={viewProductId} />
+            {pagination && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalItems={pagination.total}
+                    itemsPerPage={LIMIT}
+                    onPageChange={handlePageChange}
+                    showingText="Products"
+                />
+            )}
 
             <DeleteModal
                 title={isBulkDelete ? `products (${selectedProducts.length})` : "product"}

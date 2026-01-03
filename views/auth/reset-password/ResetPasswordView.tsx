@@ -16,6 +16,7 @@ interface Step {
     component: React.FC<{
         onNextStep?: (data?: any) => void;
         email?: string;
+        token?: string;
     }>;
 }
 
@@ -28,7 +29,7 @@ const ResetPasswordView = () => {
 
     const stepTitles: Record<number, string> = {
         1: 'Reset Password',
-        2: 'Enter Verification Code',
+        2: 'Enter Reset Password OTP',
         3: 'Create New Password',
     };
 
@@ -63,6 +64,7 @@ const ResetPasswordView = () => {
                 <StepComponent
                     onNextStep={(data) => handleNextStep(data)}
                     email={formData.email}
+                    token={formData.otp}
                 />
             );
         }

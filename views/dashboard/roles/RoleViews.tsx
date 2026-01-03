@@ -3,8 +3,8 @@
 import { DashboardBreadCrumb, FilterBar, Pagination, DashboardCard, StackIcon, DeleteModal, useDisclosure } from '@/components'
 import { Button } from '@heroui/react'
 import RoleTable from './RoleTable'
-import { rolesData } from '@/data/roles'
 import { RoleType } from '@/types'
+import { useGetRoles, useDeleteRole } from '@/services'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -13,6 +13,8 @@ const RoleViews = () => {
     const router = useRouter()
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
     const [deleteRoleId, setDeleteRoleId] = useState<string | undefined>(undefined)
+    const { data: roles, isLoading, error } = useGetRoles()
+    const deleteRoleMutation = useDeleteRole()
 
     const filterItems = [
         {
@@ -68,10 +70,26 @@ const RoleViews = () => {
         onDeleteModalOpen()
     }
 
-    const confirmDelete = () => {
-        console.log('Delete role:', deleteRoleId)
-        onDeleteModalClose()
-        setDeleteRoleId(undefined)
+    const confirmDelete = async () => {
+        if (deleteRoleId) {
+            const roleId = Number(deleteRoleId)
+            if (!isNaN(roleId)) {
+                await new Promise<void>((resolve) => {
+                    deleteRoleMutation.mutate(roleId, {
+                        onSuccess: () => {
+                            onDeleteModalClose()
+                            setDeleteRoleId(undefined)
+                            resolve()
+                        },
+                        onError: () => {
+                            resolve()
+                        }
+                    })
+                })
+            } else {
+                console.error('Invalid role ID:', deleteRoleId)
+            }
+        }
     }
 
     return (
@@ -91,32 +109,26 @@ const RoleViews = () => {
             <div className="p-3 space-y-3">
 
                 <DashboardCard bodyClassName='space-y-4'>
-                    
-                    {/* ================= FILTER BAR ================= */}
-                    <FilterBar
-                        searchInput={{
-                            placeholder: 'Search by role name',
-                            className: 'w-full md:w-72'
-                        }}
-                        items={filterItems}
-                    />
 
                     {/* ================= TABLE ================= */}
                     <RoleTable
-                        data={rolesData}
+                        data={roles || []}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        isLoading={isLoading}
                     />
 
-                    <Pagination
-                        currentPage={1}
-                        totalItems={100}
-                        itemsPerPage={25}
-                        onPageChange={(page) => {
-                            console.log('Page changed:', page)
-                        }}
-                        showingText="Roles & Permissions"
-                    />
+                    {!isLoading && !error && (
+                        <Pagination
+                            currentPage={1}
+                            totalItems={roles?.length || 0}
+                            itemsPerPage={25}
+                            onPageChange={(page) => {
+                                console.log('Page changed:', page)
+                            }}
+                            showingText="Roles & Permissions"
+                        />
+                    )}
                 </DashboardCard>
 
             </div>

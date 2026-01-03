@@ -6,6 +6,7 @@ import { useQueryParams } from "./useQueryParams";
 import { usePermissions } from "./usePermissions";
 import { useProductSelection, type BaseProductItem } from "./useProductSelection";
 import { useOrderTotals } from "./useOrderTotals";
+import { useFetchAllData } from "./useFetchAllData";
 
 export {
     useClickOutside,
@@ -15,7 +16,8 @@ export {
     useQueryParams,
     usePermissions,
     useProductSelection,
-    useOrderTotals
+    useOrderTotals,
+    useFetchAllData
 }
 
 export type { BaseProductItem }

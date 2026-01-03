@@ -12,6 +12,7 @@
     "@heroicons/react": "^2.2.0",
     "@heroui/react": "^2.8.5",
     "@hookform/resolvers": "^5.2.2",
+    "@reduxjs/toolkit": "^2.11.2",
     "@tanstack/react-query": "^5.90.11",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@types/react-select": "^5.0.1",
@@ -31,8 +32,10 @@
     "react-icons": "^5.5.0",
     "react-otp-input": "^3.1.1",
     "react-phone-number-input": "^3.4.14",
+    "react-redux": "^9.2.0",
     "react-select": "^5.10.2",
     "recharts": "^3.5.0",
+    "redux-persist": "^6.0.0",
     "swiper": "^12.0.3",
     "yup": "^1.7.1"
   },

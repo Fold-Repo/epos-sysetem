@@ -8,6 +8,7 @@ import { usersData } from '@/data'
 
 interface StoreTableProps {
     data: StoreType[]
+    isLoading?: boolean
     onEdit?: (store: StoreType) => void
     onDelete?: (storeId: string) => void
     onStatusChange?: (storeId: string, status: 'active' | 'inactive') => void
@@ -30,6 +31,7 @@ const getStoreUserCount = (storeId: string | number | undefined): number => {
 
 const StoreTable = ({
     data,
+    isLoading = false,
     onEdit,
     onDelete,
     onStatusChange
@@ -93,7 +95,7 @@ const StoreTable = ({
             rowKey={(item) => String(item.id || `store-${Math.random()}`)}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={isLoading}
         />
     )
 }

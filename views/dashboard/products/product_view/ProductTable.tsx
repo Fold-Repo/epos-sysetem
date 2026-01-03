@@ -6,13 +6,16 @@ import Image from 'next/image'
 import { EllipsisVerticalIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { TrashIcon } from '@/components/icons'
+import moment from 'moment'
 
 interface ProductTableProps {
     data: ProductType[]
     selectedProducts?: ProductType[]
     onSelectionChange?: (selected: ProductType[]) => void
     onView?: (productId: string) => void
+    onEdit?: (productId: string) => void
     onDelete?: (productId: string) => void
+    isLoading?: boolean
 }
 
 const columns = [
@@ -27,7 +30,7 @@ const columns = [
     { key: 'actions', title: 'Actions' }
 ]
 
-const ProductTable = ({ data, onSelectionChange, onView, onDelete }: ProductTableProps) => {
+const ProductTable = ({ data, onSelectionChange, onView, onEdit, onDelete, isLoading = false }: ProductTableProps) => {
 
     const renderRow = (product: ProductType) => {
         return (
@@ -35,9 +38,10 @@ const ProductTable = ({ data, onSelectionChange, onView, onDelete }: ProductTabl
 
                 <TableCell className='px-0'>
                     <div className="flex items-center gap-2">
-                        <Image src={product.image || ''} alt={product.name}
-                        width={100} height={100} className='size-9 rounded-md' 
-                        loading='lazy' />
+                            <Image src={product.image || '/img/no_image.png'}  alt={product.name}
+                                width={120} height={120} className='size-8 rounded-md object-cover' 
+                                loading='lazy' 
+                            />
                         <span className='text-xs line-clamp-1'>
                             {product.name}
                         </span>
@@ -54,21 +58,26 @@ const ProductTable = ({ data, onSelectionChange, onView, onDelete }: ProductTabl
                     <span className='text-xs'>{product.category}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs font-medium'>{formatCurrency(product.price)}</span>
+                    <span className='text-xs font-medium'>
+                        {product.minPrice !== undefined && product.maxPrice !== undefined
+                            ? product.minPrice === product.maxPrice
+                                ? formatCurrency(product.minPrice)
+                                : `${formatCurrency(product.minPrice)} - ${formatCurrency(product.maxPrice)}`
+                            : formatCurrency(product.price)}
+                    </span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>{product.unit}</span>
                 </TableCell>
                 <TableCell>
-                    <span className={`text-xs font-medium ${getStockCountColor(product.stock)}`}>
+                    <span className={`text-xs font-medium 
+                        ${getStockCountColor(product.stock)}`}>
                         {product.stock}
                     </span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>
-                        {product.created_at instanceof Date
-                            ? product.created_at.toLocaleDateString()
-                            : new Date(product.created_at).toLocaleDateString()}
+                        {moment(product.created_at).format('lll')}
                     </span>
                 </TableCell>
                 <TableCell>
@@ -100,7 +109,7 @@ const ProductTable = ({ data, onSelectionChange, onView, onDelete }: ProductTabl
                             if (key === 'view') {
                                 onView?.(product.id)
                             } else if (key === 'edit') {
-                                console.log('Edit product:', product)
+                                onEdit?.(product.id)
                             } else if (key === 'delete') {
                                 onDelete?.(product.id)
                             }
@@ -120,7 +129,7 @@ const ProductTable = ({ data, onSelectionChange, onView, onDelete }: ProductTabl
             renderRow={renderRow}
             withCheckbox={true}
             onSelectionChange={onSelectionChange}
-            loading={false}
+            loading={isLoading}
         />
     )
 }

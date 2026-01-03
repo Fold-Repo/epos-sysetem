@@ -21,7 +21,7 @@ const AuthRedirect: React.FC<AuthRedirectProps> = ({ question, linkText, href, c
   };
 
   return (
-    <p className={cn("text-sm space-y-5 mt-4", className)}>
+    <p className={cn("text-xs space-y-5 mt-4", className)}>
       {question}{' '}
       {href ? (
         <Link className="text-primary underline font-medium" href={href}>
@@ -29,6 +29,7 @@ const AuthRedirect: React.FC<AuthRedirectProps> = ({ question, linkText, href, c
         </Link>
       ) : (
         <button 
+          type="button"
           onClick={handleClick} 
           disabled={disabled} 
           className={cn(

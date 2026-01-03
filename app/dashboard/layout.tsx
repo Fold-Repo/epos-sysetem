@@ -3,12 +3,15 @@
 import { NavBar, SideBar } from '@/components'
 import React, { useState } from 'react'
 import { DASHBOARD_ROOT, DASHBOARD_SECTIONS } from '@/constants'
-import { usePermissions } from '@/hooks'
+import { usePermissions, useFetchAllData } from '@/hooks'
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
     const [open, setOpen] = useState<boolean>(false)
     const { permissions } = usePermissions()
+    
+    // Fetch all data entities and populate Redux state
+    useFetchAllData()
 
     return (
         <>

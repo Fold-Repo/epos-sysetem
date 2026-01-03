@@ -8,32 +8,16 @@ export const supplierSchema = yup.object({
         .max(100, 'Supplier name must not exceed 100 characters'),
     email: yup
         .string()
-        .optional()
-        .default('')
-        .test('email-format', 'Invalid email format', (value) => {
-            if (!value || value.length === 0) return true
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-        })
+        .required('Email is required')
+        .email('Invalid email format')
         .max(100, 'Email must not exceed 100 characters'),
     phone: yup
         .string()
-        .optional()
-        .default('')
+        .required('Phone is required')
         .max(20, 'Phone must not exceed 20 characters'),
-    country: yup
-        .string()
-        .optional()
-        .default('')
-        .max(100, 'Country must not exceed 100 characters'),
-    city: yup
-        .string()
-        .optional()
-        .default('')
-        .max(100, 'City must not exceed 100 characters'),
     address: yup
         .string()
-        .optional()
-        .default('')
+        .required('Address is required')
         .max(500, 'Address must not exceed 500 characters'),
 }).required();
 

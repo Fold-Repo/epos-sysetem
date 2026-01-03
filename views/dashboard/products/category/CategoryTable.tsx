@@ -1,75 +1,74 @@
-import { TableCell, TableComponent, MenuDropdown } from '@/components'
-import { ProductCategoryType } from '@/types/category.type'
+import { TableCell, TableComponent, MenuDropdown, StatusChip } from '@/components'
+import { Category } from '@/types/category.type'
 import { EllipsisVerticalIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { TrashIcon } from '@/components/icons'
 import Image from 'next/image'
-import { StatusChip } from '@/components'
+import moment from 'moment'
 
 interface CategoryTableProps {
-    data: ProductCategoryType[]
-    selectedCategories?: ProductCategoryType[]
-    onSelectionChange?: (selected: ProductCategoryType[]) => void
-    onDelete?: (categoryId: string) => void
+    data: Category[]
+    isLoading?: boolean
+    onEdit?: (category: Category) => void
+    onDelete?: (categoryId: number) => void
 }
 
 const columns = [
-    { key: 'category', title: 'Product category', className: 'px-0' },
+    { key: 'category', title: 'Product category' },
     { key: 'productCount', title: 'Product Count' },
     { key: 'created_at', title: 'Date Created' },
-    { key: 'last_modified', title: 'Last modified' },
+    { key: 'last_modified', title: 'Last Modified' },
     { key: 'status', title: 'Status' },
     { key: 'actions', title: 'Action' }
 ]
 
-const CategoryTable = ({ data, onSelectionChange, onDelete }: CategoryTableProps) => {
+const CategoryTable = ({ data, isLoading = false, onEdit, onDelete }: CategoryTableProps) => {
 
-    const renderRow = (category: ProductCategoryType) => {
+    const renderRow = (category: Category) => {
         return (
             <>
-                <TableCell className='px-0'>
+                <TableCell>
                     <div className="flex items-center gap-2">
                         {category.image && (
-                            <Image 
-                                src={category.image} 
-                                alt={category.name}
-                                width={100} 
-                                height={100} 
-                                className='size-9 rounded-md' 
+                            <Image src={category.image} alt={category.category_name}
+                                width={100} height={100} className='size-9 rounded-md object-cover' 
                                 loading='lazy' 
                             />
                         )}
                         <span className='text-xs line-clamp-1'>
-                            {category.name}
+                            {category.category_name}
                         </span>
                     </div>
                 </TableCell>
 
                 <TableCell>
-                    <span className='text-xs'>{category.productCount}</span>
+                    <span className='text-xs'>{category.productCount ?? '-'}</span>
                 </TableCell>
 
                 <TableCell>
                     <span className='text-xs'>
-                        {category.created_at instanceof Date
-                            ? category.created_at.toLocaleDateString()
-                            : new Date(category.created_at).toLocaleDateString()}
+                        {category.created_at 
+                            ? moment(category.created_at).format('lll')
+                            : '-'}
                     </span>
                 </TableCell>
 
                 <TableCell>
                     <span className='text-xs'>
-                        {category.last_modified instanceof Date
-                            ? category.last_modified.toLocaleDateString()
-                            : new Date(category.last_modified).toLocaleDateString()}
+                        {category.last_modified 
+                            ? moment(category.last_modified).format('lll')
+                            : '-'}
                     </span>
                 </TableCell>
 
                 <TableCell>
-                    <StatusChip 
-                        status={category.status} 
+                    {category.status ? (
+                        <StatusChip status={category.status} 
                         label={category.status === 'active' ? 'Active' : 'Inactive'}
-                    />
+                        />
+                    ) : (
+                        <span className='text-xs text-gray-400'>-</span>
+                    )}
                 </TableCell>
 
                 <TableCell>
@@ -94,9 +93,9 @@ const CategoryTable = ({ data, onSelectionChange, onDelete }: CategoryTableProps
                         ]}
                         onChange={(key) => {
                             if (key === 'edit') {
-                                console.log('Edit category:', category)
+                                onEdit?.(category)
                             } else if (key === 'delete') {
-                                onDelete?.(category.id)
+                                onDelete?.(category.category_id)
                             }
                         }}
                     />
@@ -110,11 +109,10 @@ const CategoryTable = ({ data, onSelectionChange, onDelete }: CategoryTableProps
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => item.id}
+            rowKey={(item) => String(item.category_id)}
             renderRow={renderRow}
-            withCheckbox={true}
-            onSelectionChange={onSelectionChange}
-            loading={false}
+            withCheckbox={false}
+            loading={isLoading}
         />
     )
 }
