@@ -1,3 +1,5 @@
+import { PaginationResponse } from './type';
+
 /**
  * Brand from API
  */
@@ -13,12 +15,15 @@ export interface Brand {
     status?: 'active' | 'inactive';
 }
 
+// PaginationResponse is now exported from ./type.ts
+
 /**
  * Brands list response from API
  */
 export interface BrandsListResponse {
     status: number;
     data: Brand[];
+    pagination: PaginationResponse;
 }
 
 /**

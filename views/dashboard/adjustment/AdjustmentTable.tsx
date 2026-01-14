@@ -1,4 +1,4 @@
-import { TableCell, TableComponent, MenuDropdown, TrashIcon } from '@/components'
+import { TableCell, TableComponent, MenuDropdown, TrashIcon, StatusChip } from '@/components'
 import { EllipsisVerticalIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { AdjustmentType } from '@/types'
@@ -11,35 +11,51 @@ interface AdjustmentTableProps {
     onView?: (adjustmentId: string) => void
     onEdit?: (adjustmentId: string) => void
     onDelete?: (adjustmentId: string) => void
+    loading?: boolean
 }
 
+const AdjustmentTable = ({ 
+    data, 
+    selectedAdjustments,
+    onSelectionChange, 
+    onView, 
+    onEdit, 
+    onDelete,
+    loading = false
+}: AdjustmentTableProps) => {
+
 const columns = [
-    { key: 'reference', title: 'REFERENCE' },
-    { key: 'totalProducts', title: 'TOTAL PRODUCTS' },
+    { key: 'date', title: 'DATE' },
+    { key: 'type', title: 'TYPE' },
+    { key: 'note', title: 'NOTE' },
+    { key: 'created_by', title: 'CREATED BY' },
     { key: 'created_at', title: 'CREATED ON' },
     { key: 'actions', title: 'ACTION' }
 ]
 
-const AdjustmentTable = ({ 
-    data, 
-    onSelectionChange, 
-    onView, 
-    onEdit, 
-    onDelete 
-}: AdjustmentTableProps) => {
 
     const renderRow = (adjustment: AdjustmentType) => {
         return (
             <>
                 <TableCell>
-                    <span className='text-xs'>{adjustment.reference}</span>
+                    <span className='text-xs'>
+                        {adjustment.date ? moment(adjustment.date).format('LL') : '-'}
+                    </span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{adjustment.totalProducts}</span>
+                    <StatusChip 
+                        status={adjustment.type === 'positive' ? 'positive' : 'negative'} 
+                    />
+                </TableCell>
+                <TableCell>
+                    <span className='text-xs'>{adjustment.note || '-'}</span>
+                </TableCell>
+                <TableCell>
+                    <span className='text-xs'>{adjustment.created_by_name || '-'}</span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>
-                        {moment(adjustment.created_at).format('LLL')}
+                        {adjustment.created_at ? moment(adjustment.created_at).format('LLL') : '-'}
                     </span>
                 </TableCell>
                 <TableCell>
@@ -69,12 +85,13 @@ const AdjustmentTable = ({
                         ]}
                         onChange={(key) => {
                             if (!adjustment.id) return
+                            const id = String(adjustment.id)
                             if (key === 'view') {
-                                onView?.(adjustment.id)
+                                onView?.(id)
                             } else if (key === 'edit') {
-                                onEdit?.(adjustment.id)
+                                onEdit?.(id)
                             } else if (key === 'delete') {
-                                onDelete?.(adjustment.id)
+                                onDelete?.(id)
                             }
                         }}
                     />
@@ -88,11 +105,11 @@ const AdjustmentTable = ({
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => item.id || `adj-${Math.random()}`}
+            rowKey={(item) => String(item.id || `adj-${Math.random()}`)}
             renderRow={renderRow}
-            withCheckbox={true}
+            withCheckbox={!!onSelectionChange}
             onSelectionChange={onSelectionChange}
-            loading={false}
+            loading={loading}
         />
     )
 }

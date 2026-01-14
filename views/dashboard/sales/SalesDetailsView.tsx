@@ -1,12 +1,70 @@
 'use client'
 
-import { DashboardBreadCrumb, DashboardCard, TableComponent, TableCell } from '@/components'
-import { OrderItemsTable, SummaryBox } from '@/views/dashboard/components'
-import { StatusChip } from '@/components'
+import { DashboardBreadCrumb, DashboardCard, StatusChip } from '@/components'
+import { OrderItemsTable, SummaryBox, OrderItem } from '@/views/dashboard/components'
 import { formatCurrency } from '@/lib'
+import { useGetSaleDetail } from '@/services'
 import moment from 'moment'
+import { notFound } from 'next/navigation'
 
-const SalesDetailsView = ({ saleId }: { saleId: string }) => {
+interface SalesDetailsViewProps {
+    saleId: string
+}
+
+const SalesDetailsView = ({ saleId }: SalesDetailsViewProps) => {
+
+    // ================================
+    // FETCH SALE DETAILS
+    // ================================
+    const { data: sale, isLoading, error } = useGetSaleDetail(Number(saleId))
+
+    // ================================
+    // TRANSFORM ITEMS TO ORDER ITEM FORMAT
+    // ================================
+    const orderItems: OrderItem[] = sale?.items?.map(item => {
+        const itemName = item.variation
+            ? `${item.product.name} - ${item.variation.type}: ${item.variation.value}`
+            : item.product.name
+
+        const itemCode = item.variation?.sku || item.product.sku
+
+        return {
+            id: String(item.id),
+            productId: String(item.product.id),
+            name: itemName,
+            code: itemCode,
+            quantity: item.quantity,
+            netUnitPrice: parseFloat(item.unit_cost),
+            discount: parseFloat(item.discount),
+            tax: parseFloat(item.tax.amount),
+            taxType: item.tax.type,
+            subtotal: parseFloat(item.subtotal)
+        }
+    }) || []
+
+    // ================================
+    // FORMAT TAX DISPLAY
+    // ================================
+    const taxDisplay = sale
+        ? `${formatCurrency(parseFloat(sale.tax.amount))}${sale.tax.type === 'percent' ? ` (${sale.tax.amount}%)` : ` (${sale.tax.type})`}`
+        : '-'
+
+    // ================================
+    // FORMAT DISCOUNT DISPLAY
+    // ================================
+    const discountDisplay = sale
+        ? `${formatCurrency(parseFloat(sale.discount.amount))}${sale.discount.type === 'percent' ? ` (${sale.discount.amount}%)` : ''}`
+        : '-'
+
+    // ================================
+    // LOADING STATE
+    // ================================
+    if (isLoading) {
+        return <SalesDetailsSkeleton />
+    }
+
+    if(!sale || error) return notFound()
+
     return (
         <>
             <DashboardBreadCrumb
@@ -18,163 +76,79 @@ const SalesDetailsView = ({ saleId }: { saleId: string }) => {
             />
 
             <div className="p-3 space-y-3">
-                {/* ======================== USER & CUSTOMER INFORMATION ======================== */}
-                <DashboardCard title="User & Customer Information"
+                {/* ======================== CUSTOMER & STORE INFORMATION ======================== */}
+                <DashboardCard title="Customer & Store Information"
                     className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 gap-5'>
                     <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">User</h6>
-                        <p className="text-sm font-medium text-gray-900">John Smith</p>
+                        <h6 className="text-xs text-gray-600">Customer Name</h6>
+                        <p className="text-sm font-medium text-gray-900">{sale?.customer.name}</p>
                     </div>
                     <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Customer</h6>
-                        <p className="text-sm font-medium text-gray-900">John Doe</p>
+                        <h6 className="text-xs text-gray-600">Store</h6>
+                        <p className="text-sm font-medium text-gray-900">{sale?.store.name}</p>
                     </div>
                 </DashboardCard>
 
                 {/* ======================== SALE INFORMATION ======================== */}
                 <DashboardCard title="Sale Information"
                     className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5'>
+
                     <div className="space-y-2">
                         <h6 className="text-xs text-gray-600">Reference</h6>
-                        <p className="text-sm font-medium text-gray-900">SAL-2024-001</p>
+                        <p className="text-sm font-medium text-gray-900">{sale.reference}</p>
                     </div>
                     <div className="space-y-2">
                         <h6 className="text-xs text-gray-600">Grand Total</h6>
-                        <p className="text-sm font-medium text-gray-900">{formatCurrency(1250.00)}</p>
+                        <p className="text-sm font-medium text-gray-900">
+                            {formatCurrency(parseFloat(sale.grand_total))}
+                        </p>
                     </div>
                     <div className="space-y-2">
                         <h6 className="text-xs text-gray-600">Status</h6>
-                        <StatusChip status="completed" />
+                        <StatusChip status={sale.status.toLowerCase()} />
                     </div>
                     <div className="space-y-2">
                         <h6 className="text-xs text-gray-600">Payment Status</h6>
-                        <StatusChip status="paid" />
+                        <StatusChip status={sale.payment.status.toLowerCase()} />
                     </div>
                     <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Paid</h6>
-                        <p className="text-sm font-medium text-gray-900">{formatCurrency(1250.00)}</p>
-                    </div>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Due</h6>
-                        <p className="text-sm font-medium text-gray-900">{formatCurrency(0.00)}</p>
-                    </div>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Payment Type</h6>
-                        <p className="text-sm font-medium text-gray-900">Cash</p>
+                        <h6 className="text-xs text-gray-600">Payment Method</h6>
+                        <p className="text-sm font-medium text-gray-900 capitalize">
+                            {sale.payment.method?.type || '-'}
+                        </p>
                     </div>
                     <div className="space-y-2">
                         <h6 className="text-xs text-gray-600">Created On</h6>
-                        <p className="text-sm font-medium text-gray-900">2024-01-15</p>
-                    </div>
-                    <div className="space-y-2 col-span-full">
-                        <h6 className="text-xs text-gray-600">Note</h6>
-                        <p className="text-sm text-gray-900">
-                            This is a test sale for the product, please review the details and confirm the sale, thank you.
+                        <p className="text-sm font-medium text-gray-900">
+                            {moment(sale.created_at).format('LLL')}
                         </p>
                     </div>
-                </DashboardCard>
 
-                {/* ======================== PAYMENT DETAILS ======================== */}
-                <DashboardCard title="Payment Details" className='overflow-hidden' 
-                bodyClassName='p-0'>
-                    <TableComponent
-                        className='border-0'
-                        columns={[
-                            { key: 'date', title: 'DATE' },
-                            { key: 'reference', title: 'REFERENCE' },
-                            { key: 'paymentType', title: 'PAYMENT TYPE' },
-                            { key: 'amount', title: 'AMOUNT' }
-                        ]}
-                        data={[
-                            {
-                                id: '1',
-                                date: '2025-12-12',
-                                reference: 'N/A',
-                                paymentType: 'Cash',
-                                amount: 124.12
-                            }
-                        ]}
-                        rowKey={(item) => item.id}
-                        renderRow={(payment) => (
-                            <>
-                                <TableCell>
-                                    <span className='text-xs'>
-                                        {moment(payment.date).format('MM/DD/YYYY')}
-                                    </span>
-                                </TableCell>
-                                <TableCell>
-                                    <span className='text-xs'>{payment.reference}</span>
-                                </TableCell>
-                                <TableCell>
-                                    <span className='text-xs'>{payment.paymentType}</span>
-                                </TableCell>
-                                <TableCell>
-                                    <span className='text-xs font-medium'>
-                                        {formatCurrency(payment.amount)}
-                                    </span>
-                                </TableCell>
-                            </>
-                        )}
-                        withCheckbox={false}
-                        loading={false}
-                    />
+                    {sale.note && (
+                        <div className="space-y-2 col-span-full">
+                            <h6 className="text-xs text-gray-600">Note</h6>
+                            <p className="text-sm text-gray-900">{sale.note}</p>
+                        </div>
+                    )}
+                    
                 </DashboardCard>
 
                 {/* ======================== SALE ITEMS ======================== */}
-                <DashboardCard title="Sale Items" className='overflow-hidden' 
-                bodyClassName='p-0'>
+                <DashboardCard title="Sale Items" className='overflow-hidden'
+                    bodyClassName='p-0'>
                     <OrderItemsTable
-                        items={[
-                            {
-                                id: '1',
-                                productId: '1',
-                                name: 'Wireless Bluetooth Headphones',
-                                code: 'WBH-001',
-                                stock: 45,
-                                unit: 'piece',
-                                quantity: 2,
-                                netUnitPrice: 129.99,
-                                discount: 5,
-                                tax: 10,
-                                subtotal: 259.98
-                            },
-                            {
-                                id: '2',
-                                productId: '2',
-                                name: 'Cotton T-Shirt',
-                                code: 'CTS-002',
-                                stock: 120,
-                                unit: 'piece',
-                                quantity: 3,
-                                netUnitPrice: 24.99,
-                                discount: 10,
-                                tax: 8,
-                                subtotal: 74.97
-                            },
-                            {
-                                id: '3',
-                                productId: '3',
-                                name: 'Running Shoes',
-                                code: 'RS-003',
-                                stock: 30,
-                                unit: 'pair',
-                                quantity: 1,
-                                netUnitPrice: 89.99,
-                                discount: 15,
-                                tax: 12,
-                                subtotal: 89.99
-                            }
-                        ]}
+                        items={orderItems}
                         readOnly={true}
+                        hideStock={true}
                     />
 
                     <div className="px-5 pb-5">
                         <SummaryBox
                             items={[
-                                { label: 'Order Tax', value: formatCurrency(125.00) + ' (10%)' },
-                                { label: 'Discount', value: formatCurrency(50.00) },
-                                { label: 'Shipping', value: formatCurrency(20.00) },
-                                { label: 'Grand Total', value: formatCurrency(1250.00), isTotal: true }
+                                { label: 'Order Tax', value: taxDisplay },
+                                { label: 'Discount', value: discountDisplay },
+                                { label: 'Shipping', value: formatCurrency(parseFloat(sale.shipping)) },
+                                { label: 'Grand Total', value: formatCurrency(parseFloat(sale.grand_total)), isTotal: true }
                             ]}
                         />
                     </div>
@@ -184,5 +158,64 @@ const SalesDetailsView = ({ saleId }: { saleId: string }) => {
     )
 }
 
-export default SalesDetailsView
+// ================================
+// SKELETON COMPONENT FOR LOADING STATE
+// ================================
+const SalesDetailsSkeleton = () => {
+    return (
+        <>
+            <DashboardBreadCrumb
+                items={[
+                    { label: 'Sales', href: '/dashboard/sales' },
+                    { label: 'Sale Details' }
+                ]}
+                title="Sale Details"
+            />
 
+            <div className="p-3 space-y-3">
+
+                <DashboardCard title="Customer & Store Information"
+                    className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 gap-5'>
+                    <div className="space-y-2 animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        <div className="h-5 bg-gray-200 rounded w-40"></div>
+                    </div>
+                    <div className="space-y-2 animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        <div className="h-5 bg-gray-200 rounded w-40"></div>
+                    </div>
+                </DashboardCard>
+
+                <DashboardCard title="Sale Information"
+                    className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5'>
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="space-y-2 animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            <div className="h-5 bg-gray-200 rounded w-32"></div>
+                        </div>
+                    ))}
+                </DashboardCard>
+
+                <DashboardCard title="Sale Items" className='overflow-hidden' bodyClassName='p-0'>
+                    <div className="p-5 space-y-3 animate-pulse">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="h-12 bg-gray-200 rounded w-full"></div>
+                        ))}
+                    </div>
+                    <div className="px-5 pb-5">
+                        <div className="space-y-2 animate-pulse">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="flex justify-between">
+                                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </DashboardCard>
+            </div>
+        </>
+    )
+}
+
+export default SalesDetailsView

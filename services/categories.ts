@@ -14,10 +14,14 @@ import { getErrorMessage } from "@/utils";
 
 /**
  * Get all categories
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 200 for Redux state)
  * @returns Promise with the categories list response
  */
-export async function getCategories(): Promise<CategoriesListResponse> {
-    const response = await client.get(ENDPOINT.CATEGORIES);
+export async function getCategories(page: number = 1, limit: number = 200): Promise<CategoriesListResponse> {
+    const response = await client.get(ENDPOINT.CATEGORIES, {
+        params: { page, limit }
+    });
     return response.data;
 }
 
@@ -53,23 +57,29 @@ export async function deleteCategory(id: number): Promise<DeleteCategoryResponse
 }
 
 /**
- * React Query hook to get categories list
- * @returns Query result with data (Category[]), isLoading, and error
+ * React Query hook to get categories list with pagination
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 25)
+ * @returns Query result with data (Category[]), pagination, isLoading, and error
  */
-export const useGetCategories = () => {
-    const { data, isLoading, error } = useQuery<Category[]>({
-        queryKey: ['categories-list'],
+export const useGetCategories = (page: number = 1, limit: number = 25) => {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['categories-list', page, limit],
         queryFn: async () => {
-            const response = await getCategories();
-            return response.data;
+            const response = await getCategories(page, limit);
+            return {
+                data: response.data,
+                pagination: response.pagination
+            };
         },
     });
 
     return { 
-        data: data || [], 
+        data: data?.data || [], 
+        pagination: data?.pagination,
         isLoading, 
         error,
-        categories: data || [] // Alias for convenience
+        categories: data?.data || [] // Alias for convenience
     };
 };
 

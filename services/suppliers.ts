@@ -14,10 +14,14 @@ import { getErrorMessage } from "@/utils";
 
 /**
  * Get all suppliers
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 200 for Redux state)
  * @returns Promise with the suppliers list response
  */
-export async function getSuppliers(): Promise<SuppliersListResponse> {
-    const response = await client.get(ENDPOINT.SUPPLIERS);
+export async function getSuppliers(page: number = 1, limit: number = 200): Promise<SuppliersListResponse> {
+    const response = await client.get(ENDPOINT.SUPPLIERS, {
+        params: { page, limit }
+    });
     return response.data;
 }
 
@@ -53,23 +57,29 @@ export async function deleteSupplier(id: number): Promise<DeleteSupplierResponse
 }
 
 /**
- * React Query hook to get suppliers list
- * @returns Query result with data (Supplier[]), isLoading, and error
+ * React Query hook to get suppliers list with pagination
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 25)
+ * @returns Query result with data (Supplier[]), pagination, isLoading, and error
  */
-export const useGetSuppliers = () => {
-    const { data, isLoading, error } = useQuery<Supplier[]>({
-        queryKey: ['suppliers-list'],
+export const useGetSuppliers = (page: number = 1, limit: number = 25) => {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['suppliers-list', page, limit],
         queryFn: async () => {
-            const response = await getSuppliers();
-            return response.data;
+            const response = await getSuppliers(page, limit);
+            return {
+                data: response.data,
+                pagination: response.pagination
+            };
         },
     });
 
     return { 
-        data: data || [], 
+        data: data?.data || [], 
+        pagination: data?.pagination,
         isLoading, 
         error,
-        suppliers: data || [] // Alias for convenience
+        suppliers: data?.data || [] // Alias for convenience
     };
 };
 

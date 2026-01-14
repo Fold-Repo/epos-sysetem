@@ -21,8 +21,8 @@ export const fetchStores = createAsyncThunk(
     'stores/fetchStores',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await getStores()
-            return response.data
+            const response = await getStores(1, 200)
+            return response.stores
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to fetch stores')
         }

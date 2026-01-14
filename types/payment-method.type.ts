@@ -1,7 +1,13 @@
 export interface PaymentMethodType {
-    id?: string | number;
+    id: number;
     name: string;
-    status: 'active' | 'inactive';
-    created_at?: string | Date;
+    description: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PaymentMethodsListResponse {
+    status: number;
+    data: PaymentMethodType[];
 }
 

@@ -7,6 +7,7 @@ import { StoreType } from '@/types'
 import StoreTable from './StoreTable'
 import StoreModal from './StoreModal'
 import { useGetStores, useDeleteStore } from '@/services'
+import { useQueryParams } from '@/hooks'
 
 const StoresView = () => {
 
@@ -15,7 +16,10 @@ const StoresView = () => {
     const [deleteStoreId, setDeleteStoreId] = useState<string | undefined>(undefined)
     const [editingStore, setEditingStore] = useState<StoreType | undefined>(undefined)
     const [searchValue, setSearchValue] = useState('')
-    const { data: stores, isLoading } = useGetStores()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 20
+    const { data: stores, pagination, isLoading } = useGetStores(currentPage, LIMIT)
     const deleteStoreMutation = useDeleteStore()
 
     // ==============================
@@ -100,11 +104,11 @@ const StoresView = () => {
                     />
 
                     <Pagination
-                        currentPage={1}
-                        totalItems={filteredStores?.length || 0}
-                        itemsPerPage={25}
+                        currentPage={currentPage}
+                        totalItems={pagination?.total || 0}
+                        itemsPerPage={LIMIT}
                         onPageChange={(page) => {
-                            console.log('Page changed:', page)
+                            updateQueryParams({ page: page.toString() })
                         }}
                         showingText="Stores"
                     />

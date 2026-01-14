@@ -26,9 +26,11 @@ interface CustomAutocompleteProps {
     value?: string | string[] | Option | Option[];
     onChange?: (value: any) => void;
     onBlur?: () => void;
+    onInputChange?: (inputValue: string) => void;
     isDisabled?: boolean;
     isClearable?: boolean;
     isSearchable?: boolean;
+    isLoading?: boolean;
     inputSize?: "sm" | "md" | "lg";
     radius?: "none" | "sm" | "md" | "lg" | "xl" | "full";
 }
@@ -47,9 +49,11 @@ const CustomAutocomplete: React.FC<CustomAutocompleteProps> = ({
     value,
     onChange,
     onBlur,
+    onInputChange,
     isDisabled = false,
     isClearable = false,
     isSearchable = true,
+    isLoading = false,
     inputSize = "md",
     radius = "md",
 }) => {
@@ -206,9 +210,11 @@ const CustomAutocomplete: React.FC<CustomAutocompleteProps> = ({
                     value={selectedValue}
                     onChange={handleChange}
                     onBlur={onBlur}
+                    onInputChange={onInputChange}
                     isDisabled={isDisabled}
                     isClearable={isClearable}
                     isSearchable={isSearchable}
+                    isLoading={isLoading}
                     styles={customStyles}
                 />
             </div>

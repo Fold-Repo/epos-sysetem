@@ -4,10 +4,12 @@ import { createInputLabel, Input, PopupModal, TextArea, PhoneInput } from '@/com
 import { Button } from '@heroui/react'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { CustomerType } from '@/types'
+import { CustomerType, CreateCustomerPayload } from '@/types'
 import { useEffect } from 'react'
-import { useToast } from '@/hooks'
 import { customerSchema, CustomerFormData } from '@/schema'
+import { useCreateCustomer, useUpdateCustomer } from '@/services'
+import { useAppDispatch } from '@/store/hooks'
+import { fetchCustomers } from '@/store/slice'
 
 interface CustomerModalProps {
     isOpen: boolean
@@ -23,13 +25,17 @@ const CustomerModal = ({
     initialData
 }: CustomerModalProps) => {
 
-    const { showSuccess } = useToast()
+    const dispatch = useAppDispatch()
+    const createCustomerMutation = useCreateCustomer()
+    const updateCustomerMutation = useUpdateCustomer()
+
+    const isLoading = createCustomerMutation.isPending || updateCustomerMutation.isPending
 
     const {
         register,
         handleSubmit,
         control,
-        formState: { errors, isSubmitting },
+        formState: { errors },
         reset
     } = useForm<CustomerFormData>({
         resolver: yupResolver(customerSchema),
@@ -37,7 +43,7 @@ const CustomerModal = ({
         defaultValues: {
             name: initialData?.name || '',
             email: initialData?.email || '',
-            phone: initialData?.phone || '',
+            phone: initialData?.phone || initialData?.phonenumber || '',
             country: initialData?.country || '',
             city: initialData?.city || '',
             address: initialData?.address || ''
@@ -49,7 +55,7 @@ const CustomerModal = ({
             reset({
                 name: initialData?.name || '',
                 email: initialData?.email || '',
-                phone: initialData?.phone || '',
+                phone: initialData?.phone || initialData?.phonenumber || '',
                 country: initialData?.country || '',
                 city: initialData?.city || '',
                 address: initialData?.address || ''
@@ -58,18 +64,31 @@ const CustomerModal = ({
     }, [isOpen, initialData, reset])
 
     const handleFormSubmit = async (data: CustomerFormData) => {
+        const payload: CreateCustomerPayload = {
+            name: data.name,
+            email: data.email || undefined,
+            phonenumber: data.phone || undefined,
+            country: data.country || undefined,
+            city: data.city || undefined,
+            address: data.address || undefined
+        }
+
         try {
             if (mode === 'edit' && initialData) {
-                console.log('Update customer:', initialData.id, data)
-                showSuccess('Customer updated', 'Customer updated successfully.')
+                const customerId = initialData.customer_id || initialData.id
+                await updateCustomerMutation.mutateAsync({ 
+                    id: Number(customerId), 
+                    payload 
+                })
             } else {
-                console.log('Create customer:', data)
-                showSuccess('Customer created', 'Customer created successfully.')
+                await createCustomerMutation.mutateAsync(payload)
             }
+            // Refresh Redux state after successful mutation
+            dispatch(fetchCustomers())
             onClose()
             reset()
         } catch (error) {
-            console.error('Form submission error:', error)
+            // Error is handled by the mutation
         }
     }
 
@@ -90,7 +109,7 @@ const CustomerModal = ({
                     type='submit'
                     className='h-10 px-6'
                     color="primary"
-                    isLoading={isSubmitting}
+                    isLoading={isLoading}
                     onPress={() => {
                         const form = document.querySelector('form')
                         if (form) {
@@ -170,4 +189,3 @@ const CustomerModal = ({
 }
 
 export default CustomerModal
-

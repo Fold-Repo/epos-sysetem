@@ -15,11 +15,13 @@ interface PurchaseTableProps {
     onView?: (purchaseId: string) => void
     onEdit?: (purchaseId: string) => void
     onDelete?: (purchaseId: string) => void
+    loading?: boolean
 }
 
 const columns = [
     { key: 'reference', title: 'REFERENCE' },
     { key: 'supplier', title: 'SUPPLIER' },
+    { key: 'store_name', title: 'STORE' },
     { key: 'status', title: 'STATUS' },
     { key: 'paymentStatus', title: 'PAYMENT STATUS' },
     { key: 'grandTotal', title: 'GRAND TOTAL' },
@@ -29,10 +31,12 @@ const columns = [
 
 const PurchaseTable = ({ 
     data, 
+    selectedPurchases,
     onSelectionChange, 
     onView, 
     onEdit, 
-    onDelete
+    onDelete,
+    loading = false
 }: PurchaseTableProps) => {
 
     const renderRow = (purchase: PurchaseType) => {
@@ -42,7 +46,10 @@ const PurchaseTable = ({
                     <span className='text-xs'>{purchase.reference}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{purchase.supplier}</span>
+                    <span className='text-xs'>{purchase.supplier_name}</span>
+                </TableCell>
+                <TableCell>
+                    <span className='text-xs'>{purchase.store_name}</span>
                 </TableCell>
                 <TableCell>
                     <StatusChip status={purchase.status} />
@@ -111,9 +118,9 @@ const PurchaseTable = ({
             data={data}
             rowKey={(item) => String(item.id || `pur-${Math.random()}`)}
             renderRow={renderRow}
-            withCheckbox={false}
+            withCheckbox={true}
             onSelectionChange={onSelectionChange}
-            loading={false}
+            loading={loading}
         />
     )
 }

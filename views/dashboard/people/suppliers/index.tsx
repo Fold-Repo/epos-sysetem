@@ -6,6 +6,7 @@ import SupplierModal from './SupplierModal'
 import { Supplier } from '@/types/supplier.type'
 import { useState, useEffect, useMemo } from 'react'
 import { useGetSuppliers, useDeleteSupplier } from '@/services'
+import { useQueryParams } from '@/hooks'
 
 interface SuppliersViewProps {
     onAddClick?: (handler: () => void) => void
@@ -18,7 +19,10 @@ const SuppliersView = ({ onAddClick }: SuppliersViewProps) => {
     const [editingSupplier, setEditingSupplier] = useState<Supplier | undefined>(undefined)
     const [deleteSupplierId, setDeleteSupplierId] = useState<number | undefined>(undefined)
     const [searchValue, setSearchValue] = useState('')
-    const { data: suppliers, isLoading } = useGetSuppliers()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 20
+    const { data: suppliers, pagination, isLoading } = useGetSuppliers(currentPage, LIMIT)
     const deleteSupplierMutation = useDeleteSupplier()
 
     useEffect(() => {
@@ -91,11 +95,11 @@ const SuppliersView = ({ onAddClick }: SuppliersViewProps) => {
 
                 {/* ================= PAGINATION ================= */}
                 <Pagination
-                    currentPage={1}
-                    totalItems={filteredSuppliers?.length || 0}
-                    itemsPerPage={25}
+                    currentPage={currentPage}
+                    totalItems={pagination?.total || 0}
+                    itemsPerPage={LIMIT}
                     onPageChange={(page) => {
-                        console.log('Page changed:', page)
+                        updateQueryParams({ page: page.toString() })
                     }}
                     showingText="Suppliers"
                 />

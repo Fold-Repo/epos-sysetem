@@ -2,19 +2,24 @@
 
 import { DashboardBreadCrumb } from '@/components'
 import QuotationForm from '../QuotationForm'
-import { useToast, useGoBack } from '@/hooks'
+import { useGoBack } from '@/hooks'
 import { CreateQuotationFormData, UpdateQuotationFormData } from '@/types'
+import { useCreateQuotation, transformQuotationFormDataToPayload } from '@/services'
+import { useRouter } from 'next/navigation'
 
 const CreateQuotationView = () => {
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
+    const router = useRouter()
+    const { mutate: createQuotation, isPending } = useCreateQuotation()
 
     const handleSubmit = (formData: CreateQuotationFormData | UpdateQuotationFormData) => {
-        // Type guard: in create mode, formData will always be CreateQuotationFormData
-        const createData = formData as CreateQuotationFormData
-        console.log('Create quotation:', createData)
-        showSuccess('Quotation created', 'Quotation created successfully.')
-        // router.push('/dashboard/quotations')
+        const payload = transformQuotationFormDataToPayload(formData as CreateQuotationFormData)
+        
+        createQuotation(payload, {
+            onSuccess: () => {
+                router.push('/dashboard/quotations')
+            }
+        })
     }
 
     return (
@@ -32,6 +37,7 @@ const CreateQuotationView = () => {
                     mode="create"
                     onSubmit={handleSubmit}
                     onCancel={goBack}
+                    isLoading={isPending}
                     submitButtonText="Create Quotation"
                 />
             </div>

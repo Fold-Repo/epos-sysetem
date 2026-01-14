@@ -15,6 +15,7 @@ interface ProductDetailsViewProps {
 }
 
 const ProductDetailsView = ({ productId }: ProductDetailsViewProps) => {
+    
     const { data: product, isLoading } = useGetProductDetail(Number(productId))
 
     const imageUrls = product?.images?.map(img => img.image_url) || []
@@ -22,19 +23,7 @@ const ProductDetailsView = ({ productId }: ProductDetailsViewProps) => {
     // ================================
     // Main Image
     // ================================
-    let mainImageUrl: string | undefined = undefined
-    if (product?.image_url) {
-        try {
-            const imageData = JSON.parse(product.image_url)
-            if (typeof imageData === 'object' && imageData.url) {
-                mainImageUrl = imageData.url
-            } else if (typeof imageData === 'string') {
-                mainImageUrl = imageData
-            }
-        } catch {
-            mainImageUrl = product.image_url
-        }
-    }
+    const mainImageUrl = product?.image_url || undefined
 
     // ================================
     // Combine all images (main image + images array, avoiding duplicates)
@@ -51,10 +40,15 @@ const ProductDetailsView = ({ productId }: ProductDetailsViewProps) => {
     // Format price display
     // ================================
     const priceDisplay = product
-        ? product.min_price === product.max_price
-            ? formatCurrency(parseFloat(product.min_price))
-            : `${formatCurrency(parseFloat(product.min_price))} - ${formatCurrency(parseFloat(product.max_price))}`
+        ? product.pricing.min_price === product.pricing.max_price
+            ? formatCurrency(parseFloat(product.pricing.min_price))
+            : `${formatCurrency(parseFloat(product.pricing.min_price))} - ${formatCurrency(parseFloat(product.pricing.max_price))}`
         : ''
+    
+    // ================================
+    // Determine product type (Simple or Variation)
+    // ================================
+    const isVariationProduct = product?.variations && product.variations.length > 0
 
     if (isLoading) {
         return <ProductDetailsSkeleton />
@@ -64,7 +58,7 @@ const ProductDetailsView = ({ productId }: ProductDetailsViewProps) => {
 
     return (
         <>
-        
+
             <DashboardBreadCrumb
                 items={[
                     { label: 'Products', href: '/dashboard/products' },
@@ -106,43 +100,71 @@ const ProductDetailsView = ({ productId }: ProductDetailsViewProps) => {
                         <div className="space-y-2">
                             <h6 className="text-sm text-gray-400">Product Type</h6>
                             <Chip size="sm" variant="flat"
-                                color={product.product_type === 'Simple' ? 'primary' : 'secondary'}>
-                                {product.product_type === 'Simple' ? 'Single' : 'Variation'}
+                                color={!isVariationProduct ? 'primary' : 'secondary'}>
+                                {!isVariationProduct ? 'Single' : 'Variation'}
                             </Chip>
                         </div>
 
                         <div className="space-y-2">
                             <h6 className="text-sm text-gray-400">Category</h6>
-                            <p className="text-sm font-medium text-gray-700">{product.category_name}</p>
+                            <p className="text-sm font-medium text-gray-700">{product.category.name}</p>
                         </div>
+
+                        {product.subcategory.name && (
+                            <div className="space-y-2">
+                                <h6 className="text-sm text-gray-400">Subcategory</h6>
+                                <p className="text-sm font-medium text-gray-700">{product.subcategory.name}</p>
+                            </div>
+                        )}
 
                         <div className="space-y-2">
                             <h6 className="text-sm text-gray-400">Brand</h6>
-                            <p className="text-sm font-medium text-gray-700">{product.brand_name}</p>
+                            <p className="text-sm font-medium text-gray-700">{product.brand.name}</p>
                         </div>
 
                         <div className="space-y-2">
                             <h6 className="text-sm text-gray-400">Unit</h6>
                             <Chip size="sm" variant="flat" color="success" className="text-green-700 bg-green-100">
-                                {product.product_unit}
+                                {product.unit.name}
                             </Chip>
                         </div>
 
                         <div className="space-y-2">
-                            <h6 className="text-sm text-gray-400">Quantity Limit</h6>
-                            <p className="text-sm font-medium text-gray-700">{product.quantity_limit}</p>
+                            <h6 className="text-sm text-gray-400">Stock Quantity</h6>
+                            <p className="text-sm font-medium text-gray-700">{product.stock.quantity}</p>
                         </div>
+
+                        {product.stock.alert_level && (
+                            <div className="space-y-2">
+                                <h6 className="text-sm text-gray-400">Stock Alert Level</h6>
+                                <p className="text-sm font-medium text-gray-700">{product.stock.alert_level}</p>
+                            </div>
+                        )}
 
                         <div className="space-y-2">
                             <h6 className="text-sm text-gray-400">Status</h6>
-                            <Chip
-                                size="sm"
-                                variant="flat"
-                                color={product.status === 'Active' ? 'success' : 'default'}
-                            >
+                            <Chip size="sm" variant="flat"
+                                color={product.status === 'Active' ? 'success' : 'default'}>
                                 {product.status}
                             </Chip>
                         </div>
+                        
+                        {/* Tax info for single products only */}
+                        {!isVariationProduct && product.tax.type && (
+                            <div className="space-y-2">
+                                <h6 className="text-sm text-gray-400">Tax</h6>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-700">
+                                        {product.tax.type === 'fixed' 
+                                            ? formatCurrency(parseFloat(product.tax.amount || '0'))
+                                            : `${product.tax.amount || '0'}%`}
+                                    </span>
+                                    <Chip size="sm" variant="flat" color="secondary" className="capitalize">
+                                        {product.tax.type}
+                                    </Chip>
+                                </div>
+                            </div>
+                        )}
 
                         {product.expiry_date && (
                             <div className="space-y-2">
@@ -168,11 +190,12 @@ const ProductDetailsView = ({ productId }: ProductDetailsViewProps) => {
                                 </p>
                             </div>
                         )}
+
                     </div>
                 </DashboardCard>
 
                 {/* ======================== Variations ======================== */}
-                {product.product_type === 'Variation' && product.variations && product.variations.length > 0 && (
+                {isVariationProduct && (
                     <DashboardCard title="Variations">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {product.variations.map((variation, index) => (
@@ -208,17 +231,23 @@ const ProductDetailsView = ({ productId }: ProductDetailsViewProps) => {
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-gray-400">Tax</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-medium text-gray-700">
-                                                    {formatCurrency(parseFloat(variation.tax_amount))}
-                                                </span>
-                                                <Chip size="sm" variant="flat" color="secondary">
+                                                {variation.tax_type === 'fixed' ? (
+                                                    <span className="text-xs font-medium text-gray-700">
+                                                        {formatCurrency(parseFloat(variation.tax_amount))}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs font-medium text-gray-700">
+                                                        {variation.tax_amount}%
+                                                    </span>
+                                                )}
+                                                <Chip size="sm" variant="flat" color="secondary" className='capitalize'>
                                                     {variation.tax_type}
                                                 </Chip>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Stock Details */}
+                                    {/* ======================== Stock Details ======================== */}
                                     <div className="space-y-2 pt-2 border-t border-gray-100">
                                         <h6 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Stock Details</h6>
                                         <div className="flex items-center justify-between">

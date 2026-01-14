@@ -3,9 +3,26 @@
 import { DashboardCard, FilterBar, Pagination, StackIcon, useDisclosure, DeleteModal } from '@/components'
 import CustomerTable from './CustomerTable'
 import CustomerModal from './CustomerModal'
-import { customersData } from '@/data'
-import { CustomerType } from '@/types'
+import { CustomerType, CustomerQueryParams } from '@/types'
 import { useState, useEffect } from 'react'
+import { useGetCustomers, useDeleteCustomer } from '@/services'
+import { useQueryParams } from '@/hooks'
+import { useAppDispatch } from '@/store/hooks'
+import { fetchCustomers } from '@/store/slice'
+
+// ================================
+// CONSTANTS
+// ================================
+const LIMIT = 25
+
+const SORT_OPTIONS = [
+    { label: 'Newest First', key: 'newest' },
+    { label: 'Oldest First', key: 'oldest' },
+    { label: 'Name (A-Z)', key: 'name_asc' },
+    { label: 'Name (Z-A)', key: 'name_desc' },
+    { label: 'City (A-Z)', key: 'city_asc' },
+    { label: 'City (Z-A)', key: 'city_desc' }
+]
 
 interface CustomerViewProps {
     onAddClick?: (handler: () => void) => void
@@ -13,10 +30,37 @@ interface CustomerViewProps {
 
 const CustomerView = ({ onAddClick }: CustomerViewProps) => {
 
+    const dispatch = useAppDispatch()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    
+    // ================================
+    // GET QUERY PARAMS FROM URL
+    // ================================
+    const queryParams: CustomerQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: LIMIT,
+        search: searchParams.get('search') || undefined,
+        sort: searchParams.get('sort') || undefined
+    }
+    
+    // ================================
+    // FETCH CUSTOMERS
+    // ================================
+    const { data, isLoading } = useGetCustomers(queryParams)
+    const { customers, pagination } = data || {}
+
+    // ================================
+    // DELETE MUTATION
+    // ================================
+    const deleteCustomerMutation = useDeleteCustomer()
+
+    // ================================
+    // MODAL STATE
+    // ================================
     const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
     const [editingCustomer, setEditingCustomer] = useState<CustomerType | undefined>(undefined)
-    const [deleteCustomerId, setDeleteCustomerId] = useState<string | undefined>(undefined)
+    const [deleteCustomerId, setDeleteCustomerId] = useState<number | undefined>(undefined)
 
     useEffect(() => {
         if (onAddClick) {
@@ -27,50 +71,49 @@ const CustomerView = ({ onAddClick }: CustomerViewProps) => {
         }
     }, [onAddClick, onModalOpen])
 
+    // ================================
+    // DELETE HANDLERS
+    // ================================
+    const handleDelete = (customerId: string) => {
+        setDeleteCustomerId(Number(customerId))
+        onDeleteModalOpen()
+    }
+
     const confirmDelete = () => {
-        console.log('Delete customer:', deleteCustomerId)
+        if (deleteCustomerId) {
+            deleteCustomerMutation.mutate(deleteCustomerId, {
+                onSuccess: () => {
+                    dispatch(fetchCustomers())
+                }
+            })
+        }
         onDeleteModalClose()
         setDeleteCustomerId(undefined)
     }
 
+    // ================================
+    // GET LABEL FOR CURRENT FILTER VALUE
+    // ================================
+    const getSortLabel = () => {
+        const current = SORT_OPTIONS.find(o => o.key === queryParams.sort)
+        return current ? `Sort: ${current.label}` : 'Sort By'
+    }
+
+    // ================================
+    // FILTER ITEMS CONFIG
+    // ================================
     const filterItems = [
         {
             type: 'dropdown' as const,
-            label: 'Country: All',
+            label: getSortLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'United States', key: 'us' },
-                { label: 'United Kingdom', key: 'uk' },
-                { label: 'Canada', key: 'ca' }
-            ],
-            value: '',
+            items: SORT_OPTIONS,
+            value: queryParams.sort || '',
             onChange: (key: string) => {
-                console.log('Country changed:', key)
+                updateQueryParams({ sort: key, page: 1 })
             }
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Sort By: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'Name (A-Z)', key: 'name_asc' },
-                { label: 'Name (Z-A)', key: 'name_desc' },
-                { label: 'Newest First', key: 'newest' },
-                { label: 'Oldest First', key: 'oldest' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Sort changed:', key)
-            }
-        },
-        {
-            type: 'dateRange' as const,
-            label: 'Data',
-            placeholder: 'Select date range'
-        },
+        }
     ]
 
     return (
@@ -79,32 +122,35 @@ const CustomerView = ({ onAddClick }: CustomerViewProps) => {
                 <FilterBar
                     searchInput={{
                         placeholder: 'Search by name, email, or phone',
-                        className: 'w-full md:w-72'
+                        className: 'w-full md:w-72',
+                        onSearch: (value: string) => {
+                            updateQueryParams({ search: value || null, page: 1 })
+                        }
                     }}
                     items={filterItems}
                 />
 
                 <CustomerTable
-                    data={customersData}
+                    data={customers ?? []}
+                    loading={isLoading}
                     onEdit={(customer) => {
                         setEditingCustomer(customer)
                         onModalOpen()
                     }}
-                    onDelete={(customerId) => {
-                        setDeleteCustomerId(customerId)
-                        onDeleteModalOpen()
-                    }}
+                    onDelete={handleDelete}
                 />
 
-                <Pagination
-                    currentPage={1}
-                    totalItems={100}
-                    itemsPerPage={25}
-                    onPageChange={(page) => {
-                        console.log('Page changed:', page)
-                    }}
-                    showingText="Customers"
-                />
+                {pagination && (
+                    <Pagination
+                        currentPage={pagination.page}
+                        totalItems={pagination.total}
+                        itemsPerPage={pagination.limit}
+                        onPageChange={(page) => {
+                            updateQueryParams({ page })
+                        }}
+                        showingText="Customers"
+                    />
+                )}
             </DashboardCard>
 
             <CustomerModal

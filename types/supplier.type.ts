@@ -1,3 +1,5 @@
+import { PaginationResponse } from './type';
+
 /**
  * Supplier from API
  */
@@ -12,12 +14,15 @@ export interface Supplier {
     updated_at: string;
 }
 
+
+
 /**
  * Suppliers list response from API
  */
 export interface SuppliersListResponse {
     status: number;
     data: Supplier[];
+    pagination: PaginationResponse;
 }
 
 /**

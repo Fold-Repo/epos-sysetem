@@ -8,12 +8,67 @@ import { LuChartSpline } from 'react-icons/lu';
 import { useState } from 'react';
 import { QuotationType } from '@/types';
 import QuotationTable from './QuotationTable';
-import { quotationsData } from '@/data';
 import { useRouter } from 'next/navigation';
+import { useGetQuotations, QuotationQueryParams } from '@/services';
+import { useQueryParams } from '@/hooks';
+import { useAppSelector, selectStores } from '@/store';
+
+// ================================
+// CONSTANTS
+// ================================
+const LIMIT = 25
+
+const SORT_OPTIONS = [
+    { label: 'Newest First', key: 'newest' },
+    { label: 'Oldest First', key: 'oldest' },
+    { label: 'Total (High to Low)', key: 'total_desc' },
+    { label: 'Total (Low to High)', key: 'total_asc' },
+    { label: 'Status (A-Z)', key: 'status_asc' },
+    { label: 'Status (Z-A)', key: 'status_desc' }
+]
+
+const STATUS_OPTIONS = [
+    { label: 'All', key: 'all' },
+    { label: 'Draft', key: 'draft' },
+    { label: 'Sent', key: 'sent' },
+    { label: 'Approved', key: 'approved' },
+    { label: 'Rejected', key: 'rejected' }
+]
 
 const QuotationView = () => {
 
     const router = useRouter()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    
+    // ================================
+    // GET STORES FROM REDUX STATE
+    // ================================
+    const stores = useAppSelector(selectStores)
+    
+    // ================================
+    // GET QUERY PARAMS FROM URL
+    // ================================
+    const storeIdParam = searchParams.get('store_id')
+    const queryParams: QuotationQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: LIMIT,
+        search: searchParams.get('search') || undefined,
+        status: searchParams.get('status') || undefined,
+        store_id: storeIdParam ? parseInt(storeIdParam, 10) : undefined,
+        sort: searchParams.get('sort') || undefined,
+        startDate: searchParams.get('startDate') || undefined,
+        endDate: searchParams.get('endDate') || undefined
+    }
+    
+    // ================================
+    // FETCH QUOTATIONS
+    // ================================
+    const { data, isLoading } = useGetQuotations(queryParams)
+    const { quotations, pagination } = data || {}
+    
+    // ================================
+    // DELETE MODAL STATE
+    // ================================
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
     const [selectedQuotations, setSelectedQuotations] = useState<QuotationType[]>([]);
     const [deleteQuotationId, setDeleteQuotationId] = useState<string | undefined>(undefined)
@@ -65,6 +120,7 @@ const QuotationView = () => {
     }
 
     const confirmDelete = () => {
+        // TODO: Implement delete functionality
         if (isBulkDelete) {
             console.log('Delete quotations:', selectedQuotations.map(q => q.id))
             setSelectedQuotations([])
@@ -74,47 +130,85 @@ const QuotationView = () => {
         onDeleteModalClose()
     }
 
+    // ================================
+    // GET LABEL FOR CURRENT FILTER VALUE
+    // ================================
+    const getStatusLabel = () => {
+        const current = STATUS_OPTIONS.find(o => o.key === queryParams.status)
+        return current ? `Status: ${current.label}` : 'Status: All'
+    }
+
+    const getSortLabel = () => {
+        const current = SORT_OPTIONS.find(o => o.key === queryParams.sort)
+        return current ? `Sort: ${current.label}` : 'Sort By'
+    }
+
+    // ================================
+    // STORE OPTIONS
+    // ================================
+    const storeOptions = stores
+        .filter(s => s.store_id !== undefined)
+        .map(s => ({ value: String(s.store_id), label: s.name }))
+
+    const getStoreLabel = () => {
+        if (!queryParams.store_id) return 'Store: All'
+        const store = stores.find(s => s.store_id === queryParams.store_id)
+        return store ? `Store: ${store.name}` : 'Store: All'
+    }
+
+    // ================================
+    // FILTER ITEMS CONFIG
+    // ================================
     const filterItems = [
         {
             type: 'dateRange' as const,
-            label: 'Data',
-            placeholder: 'Select date range'
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Status: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Sent', key: 'sent' },
-                { label: 'Draft', key: 'draft' },
-                { label: 'Approved', key: 'approved' },
-                { label: 'Rejected', key: 'rejected' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Status changed:', key)
+            label: 'Date',
+            startDate: queryParams.startDate ? new Date(queryParams.startDate) : undefined,
+            endDate: queryParams.endDate ? new Date(queryParams.endDate) : undefined,
+            onChange: (value: Date | { startDate: Date; endDate: Date }) => {
+                if ('startDate' in value && 'endDate' in value) {
+                    updateQueryParams({ 
+                        startDate: value.startDate.toISOString().split('T')[0], 
+                        endDate: value.endDate.toISOString().split('T')[0], 
+                        page: 1 
+                    })
+                }
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Sort By: All',
+            label: getStatusLabel(),
+            startContent: <StackIcon className="text-slate-400" />,
+            showChevron: false,
+            items: STATUS_OPTIONS,
+            value: queryParams.status || 'all',
+            onChange: (key: string) => {
+                updateQueryParams({ status: key === 'all' ? null : key, page: 1 })
+            }
+        },
+        {
+            type: 'dropdown' as const,
+            label: getStoreLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
             items: [
-                { label: 'Reference (A-Z)', key: 'reference_asc' },
-                { label: 'Reference (Z-A)', key: 'reference_desc' },
-                { label: 'Customer (A-Z)', key: 'customer_asc' },
-                { label: 'Customer (Z-A)', key: 'customer_desc' },
-                { label: 'Grand Total (High to Low)', key: 'total_desc' },
-                { label: 'Grand Total (Low to High)', key: 'total_asc' },
-                { label: 'Newest First', key: 'newest' },
-                { label: 'Oldest First', key: 'oldest' }
+                { label: 'All', key: 'all' },
+                ...storeOptions.map(s => ({ label: s.label, key: s.value }))
             ],
-            value: '',
+            value: queryParams.store_id ? String(queryParams.store_id) : 'all',
             onChange: (key: string) => {
-                console.log('Sort changed:', key)
+                updateQueryParams({ store_id: key === 'all' ? null : key, page: 1 })
+            }
+        },
+        {
+            type: 'dropdown' as const,
+            label: getSortLabel(),
+            startContent: <StackIcon className="text-slate-400" />,
+            showChevron: false,
+            items: SORT_OPTIONS,
+            value: queryParams.sort || '',
+            onChange: (key: string) => {
+                updateQueryParams({ sort: key, page: 1 })
             }
         }
     ]
@@ -156,33 +250,40 @@ const QuotationView = () => {
                     <FilterBar
                         searchInput={{
                             placeholder: 'Search by reference',
-                            className: 'w-full md:w-72'
+                            className: 'w-full md:w-72',
+                            onSearch: (value: string) => {
+                                updateQueryParams({ search: value || null, page: 1 })
+                            }
                         }}
                         items={filterItems}
                     />
 
                     {/* ================= TABLE ================= */}
                     <QuotationTable
-                        data={quotationsData}
+                        data={quotations ?? []}
                         selectedQuotations={selectedQuotations}
                         onSelectionChange={setSelectedQuotations}
                         onView={(quotationId) => router.push(`/dashboard/quotations/${quotationId}`)}
                         onEdit={(quotationId) => router.push(`/dashboard/quotations/${quotationId}/edit`)}
                         onDelete={handleDelete}
+                        onCreateSale={(quotationId) => router.push(`/dashboard/sales/create?from_quotation=${quotationId}`)}
                         onDownloadPDF={(quotationId) => {
                             console.log('Download PDF for quotation:', quotationId)
                         }}
+                        loading={isLoading}
                     />
 
-                    <Pagination
-                        currentPage={1}
-                        totalItems={100}
-                        itemsPerPage={25}
-                        onPageChange={(page) => {
-                            console.log('Page changed:', page)
-                        }}
-                        showingText="Quotations"
-                    />
+                    {pagination && (
+                        <Pagination
+                            currentPage={typeof pagination.page === 'string' ? parseInt(pagination.page, 10) : pagination.page}
+                            totalItems={pagination.total}
+                            itemsPerPage={typeof pagination.limit === 'string' ? parseInt(pagination.limit, 10) : pagination.limit}
+                            onPageChange={(page) => {
+                                updateQueryParams({ page })
+                            }}
+                            showingText="Quotations"
+                        />
+                    )}
 
                 </DashboardCard>
 

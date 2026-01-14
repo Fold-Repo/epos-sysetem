@@ -16,49 +16,6 @@ const RoleViews = () => {
     const { data: roles, isLoading, error } = useGetRoles()
     const deleteRoleMutation = useDeleteRole()
 
-    const filterItems = [
-        {
-            type: 'dropdown' as const,
-            label: 'Status: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Active', key: 'active' },
-                { label: 'Inactive', key: 'inactive' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Status changed:', key)
-            }
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Sort By: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'Name (A-Z)', key: 'name_asc' },
-                { label: 'Name (Z-A)', key: 'name_desc' },
-                { label: 'Users (High to Low)', key: 'users_desc' },
-                { label: 'Users (Low to High)', key: 'users_asc' },
-                { label: 'Permissions (High to Low)', key: 'permissions_desc' },
-                { label: 'Permissions (Low to High)', key: 'permissions_asc' },
-                { label: 'Newest First', key: 'newest' },
-                { label: 'Oldest First', key: 'oldest' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Sort changed:', key)
-            }
-        },
-        {
-            type: 'dateRange' as const,
-            label: 'Data',
-            placeholder: 'Select date range'
-        }
-    ]
-
     const handleEdit = (role: RoleType) => {
         if (role.id) {
             router.push(`/dashboard/roles-permissions/${role.id}/edit`)

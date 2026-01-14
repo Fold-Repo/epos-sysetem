@@ -7,6 +7,7 @@ import UnitsTable from './UnitsTable'
 import { Unit } from '@/types/unit.type'
 import AddUnitModal from './AddUnitModal'
 import { useGetUnits, useDeleteUnit } from '@/services'
+import { useQueryParams } from '@/hooks'
 
 interface ProductUnitsViewProps {
     onAddClick?: (handler: () => void) => void
@@ -19,7 +20,10 @@ const ProductUnitsView = ({ onAddClick }: ProductUnitsViewProps) => {
     const [deleteUnitId, setDeleteUnitId] = useState<number | undefined>(undefined)
     const [editingUnit, setEditingUnit] = useState<Unit | undefined>(undefined)
     const [searchValue, setSearchValue] = useState('')
-    const { data: units, isLoading } = useGetUnits()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 20
+    const { data: units, pagination, isLoading } = useGetUnits(currentPage, LIMIT)
     const deleteUnitMutation = useDeleteUnit()
 
     useEffect(() => {
@@ -91,10 +95,12 @@ const ProductUnitsView = ({ onAddClick }: ProductUnitsViewProps) => {
             />
 
             <Pagination
-                currentPage={1}
-                totalItems={filteredUnits?.length || 0}
-                itemsPerPage={25}
-                onPageChange={() => { }}
+                currentPage={currentPage}
+                totalItems={pagination?.total || 0}
+                itemsPerPage={LIMIT}
+                onPageChange={(page) => {
+                    updateQueryParams({ page: page.toString() })
+                }}
                 showingText="Units"
             />
 

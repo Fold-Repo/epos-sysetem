@@ -7,6 +7,7 @@ import VariationsTable from './VariationsTable'
 import { Variation } from '@/types/variation.type'
 import AddVariationModal from './AddVariationModal'
 import { useGetVariations, useDeleteVariation } from '@/services'
+import { useQueryParams } from '@/hooks'
 
 interface ProductVariationsViewProps {
     onAddClick?: (handler: () => void) => void
@@ -19,7 +20,10 @@ const ProductVariationsView = ({ onAddClick }: ProductVariationsViewProps) => {
     const [deleteVariationId, setDeleteVariationId] = useState<number | undefined>(undefined)
     const [editingVariation, setEditingVariation] = useState<Variation | undefined>(undefined)
     const [searchValue, setSearchValue] = useState('')
-    const { data: variations, isLoading } = useGetVariations()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 20
+    const { data: variations, pagination, isLoading } = useGetVariations(currentPage, LIMIT)
     const deleteVariationMutation = useDeleteVariation()
 
     useEffect(() => {
@@ -93,10 +97,12 @@ const ProductVariationsView = ({ onAddClick }: ProductVariationsViewProps) => {
             />
 
             <Pagination
-                currentPage={1}
-                totalItems={filteredVariations?.length || 0}
-                itemsPerPage={25}
-                onPageChange={() => { }}
+                currentPage={currentPage}
+                totalItems={pagination?.total || 0}
+                itemsPerPage={LIMIT}
+                onPageChange={(page) => {
+                    updateQueryParams({ page: page.toString() })
+                }}
                 showingText="Variations"
             />
 

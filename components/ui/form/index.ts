@@ -8,7 +8,8 @@ export { default as TextArea } from './TextArea';
 export { default as FileUpload } from './FileUpload';
 export { default as ProfilePictureUpload } from './ProfilePictureUpload';
 export { default as ImagePreview } from './ImagePreview';
-export { default as CustomAutocomplete } from './CustomAutocomplete';
+export { default as CustomAutocomplete } from './CustomAutocomplete'
+export { default as ProductSelect } from './ProductSelect';
 export { default as Label } from './Label';
 export { default as ErrorMessage } from './ErrorMessage';
 export { createFileLabel, createInputLabel } from './labelHelpers';

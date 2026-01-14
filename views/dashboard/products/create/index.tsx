@@ -22,7 +22,10 @@ const CreateProductView = () => {
         if (data.multipleImage && data.multipleImage.length > 0) {
             setIsUploading(true)
             try {
-                // Upload images and wait for completion
+
+                // ================================
+                // UPLOAD IMAGES AND WAIT FOR COMPLETION
+                // ================================
                 const uploadedFiles = await uploadImage({
                     images: data.multipleImage,
                     folders: UPLOAD_FOLDER.PRODUCTS
@@ -32,6 +35,7 @@ const CreateProductView = () => {
                     url: file.url,
                     public_id: file.public_id
                 }))
+
             } catch (error) {
                 setIsUploading(false)
                 throw new Error('Failed to upload product images. Please try again.')
@@ -46,7 +50,7 @@ const CreateProductView = () => {
 
         const basePayload = {
             name: data.name,
-            description: data.note || '',
+            description: data.description || '',
             sku: data.skuBarcode,
             barcodeSymbology: data.barcodeSymbology || 'Code 128',
             category_id: Number(data.productCategory),
@@ -55,12 +59,19 @@ const CreateProductView = () => {
             quantityLimit: Number(data.quantityLimitation) || 0,
             expiryDate: data.expiryDate || undefined,
             status: data.status === 'active' ? 'Active' as const : 'Inactive' as const,
-            note: data.note || undefined,
             images
         }
 
         if (data.productType === 'single') {
-            // Single/Simple product
+            
+            // ================================
+            // DETERMINE IF TAX IS PERCENTAGE
+            // ================================
+            const taxType = data.taxIsPercentage ? 'percent' as const : 'fixed' as const
+
+            // ================================
+            // RETURN BASE PAYLOAD WITH TAX TYPE
+            // ================================
             return {
                 ...basePayload,
                 productType: 'Simple' as const,
@@ -69,28 +80,32 @@ const CreateProductView = () => {
                 stockAlert: Number(data.stockAlert) || 0,
                 tax: {
                     amount: parseFloat(data.orderTax) || 0,
-                    type: data.taxType === 'inclusive' ? 'inclusive' as const : 'exclusive' as const
+                    type: taxType
                 }
             }
         } else {
-            // Variation product
-            // Get the variation name from the selected variation ID
+            // ================================
+            // HANDLE VARIATION PRODUCT
+            // ================================
             const selectedVariation = variations.find(v => v.id === Number(data.variations))
             const variationTypeName = selectedVariation?.name || ''
 
-            const variationDetails = data.variationDetails.map(detail => ({
-                variationType: variationTypeName, // Variation name (e.g., "Color", "Size")
-                value: detail.variationType, // Variation option value (e.g., "Red", "Black", "Small")
-                sku: detail.skuBarcode,
-                productCost: parseFloat(detail.productCost) || 0,
-                productPrice: parseFloat(detail.productPrice) || 0,
-                productQuantity: Number(detail.addProductQuantity) || 0,
-                stockAlert: Number(detail.stockAlert) || 0,
-                tax: {
-                    amount: parseFloat(detail.orderTax) || 0,
-                    type: detail.taxType === 'inclusive' ? 'inclusive' as const : 'exclusive' as const
+            const variationDetails = data.variationDetails.map(detail => {
+                const taxType = detail.taxIsPercentage ? 'percent' as const : 'fixed' as const
+                return {
+                    variationType: variationTypeName, 
+                    value: detail.variationType, 
+                    sku: detail.skuBarcode,
+                    productCost: parseFloat(detail.productCost) || 0,
+                    productPrice: parseFloat(detail.productPrice) || 0,
+                    productQuantity: Number(detail.addProductQuantity) || 0,
+                    stockAlert: Number(detail.stockAlert) || 0,
+                    tax: {
+                        amount: parseFloat(detail.orderTax) || 0,
+                        type: taxType
+                    }
                 }
-            }))
+            })
 
             return {
                 ...basePayload,

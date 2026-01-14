@@ -10,6 +10,7 @@ import Stepper from './Stepper';
 import DashboardCard from './DashboardCard';
 import Accordion from './Accordion';
 import PasswordRequirements from './PasswordRequirements';
+import TrendIndicator from './TrendIndicator';
 
 export {
     SearchInput,
@@ -23,5 +24,6 @@ export {
     Stepper,
     DashboardCard,
     Accordion,
-    PasswordRequirements
+    PasswordRequirements,
+    TrendIndicator
 }

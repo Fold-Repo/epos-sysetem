@@ -14,10 +14,14 @@ import { getErrorMessage } from "@/utils";
 
 /**
  * Get all brands
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 200 for Redux state)
  * @returns Promise with the brands list response
  */
-export async function getBrands(): Promise<BrandsListResponse> {
-    const response = await client.get(ENDPOINT.BRANDS);
+export async function getBrands(page: number = 1, limit: number = 200): Promise<BrandsListResponse> {
+    const response = await client.get(ENDPOINT.BRANDS, {
+        params: { page, limit }
+    });
     return response.data;
 }
 
@@ -53,23 +57,29 @@ export async function deleteBrand(id: number): Promise<DeleteBrandResponse> {
 }
 
 /**
- * React Query hook to get brands list
- * @returns Query result with data (Brand[]), isLoading, and error
+ * React Query hook to get brands list with pagination
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 25)
+ * @returns Query result with data (Brand[]), pagination, isLoading, and error
  */
-export const useGetBrands = () => {
-    const { data, isLoading, error } = useQuery<Brand[]>({
-        queryKey: ['brands-list'],
+export const useGetBrands = (page: number = 1, limit: number = 25) => {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['brands-list', page, limit],
         queryFn: async () => {
-            const response = await getBrands();
-            return response.data;
+            const response = await getBrands(page, limit);
+            return {
+                data: response.data,
+                pagination: response.pagination
+            };
         },
     });
 
     return { 
-        data: data || [], 
+        data: data?.data || [], 
+        pagination: data?.pagination,
         isLoading, 
         error,
-        brands: data || [] // Alias for convenience
+        brands: data?.data || [] // Alias for convenience
     };
 };
 

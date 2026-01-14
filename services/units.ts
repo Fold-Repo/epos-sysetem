@@ -14,10 +14,14 @@ import { getErrorMessage } from "@/utils";
 
 /**
  * Get all units
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 200 for Redux state)
  * @returns Promise with the units list response
  */
-export async function getUnits(): Promise<UnitsListResponse> {
-    const response = await client.get(ENDPOINT.UNITS);
+export async function getUnits(page: number = 1, limit: number = 200): Promise<UnitsListResponse> {
+    const response = await client.get(ENDPOINT.UNITS, {
+        params: { page, limit }
+    });
     return response.data;
 }
 
@@ -53,23 +57,29 @@ export async function deleteUnit(id: number): Promise<DeleteUnitResponse> {
 }
 
 /**
- * React Query hook to get units list
- * @returns Query result with data (Unit[]), isLoading, and error
+ * React Query hook to get units list with pagination
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 25)
+ * @returns Query result with data (Unit[]), pagination, isLoading, and error
  */
-export const useGetUnits = () => {
-    const { data, isLoading, error } = useQuery<Unit[]>({
-        queryKey: ['units-list'],
+export const useGetUnits = (page: number = 1, limit: number = 25) => {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['units-list', page, limit],
         queryFn: async () => {
-            const response = await getUnits();
-            return response.data;
+            const response = await getUnits(page, limit);
+            return {
+                data: response.data,
+                pagination: response.pagination
+            };
         },
     });
 
     return { 
-        data: data || [], 
+        data: data?.data || [], 
+        pagination: data?.pagination,
         isLoading, 
         error,
-        units: data || [] // Alias for convenience
+        units: data?.data || [] // Alias for convenience
     };
 };
 

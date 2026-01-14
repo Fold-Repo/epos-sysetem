@@ -7,6 +7,7 @@ import CategoryTable from './CategoryTable'
 import { Category } from '@/types/category.type'
 import AddCategoryModal from './AddCategoryModal'
 import { useGetCategories, useDeleteCategory } from '@/services'
+import { useQueryParams } from '@/hooks'
 
 interface ProductCategoryViewProps {
     onAddClick?: (handler: () => void) => void
@@ -19,7 +20,10 @@ const ProductCategoryView = ({ onAddClick }: ProductCategoryViewProps) => {
     const [deleteCategoryId, setDeleteCategoryId] = useState<number | undefined>(undefined)
     const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined)
     const [searchValue, setSearchValue] = useState('')
-    const { data: categories, isLoading } = useGetCategories()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 20
+    const { data: categories, pagination, isLoading } = useGetCategories(currentPage, LIMIT)
     const deleteCategoryMutation = useDeleteCategory()
 
     useEffect(() => {
@@ -90,10 +94,12 @@ const ProductCategoryView = ({ onAddClick }: ProductCategoryViewProps) => {
             />
 
             <Pagination
-                currentPage={1}
-                totalItems={filteredCategories?.length || 0}
-                itemsPerPage={25}
-                onPageChange={() => { }}
+                currentPage={currentPage}
+                totalItems={pagination?.total || 0}
+                itemsPerPage={LIMIT}
+                onPageChange={(page) => {
+                    updateQueryParams({ page: page.toString() })
+                }}
                 showingText="Categories"
             />
 

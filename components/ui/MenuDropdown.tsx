@@ -52,9 +52,14 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        if (value !== undefined) {
+        // ================================
+        // SET INTERNAL LABEL
+        // ================================
+        if (label) {
+            setInternalLabel(label);
+        } else if (value !== undefined) {
             const found = items.find(i => i.key === value);
-            setInternalLabel(found ? found.label : (label || "Select"));
+            setInternalLabel(found ? found.label : "Select");
         }
     }, [value, items, label]);
 
