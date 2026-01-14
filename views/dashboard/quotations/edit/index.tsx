@@ -1,98 +1,135 @@
 'use client'
 
 import { DashboardBreadCrumb, DashboardCard } from '@/components'
-import { useToast, useGoBack } from '@/hooks'
+import { useGoBack } from '@/hooks'
 import { UpdateQuotationFormData, CreateQuotationFormData } from '@/types'
-import { quotationsData, productsData } from '@/data'
-import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import QuotationForm from '../QuotationForm'
-
-interface QuotationItem {
-    id: string
-    productId: string
-    name: string
-    code: string
-    stock: number
-    unit: string
-    quantity: number
-    netUnitPrice: number
-    discount: number
-    tax: number
-    subtotal: number
-}
+import { useGetQuotationDetail, useUpdateQuotation, transformQuotationFormDataToPayload } from '@/services'
+import { useMemo } from 'react'
 
 const EditQuotationView = () => {
+
     const params = useParams()
     const quotationId = params?.id as string
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
-    const [initialData, setInitialData] = useState<any>(null)
+    
+    // ================================
+    // FETCH QUOTATION DETAILS
+    // ================================
+    const { data: quotation, isLoading } = useGetQuotationDetail(Number(quotationId))
+    const updateQuotationMutation = useUpdateQuotation()
 
-    // =========================
-    // LOAD MOCK DATA
-    // =========================
-    useEffect(() => {
+    // ================================
+    // TRANSFORM QUOTATION DATA TO FORM INITIAL DATA
+    // ================================
+    const initialData = useMemo(() => {
+        if (!quotation) return null
 
-        const mockQuotation = quotationsData[0]
-        
-        if (mockQuotation) {
+        const items = quotation.items.map((item, index) => {
+            const itemName = item.variation
+                ? `${item.product.name} - ${item.variation.type}: ${item.variation.value}`
+                : item.product.name
 
-            const mockItems: QuotationItem[] = productsData.slice(0, 3).map((product, index) => {
-                const price = product.price || 0
-                const discount = product.discount || 0
-                const tax = product.tax || 0
-                const quantity = index + 1
-                const itemPrice = price * quantity
-                const discountAmount = (itemPrice * discount) / 100
-                const taxAmount = (itemPrice * tax) / 100
-                const subtotal = itemPrice - discountAmount + taxAmount
-                
-                return {
-                    id: `item-${index}-${Date.now()}`,
-                    productId: product.id,
-                    name: product.name,
-                    code: product.code,
-                    stock: product.stock,
-                    unit: product.unit,
-                    quantity: quantity,
-                    netUnitPrice: price,
-                    discount: discount,
-                    tax: tax,
-                    subtotal: subtotal
-                }
-            })
-            
-            setInitialData({
-                ...mockQuotation,
-                items: mockItems,
-                orderTax: '10',
-                orderDiscount: '50',
-                shipping: '20',
-                orderTaxIsPercentage: true,
-                orderDiscountIsPercentage: false,
-                note: 'This is a mock quotation for editing purposes.'
-            })
+            return {
+                id: `item-${item.id}-${index}`,
+                productId: String(item.product.id),
+                name: itemName,
+                code: item.variation?.sku || item.product.sku,
+                stock: 0,
+                unit: '',
+                quantity: item.quantity,
+                netUnitPrice: parseFloat(item.unit_cost),
+                discount: parseFloat(item.discount),
+                tax: parseFloat(item.tax.amount),
+                taxType: (item.tax.type as 'percent' | 'fixed') || 'fixed',
+                subtotal: parseFloat(item.subtotal),
+                productType: item.variation ? 'Variation' as const : 'Simple' as const,
+                quotationItemId: item.id,
+                ...(item.variation && {
+                    variationId: item.variation.id,
+                    variationType: item.variation.type,
+                    variationValue: item.variation.value
+                })
+            }
+        })
+
+        return {
+            id: quotation.quotation_id,
+            reference: quotation.reference,
+            customerId: String(quotation.customer.id),
+            storeId: String(quotation.store.id),
+            status: quotation.status.toLowerCase(),
+            grandTotal: parseFloat(quotation.grand_total),
+            created_at: quotation.created_at,
+            items: items,
+            orderTax: quotation.tax.amount,
+            orderDiscount: quotation.discount.amount,
+            shipping: quotation.shipping,
+            orderTaxIsPercentage: quotation.tax.type === 'percent',
+            orderDiscountIsPercentage: quotation.discount.type === 'percent',
+            note: quotation.note || ''
         }
-        
-        setIsLoading(false)
-    }, [])
+    }, [quotation])
 
+    // ================================
+    // HANDLE FORM SUBMIT
+    // ================================
     const handleSubmit = (formData: CreateQuotationFormData | UpdateQuotationFormData) => {
-        const updateData = formData as UpdateQuotationFormData
-        console.log('Update quotation:', updateData)
-        showSuccess('Quotation updated', 'Quotation updated successfully.')
-        // router.push('/dashboard/quotations')
+        const payload = transformQuotationFormDataToPayload(formData as CreateQuotationFormData)
+        
+        updateQuotationMutation.mutate(
+            { id: Number(quotationId), payload },
+            {
+                onSuccess: () => {
+                    goBack()
+                }
+            }
+        )
     }
 
+    // ================================
+    // LOADING STATE
+    // ================================
     if (isLoading) {
         return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">Loading...</div>
-                </DashboardCard>
-            </div>
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Quotations', href: '/dashboard/quotations' },
+                        { label: 'Edit Quotation' }
+                    ]}
+                    title='Edit Quotation'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
+        )
+    }
+
+    if (!quotation || !initialData) {
+        return (
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Quotations', href: '/dashboard/quotations' },
+                        { label: 'Edit Quotation' }
+                    ]}
+                    title='Edit Quotation'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 text-center text-gray-500">
+                            Quotation not found
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
         )
     }
 
@@ -101,7 +138,8 @@ const EditQuotationView = () => {
             <DashboardBreadCrumb
                 items={[
                     { label: 'Quotations', href: '/dashboard/quotations' },
-                    { label: 'Edit Quotation' }
+                    { label: quotation.reference, href: `/dashboard/quotations/${quotationId}` },
+                    { label: 'Edit' }
                 ]}
                 title='Edit Quotation'
             />
@@ -112,6 +150,7 @@ const EditQuotationView = () => {
                     initialData={initialData}
                     onSubmit={handleSubmit}
                     onCancel={goBack}
+                    isLoading={updateQuotationMutation.isPending}
                     submitButtonText="Update Quotation"
                 />
             </div>

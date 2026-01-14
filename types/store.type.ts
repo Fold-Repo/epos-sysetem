@@ -1,3 +1,5 @@
+import { PaginationResponse } from './type';
+
 export interface StoreType {
     id?: string | number;
     name: string;
@@ -20,9 +22,12 @@ export interface StoreListItem {
     status?: string; // To be added later
 }
 
+// PaginationResponse is now exported from ./type.ts
+
 export interface StoresListResponse {
     status: number;
-    data: StoreListItem[];
+    stores: StoreListItem[];
+    pagination: PaginationResponse;
 }
 
 export interface CreateStorePayload {

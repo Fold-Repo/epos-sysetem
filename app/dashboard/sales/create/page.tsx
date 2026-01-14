@@ -1,6 +1,11 @@
+import { Suspense } from "react";
 import { CreateSaleView } from "@/views";
 
 export default function CreateSalePage() {
-    return <CreateSaleView />;
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <CreateSaleView />
+        </Suspense>
+    );
 }
 

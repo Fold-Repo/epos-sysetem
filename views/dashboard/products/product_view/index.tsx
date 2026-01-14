@@ -1,33 +1,98 @@
 import { FilterBar, Pagination, StackIcon, TrashIcon, useDisclosure } from '@/components'
 import { DeleteModal } from '@/components/modal'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ProductTable from './ProductTable'
 import { ProductType } from '@/types'
 import { useRouter } from 'next/navigation'
-import { useGetProducts, useDeleteProduct } from '@/services'
+import { useGetProducts, useDeleteProduct, ProductQueryParams } from '@/services'
 import { useQueryParams } from '@/hooks'
+import { useAppSelector, selectCategories, selectBrands } from '@/store'
+
+// ================================
+// CONSTANTS
+// ================================
+const LIMIT = 20
+
+const SORT_OPTIONS = [
+    { label: 'Default', key: '' },
+    { label: 'Name (A-Z)', key: 'name_asc' },
+    { label: 'Name (Z-A)', key: 'name_desc' },
+    { label: 'Price (Low to High)', key: 'price_asc' },
+    { label: 'Price (High to Low)', key: 'price_desc' },
+    { label: 'Newest First', key: 'newest' },
+    { label: 'Oldest First', key: 'oldest' },
+    { label: 'Stock (High to Low)', key: 'stock_desc' },
+    { label: 'Stock (Low to High)', key: 'stock_asc' }
+]
+
+const STOCK_OPTIONS = [
+    { label: 'All', key: 'all' },
+    { label: 'Low Stock', key: 'low' },
+]
 
 interface ProductsListViewProps {
     onAddClick?: (handler: () => void) => void
 }
 
 const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
+    
     const router = useRouter()
     const { searchParams, updateQueryParams } = useQueryParams()
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
     const [deleteProductId, setDeleteProductId] = useState<string | undefined>(undefined)
     const [isBulkDelete, setIsBulkDelete] = useState(false)
     
-    const currentPage = parseInt(searchParams.get('page') || '1', 10)
-    const LIMIT = 12
+    // ================================
+    // GET CATEGORIES AND BRANDS FROM STATE
+    // ================================
+    const categories = useAppSelector(selectCategories)
+    const brands = useAppSelector(selectBrands)
     
-    const { data, isLoading } = useGetProducts(currentPage, LIMIT)
+    // ================================
+    // GET QUERY PARAMS FROM URL
+    // ================================
+    const queryParams: ProductQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: LIMIT,
+        sort: searchParams.get('sort') || undefined,
+        search: searchParams.get('search') || undefined,
+        category_id: searchParams.get('category_id') ? Number(searchParams.get('category_id')) : undefined,
+        brand_id: searchParams.get('brand_id') ? Number(searchParams.get('brand_id')) : undefined,
+        stock: searchParams.get('stock') || undefined
+    }
+    
+    // ================================
+    // FETCH PRODUCTS
+    // ================================
+    const { data, isLoading } = useGetProducts(queryParams)
     const products = data?.products || []
     const pagination = data?.pagination
     const deleteProductMutation = useDeleteProduct()
     
+    // ================================
+    // BUILD CATEGORY OPTIONS
+    // ================================
+    const categoryOptions = useMemo(() => {
+        const options = [{ label: 'All', key: 'all' }]
+        categories.forEach(cat => {
+            options.push({ label: cat.category_name, key: String(cat.category_id) })
+        })
+        return options
+    }, [categories])
+    
+    // ================================
+    // BUILD BRAND OPTIONS
+    // ================================
+    const brandOptions = useMemo(() => {
+        const options = [{ label: 'All', key: 'all' }]
+        brands.forEach(brand => {
+            options.push({ label: brand.name, key: String(brand.id) })
+        })
+        return options
+    }, [brands])
+    
     const handlePageChange = (page: number) => {
-        updateQueryParams({ page: page.toString() })
+        updateQueryParams({ page })
     }
 
     useEffect(() => {
@@ -37,6 +102,35 @@ const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
             })
         }
     }, [onAddClick, router])
+    
+    // ================================
+    // GET LABEL HELPERS
+    // ================================
+    const getCategoryLabel = () => {
+        const categoryId = searchParams.get('category_id')
+        if (!categoryId || categoryId === 'all') return 'Category: All'
+        const category = categories.find(c => String(c.category_id) === categoryId)
+        return category ? `Category: ${category.category_name}` : 'Category: All'
+    }
+    
+    const getBrandLabel = () => {
+        const brandId = searchParams.get('brand_id')
+        if (!brandId || brandId === 'all') return 'Brand: All'
+        const brand = brands.find(b => String(b.id) === brandId)
+        return brand ? `Brand: ${brand.name}` : 'Brand: All'
+    }
+    
+    const getStockLabel = () => {
+        const stock = searchParams.get('stock')
+        const current = STOCK_OPTIONS.find(o => o.key === stock)
+        return current ? `Stock: ${current.label}` : 'Stock: All'
+    }
+    
+    const getSortLabel = () => {
+        const sort = searchParams.get('sort')
+        const current = SORT_OPTIONS.find(o => o.key === sort)
+        return current ? `Sort: ${current.label}` : 'Sort By'
+    }
 
     const handleView = (productId: string) => {
         router.push(`/dashboard/products/${productId}`)
@@ -87,6 +181,9 @@ const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
         }
     }
 
+    // ================================
+    // FILTER ITEMS CONFIG
+    // ================================
     const filterItems = [
         ...(selectedProducts.length > 0 ? [{
             type: 'button' as const,
@@ -96,90 +193,58 @@ const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
         }] : []),
         {
             type: 'dropdown' as const,
-            label: 'Category: All',
+            label: getCategoryLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Electronics', key: 'electronics' },
-                { label: 'Clothing', key: 'clothing' },
-                { label: 'Food & Beverages', key: 'food_beverages' },
-                { label: 'Home & Garden', key: 'home_garden' },
-                { label: 'Sports', key: 'sports' },
-                { label: 'Books', key: 'books' }
-            ],
-            value: '',
+            items: categoryOptions,
+            value: searchParams.get('category_id') || 'all',
             onChange: (key: string) => {
-                console.log('Category changed:', key)
+                updateQueryParams({ 
+                    category_id: key === 'all' ? null : key,
+                    page: 1
+                })
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Brand: All',
+            label: getBrandLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Brand A', key: 'brand_a' },
-                { label: 'Brand B', key: 'brand_b' },
-                { label: 'Brand C', key: 'brand_c' }
-            ],
-            value: '',
+            items: brandOptions,
+            value: searchParams.get('brand_id') || 'all',
             onChange: (key: string) => {
-                console.log('Brand changed:', key)
+                updateQueryParams({ 
+                    brand_id: key === 'all' ? null : key,
+                    page: 1
+                })
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Stock Status: All',
+            label: getStockLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'In Stock', key: 'in_stock' },
-                { label: 'Out of Stock', key: 'out_of_stock' },
-                { label: 'Low Stock', key: 'low_stock' }
-            ],
-            value: '',
+            items: STOCK_OPTIONS,
+            value: searchParams.get('stock') || 'all',
             onChange: (key: string) => {
-                console.log('Stock status changed:', key)
+                updateQueryParams({ 
+                    stock: key === 'all' ? null : key,
+                    page: 1
+                })
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Package: All',
+            label: getSortLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Single', key: 'single' },
-                { label: 'Pack', key: 'pack' },
-                { label: 'Box', key: 'box' },
-                { label: 'Case', key: 'case' }
-            ],
-            value: '',
+            items: SORT_OPTIONS,
+            value: searchParams.get('sort') || '',
             onChange: (key: string) => {
-                console.log('Package changed:', key)
-            }
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Sort By: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'Name (A-Z)', key: 'name_asc' },
-                { label: 'Name (Z-A)', key: 'name_desc' },
-                { label: 'Price (Low to High)', key: 'price_asc' },
-                { label: 'Price (High to Low)', key: 'price_desc' },
-                { label: 'Newest First', key: 'newest' },
-                { label: 'Oldest First', key: 'oldest' },
-                { label: 'Stock (High to Low)', key: 'stock_desc' },
-                { label: 'Stock (Low to High)', key: 'stock_asc' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Sort changed:', key)
+                updateQueryParams({ 
+                    sort: key || null,
+                    page: 1
+                })
             }
         }
     ]
@@ -190,8 +255,14 @@ const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
             {/* ================= FILTER BAR ================= */}
             <FilterBar
                 searchInput={{
-                    placeholder: 'Search by name',
-                    className: 'w-full md:w-72'
+                    placeholder: 'Search by name or SKU',
+                    className: 'w-full md:w-72',
+                    onSearch: (value: string) => {
+                        updateQueryParams({ 
+                            search: value || null,
+                            page: 1
+                        })
+                    }
                 }}
                 items={filterItems}
             />
@@ -209,7 +280,7 @@ const ProductsListView = ({ onAddClick }: ProductsListViewProps) => {
 
             {pagination && (
                 <Pagination
-                    currentPage={currentPage}
+                    currentPage={queryParams.page || 1}
                     totalItems={pagination.total}
                     itemsPerPage={LIMIT}
                     onPageChange={handlePageChange}

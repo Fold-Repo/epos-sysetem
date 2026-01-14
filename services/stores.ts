@@ -18,10 +18,14 @@ export async function createStore(payload: CreateStorePayload): Promise<CreateSt
 
 /**
  * Get all stores
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 200 for Redux state)
  * @returns Promise with the stores list response
  */
-export async function getStores(): Promise<StoresListResponse> {
-    const response = await client.get(ENDPOINT.STORES.BASE);
+export async function getStores(page: number = 1, limit: number = 200): Promise<StoresListResponse> {
+    const response = await client.get(ENDPOINT.STORES.BASE, {
+        params: { page, limit }
+    });
     return response.data;
 }
 
@@ -69,24 +73,30 @@ export const useCreateStore = () => {
 };
 
 /**
- * React Query hook to get stores list
- * @returns Query result with data (StoreType[]), isLoading, and error
+ * React Query hook to get stores list with pagination
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 25)
+ * @returns Query result with data (StoreType[]), pagination, isLoading, and error
  */
-export const useGetStores = () => {
-    const { data, isLoading, error } = useQuery<StoreType[]>({
-        queryKey: ['stores-list'],
+export const useGetStores = (page: number = 1, limit: number = 25) => {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['stores-list', page, limit],
         queryFn: async () => {
-            const response = await getStores();
+            const response = await getStores(page, limit);
             // Transform the API response to match StoreType
-            return response.data.map(transformStoreToStoreType);
+            return {
+                data: response.stores.map(transformStoreToStoreType),
+                pagination: response.pagination
+            };
         },
     });
 
     return { 
-        data: data || [], 
+        data: data?.data || [], 
+        pagination: data?.pagination,
         isLoading, 
         error,
-        stores: data || [] // Alias for convenience
+        stores: data?.data || [] // Alias for convenience
     };
 };
 

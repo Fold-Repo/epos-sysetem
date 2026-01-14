@@ -1,3 +1,5 @@
+import { PaginationResponse } from './type';
+
 /**
  * Unit from API
  */
@@ -7,12 +9,15 @@ export interface Unit {
     short_name: string;
 }
 
+// PaginationResponse is now exported from ./type.ts
+
 /**
  * Units list response from API
  */
 export interface UnitsListResponse {
     status: number;
     data: Unit[];
+    pagination: PaginationResponse;
 }
 
 /**

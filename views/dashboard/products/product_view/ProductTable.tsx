@@ -36,7 +36,7 @@ const ProductTable = ({ data, onSelectionChange, onView, onEdit, onDelete, isLoa
         return (
             <>
 
-                <TableCell className='px-0'>
+                <TableCell className='px-0 min-w-[180px]'>
                     <div className="flex items-center gap-2">
                             <Image src={product.image || '/img/no_image.png'}  alt={product.name}
                                 width={120} height={120} className='size-8 rounded-md object-cover' 

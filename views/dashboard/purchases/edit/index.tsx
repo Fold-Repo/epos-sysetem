@@ -1,94 +1,137 @@
 'use client'
 
 import { DashboardBreadCrumb, DashboardCard } from '@/components'
-import { useToast, useGoBack } from '@/hooks'
+import { useGoBack } from '@/hooks'
 import { UpdatePurchaseFormData, CreatePurchaseFormData } from '@/types'
-import { purchasesData, productsData } from '@/data'
-import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import PurchaseForm from '../PurchaseForm'
-
-interface PurchaseItem {
-    id: string
-    productId: string
-    name: string
-    code: string
-    stock: number
-    unit: string
-    quantity: number
-    netUnitPrice: number
-    discount: number
-    tax: number
-    subtotal: number
-}
+import { useGetPurchaseDetail, useUpdatePurchase, transformPurchaseFormDataToPayload } from '@/services'
+import { useMemo } from 'react'
 
 const EditPurchaseView = () => {
+
     const params = useParams()
     const purchaseId = params?.id as string
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
-    const [initialData, setInitialData] = useState<any>(null)
+    
+    // ================================
+    // FETCH PURCHASE DETAILS
+    // ================================
+    const { data: purchase, isLoading } = useGetPurchaseDetail(Number(purchaseId))
+    const updatePurchaseMutation = useUpdatePurchase()
 
-    useEffect(() => {
-        const mockPurchase = purchasesData[0]
-        
-        if (mockPurchase) {
-            const mockItems: PurchaseItem[] = productsData.slice(0, 3).map((product, index) => {
-                const price = product.price || 0
-                const discount = product.discount || 0
-                const tax = product.tax || 0
-                const quantity = index + 1
-                const itemPrice = price * quantity
-                const discountAmount = (itemPrice * discount) / 100
-                const taxAmount = (itemPrice * tax) / 100
-                const subtotal = itemPrice - discountAmount + taxAmount
-                
-                return {
-                    id: `item-${index}-${Date.now()}`,
-                    productId: product.id,
-                    name: product.name,
-                    code: product.code,
-                    stock: product.stock,
-                    unit: product.unit,
-                    quantity: quantity,
-                    netUnitPrice: price,
-                    discount: discount,
-                    tax: tax,
-                    subtotal: subtotal
-                }
-            })
-            
-            setInitialData({
-                ...mockPurchase,
-                items: mockItems,
-                orderTax: '10',
-                orderDiscount: '50',
-                shipping: '20',
-                orderTaxIsPercentage: true,
-                orderDiscountIsPercentage: false,
-                paymentMethod: 'bank_transfer',
-                paymentAmount: '1000',
-                note: 'This is a mock purchase for editing purposes.'
-            })
+    // ================================
+    // TRANSFORM PURCHASE DATA TO FORM INITIAL DATA
+    // ================================
+    const initialData = useMemo(() => {
+        if (!purchase) return null
+
+        const items = purchase.items.map((item, index) => {
+            const itemName = item.variation
+                ? `${item.product.name} - ${item.variation.type}: ${item.variation.value}`
+                : item.product.name
+
+            return {
+                id: `item-${item.id}-${index}`,
+                productId: String(item.product.id),
+                name: itemName,
+                code: item.variation?.sku || item.product.sku,
+                stock: 0,
+                unit: '',
+                quantity: item.quantity,
+                netUnitPrice: parseFloat(item.unit_cost),
+                discount: parseFloat(item.discount),
+                tax: parseFloat(item.tax.amount),
+                taxType: item.tax.type as 'percent' | 'fixed',
+                subtotal: parseFloat(item.subtotal),
+                productType: item.variation ? 'Variation' as const : 'Simple' as const,
+                ...(item.variation && {
+                    variationId: item.variation.id,
+                    variationType: item.variation.type,
+                    variationValue: item.variation.value
+                })
+            }
+        })
+
+        return {
+            id: purchase.purchase_id,
+            reference: purchase.reference,
+            supplierId: String(purchase.supplier.id),
+            storeId: String(purchase.store.id),
+            status: purchase.status.toLowerCase() as 'received' | 'pending' | 'orders',
+            paymentStatus: purchase.payment.status.toLowerCase() as 'unpaid' | 'paid',
+            paymentMethod: purchase.payment.method?.id ? String(purchase.payment.method.id) : '',
+            grandTotal: parseFloat(purchase.grand_total),
+            created_at: purchase.created_at,
+            items: items,
+            orderTax: purchase.tax.amount,
+            orderDiscount: purchase.discount.amount,
+            shipping: purchase.shipping,
+            orderTaxIsPercentage: purchase.tax.type === 'percent',
+            orderDiscountIsPercentage: purchase.discount.type === 'percent',
+            purchaseDate: purchase.purchase_date.split('T')[0],
+            note: purchase.note || ''
         }
-        
-        setIsLoading(false)
-    }, [])
+    }, [purchase])
 
+    // ================================
+    // HANDLE FORM SUBMIT
+    // ================================
     const handleSubmit = (formData: CreatePurchaseFormData | UpdatePurchaseFormData) => {
-        const updateData = formData as UpdatePurchaseFormData
-        console.log('Update purchase:', updateData)
-        showSuccess('Purchase updated', 'Purchase updated successfully.')
+        const payload = transformPurchaseFormDataToPayload(formData as CreatePurchaseFormData)
+        
+        updatePurchaseMutation.mutate(
+            { id: Number(purchaseId), payload },
+            {
+                onSuccess: () => {
+                    goBack()
+                }
+            }
+        )
     }
 
+    // ================================
+    // LOADING STATE
+    // ================================
     if (isLoading) {
         return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">Loading...</div>
-                </DashboardCard>
-            </div>
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Purchases', href: '/dashboard/purchases' },
+                        { label: 'Edit Purchase' }
+                    ]}
+                    title='Edit Purchase'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
+        )
+    }
+
+    if (!purchase || !initialData) {
+        return (
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Purchases', href: '/dashboard/purchases' },
+                        { label: 'Edit Purchase' }
+                    ]}
+                    title='Edit Purchase'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 text-center text-gray-500">
+                            Purchase not found
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
         )
     }
 
@@ -97,7 +140,8 @@ const EditPurchaseView = () => {
             <DashboardBreadCrumb
                 items={[
                     { label: 'Purchases', href: '/dashboard/purchases' },
-                    { label: 'Edit Purchase' }
+                    { label: purchase.reference, href: `/dashboard/purchases/${purchaseId}` },
+                    { label: 'Edit' }
                 ]}
                 title='Edit Purchase'
             />
@@ -108,6 +152,7 @@ const EditPurchaseView = () => {
                     initialData={initialData}
                     onSubmit={handleSubmit}
                     onCancel={goBack}
+                    isLoading={updatePurchaseMutation.isPending}
                     submitButtonText="Update Purchase"
                 />
             </div>
@@ -116,4 +161,3 @@ const EditPurchaseView = () => {
 }
 
 export default EditPurchaseView
-

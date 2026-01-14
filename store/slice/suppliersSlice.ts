@@ -21,7 +21,7 @@ export const fetchSuppliers = createAsyncThunk(
     'suppliers/fetchSuppliers',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await getSuppliers()
+            const response = await getSuppliers(1, 200)
             return response.data
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to fetch suppliers')

@@ -9,7 +9,9 @@ import {
     suppliersReducer,
     brandsReducer,
     unitsReducer,
-    variationsReducer
+    variationsReducer,
+    paymentMethodsReducer,
+    customersReducer
 } from "./slice"
 
 const rootReducer = combineReducers({
@@ -21,12 +23,14 @@ const rootReducer = combineReducers({
     brands: brandsReducer,
     units: unitsReducer,
     variations: variationsReducer,
+    paymentMethods: paymentMethodsReducer,
+    customers: customersReducer,
 })
 
 const persistConfig = {
     key: "root",
     storage: storageSession,
-    whitelist: ['auth', 'permissions', 'categories', 'stores', 'suppliers', 'brands', 'units', 'variations'], 
+    whitelist: ['auth', 'permissions', 'categories', 'stores', 'suppliers', 'brands', 'units', 'variations', 'paymentMethods', 'customers'], 
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

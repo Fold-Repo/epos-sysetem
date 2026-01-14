@@ -21,7 +21,7 @@ export const fetchVariations = createAsyncThunk(
     'variations/fetchVariations',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await getVariations()
+            const response = await getVariations(1, 200)
             return response.data
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to fetch variations')

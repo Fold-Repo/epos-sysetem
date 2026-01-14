@@ -4,15 +4,28 @@ import { DashboardBreadCrumb } from '@/components'
 import PurchaseForm from '../PurchaseForm'
 import { useToast, useGoBack } from '@/hooks'
 import { CreatePurchaseFormData, UpdatePurchaseFormData } from '@/types'
+import { useCreatePurchase, transformPurchaseFormDataToPayload } from '@/services'
+import { getErrorMessage } from '@/utils'
 
 const CreatePurchaseView = () => {
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
 
-    const handleSubmit = (formData: CreatePurchaseFormData | UpdatePurchaseFormData) => {
+    const { mutateAsync: createPurchase, isPending } = useCreatePurchase()
+    const { showError } = useToast()
+    const handleSubmit = async (
+        formData: CreatePurchaseFormData | UpdatePurchaseFormData
+    ) => {
         const createData = formData as CreatePurchaseFormData
-        console.log('Create purchase:', createData)
-        showSuccess('Purchase created', 'Purchase created successfully.')
+
+        try {
+
+            const payload = transformPurchaseFormDataToPayload(createData)
+            await createPurchase(payload)
+            goBack()
+
+        } catch (error) {
+            showError(getErrorMessage(error))
+        }
     }
 
     return (
@@ -31,6 +44,7 @@ const CreatePurchaseView = () => {
                     onSubmit={handleSubmit}
                     onCancel={goBack}
                     submitButtonText="Create Purchase"
+                    isLoading={isPending}
                 />
             </div>
         </>

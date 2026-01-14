@@ -1,26 +1,33 @@
 'use client'
 
-import { DashboardCard, CustomAutocomplete } from '@/components'
+import { DashboardCard, CustomAutocomplete, ProductSelect } from '@/components'
 import { SummaryBox, FormFieldsGrid, OrderItemsTable } from '@/views/dashboard/components'
-import { productsData, customersData } from '@/data'
-import { useProductSelection, BaseProductItem, useOrderTotals } from '@/hooks'
-import { useState, useEffect } from 'react'
+import { BaseProductItem, useOrderTotals } from '@/hooks'
+import { useState, useEffect, useMemo } from 'react'
 import { formatCurrency, getCurrencySymbol } from '@/lib'
 import { Button } from '@heroui/react'
 import { CreateQuotationFormData, UpdateQuotationFormData, QuotationType } from '@/types'
+import { useAppSelector, selectCustomers, selectStores } from '@/store'
 
 interface QuotationItem extends BaseProductItem {
     quantity: number
     netUnitPrice: number
     discount: number
     tax: number
+    taxType?: 'percent' | 'fixed'
     subtotal: number
+    productType?: 'Simple' | 'Variation'
+    variationId?: number
+    variationType?: string
+    variationValue?: string
+    quotationItemId?: number
 }
 
 interface QuotationFormProps {
     mode: 'create' | 'edit'
     initialData?: QuotationType & {
         items?: QuotationItem[]
+        storeId?: string
         orderTax?: string
         orderDiscount?: string
         shipping?: string
@@ -46,60 +53,78 @@ const QuotationForm = ({
 }: QuotationFormProps) => {
     
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
+    const [selectedStoreId, setSelectedStoreId] = useState<string>('')
     const [orderTax, setOrderTax] = useState('')
     const [orderTaxIsPercentage, setOrderTaxIsPercentage] = useState(true)
     const [orderDiscount, setOrderDiscount] = useState('')
     const [orderDiscountIsPercentage, setOrderDiscountIsPercentage] = useState(false)
     const [shipping, setShipping] = useState('')
-    const [status, setStatus] = useState('')
+    const [status, setStatus] = useState('draft')
     const [note, setNote] = useState('')
+    const [quotationItems, setItems] = useState<QuotationItem[]>([])
 
-    const { selectedProductId, items: quotationItems, setItems,
-        clearItems,
-        handleProductSelect, updateItem, deleteItem, productOptions }
-        = useProductSelection<QuotationItem>({
-            products: productsData,
-            itemMapper: (product, id) => {
-                const price = product.price || 0
-                const discount = product.discount || 0
-                const tax = product.tax || 0
-                const discountAmount = (price * discount) / 100
-                const taxAmount = (price * tax) / 100
-                const initialSubtotal = price - discountAmount + taxAmount
-                return {
-                    id,
-                    productId: product.id,
-                    name: product.name,
-                    code: product.code,
-                    stock: product.stock,
-                    unit: product.unit,
-                    quantity: 1,
-                    netUnitPrice: price,
-                    discount: discount,
-                    tax: tax,
-                    subtotal: initialSubtotal
-                }
-            },
-            duplicateErrorTitle: 'Product already added',
-            duplicateErrorMessage: (productName) => `"${productName}" is already in the order items list.`,
-            onItemUpdate: (item, field) => {
+    // =========================
+    // UPDATE ITEM
+    // =========================
+    const updateItem = (itemId: string, field: keyof QuotationItem, value: any) => {
+        setItems(prev => prev.map(item => {
+            if (item.id === itemId) {
+                const updated = { ...item, [field]: value }
+                
                 // =========================
                 // AUTO-CALCULATE SUBTOTAL
                 // =========================
-                if (field === 'quantity') {
-                    const price = item.netUnitPrice * (item.quantity || 1)
-                    const discountAmount = (price * item.discount) / 100
-                    const taxAmount = (price * item.tax) / 100
+                if (field === 'quantity' || field === 'netUnitPrice' || field === 'discount' || field === 'tax' || field === 'taxType') {
+                    const price = updated.netUnitPrice * (updated.quantity || 1)
+                    const discountAmount = (price * updated.discount) / 100
+                    
+                    // ================================
+                    // CALCULATE TAX AMOUNT
+                    // ================================
+                    const taxAmount = updated.taxType === 'fixed' ? updated.tax : (price * updated.tax) / 100
                     const subtotal = price - discountAmount + taxAmount
-                    return { subtotal } as Partial<QuotationItem>
+                    return { ...updated, subtotal }
                 }
-                return {}
+                
+                return updated
             }
-        })
+            return item
+        }))
+    }
 
-    const customerOptions = customersData
-        .filter(c => c.id !== undefined)
-        .map(c => ({ value: String(c.id!), label: c.name }))
+    // =========================
+    // DELETE ITEM
+    // =========================
+    const deleteItem = (itemId: string) => {
+        setItems(prev => prev.filter(item => item.id !== itemId))
+    }
+
+    // =========================
+    // GET CUSTOMERS AND STORES FROM REDUX STATE
+    // =========================
+    const customers = useAppSelector(selectCustomers)
+    const stores = useAppSelector(selectStores)
+    
+    // =========================
+    // CUSTOMER OPTIONS
+    // =========================
+    const customerOptions = useMemo(() => {
+        return customers
+            .filter(c => (c.customer_id !== undefined || c.id !== undefined))
+            .map(c => ({ 
+                value: String(c.customer_id || c.id), 
+                label: c.name 
+            }))
+    }, [customers])
+
+    // =========================
+    // STORE OPTIONS
+    // =========================
+    const storeOptions = useMemo(() => {
+        return stores
+            .filter(s => s.store_id !== undefined)
+            .map(s => ({ value: String(s.store_id), label: s.name }))
+    }, [stores])
 
     // =========================
     // LOAD INITIAL DATA (EDIT MODE)
@@ -107,7 +132,8 @@ const QuotationForm = ({
     useEffect(() => {
         if (mode === 'edit' && initialData) {
             setSelectedCustomerId(initialData.customerId || '')
-            setStatus(initialData.status || '')
+            setSelectedStoreId(initialData.storeId || '')
+            setStatus(initialData.status || 'draft')
             setOrderTax(initialData.orderTax || '')
             setOrderTaxIsPercentage(initialData.orderTaxIsPercentage ?? true)
             setOrderDiscount(initialData.orderDiscount || '')
@@ -145,6 +171,10 @@ const QuotationForm = ({
             return
         }
 
+        if (!selectedStoreId) {
+            return
+        }
+
         // =========================
         // MAP ITEMS TO BACKEND FORMAT
         // =========================
@@ -155,57 +185,99 @@ const QuotationForm = ({
             discount: item.discount,
             tax: item.tax,
             subtotal: item.subtotal,
-            ...(mode === 'edit' && { quotation_item_id: '' })
+            ...(item.variationId && { variation_id: item.variationId }),
+            ...(mode === 'edit' && item.quotationItemId && { quotation_item_id: String(item.quotationItemId) })
         }))
 
         // =========================
         // CONSTRUCT FORM DATA
         // =========================
+        const baseFormData: CreateQuotationFormData = {
+            store_id: selectedStoreId,
+            customer_id: selectedCustomerId,
+            quotation_items: quotationItemsData,
+            order_tax: Number(orderTax || 0),
+            order_discount: Number(orderDiscount || 0),
+            shipping: Number(shipping || 0),
+            status: status,
+            note: note || '',
+            grand_total: totals.grandTotal,
+            order_tax_type: orderTaxIsPercentage ? 'percent' : 'fixed',
+            order_discount_type: orderDiscountIsPercentage ? 'percent' : 'fixed'
+        }
+        
         if (mode === 'edit' && initialData?.id) {
             const formData: UpdateQuotationFormData = {
-                quotation_id: initialData.id,
-                customer_id: selectedCustomerId,
-                quotation_items: quotationItemsData,
-                order_tax: Number(orderTax || 0),
-                order_discount: Number(orderDiscount || 0),
-                shipping: Number(shipping || 0),
-                status: status || 'draft',
-                note: note || '',
-                grand_total: totals.grandTotal
+                ...baseFormData,
+                quotation_id: initialData.id
             }
             onSubmit(formData)
         } else {
-            const formData: CreateQuotationFormData = {
-                customer_id: selectedCustomerId,
-                quotation_items: quotationItemsData,
-                order_tax: Number(orderTax || 0),
-                order_discount: Number(orderDiscount || 0),
-                shipping: Number(shipping || 0),
-                status: status || 'draft',
-                note: note || '',
-                grand_total: totals.grandTotal
-            }
-            onSubmit(formData)
+            onSubmit(baseFormData)
         }
     }
 
-    const isSubmitDisabled = quotationItems.length === 0 || !selectedCustomerId
+    const isSubmitDisabled = quotationItems.length === 0 || !selectedCustomerId || !selectedStoreId
 
     return (
         <DashboardCard bodyClassName='space-y-2'>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 space-y-4">
-                <CustomAutocomplete
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 space-y-4">
+                
+                <ProductSelect
                     name="product"
                     label="Product"
-                    placeholder="Search Product by Code Name"
+                    placeholder="Search Product"
                     radius="lg"
                     inputSize="sm"
-                    options={productOptions}
-                    value={selectedProductId}
-                    onChange={(value) => {
-                        if (typeof value === 'string') {
-                            handleProductSelect(value)
+                    limit={20}
+                    existingItems={quotationItems}
+                    itemMapper={(product, id) => {
+                        // ================================
+                        // DETERMINE IF PRODUCT IS A VARIATION
+                        // ================================
+                        const isVariation = !!(product as any).variationId
+                        const price = product.price || 0
+                        const discount = product.discount || 0
+                        const tax = (product as any).tax || product.tax || 0
+                        const taxType = (product as any).taxType || 'percent'
+                        
+                        const taxAmount = taxType === 'fixed' ? tax : (price * tax) / 100
+                        const discountAmount = (price * discount) / 100
+                        const initialSubtotal = price - discountAmount + taxAmount
+                        
+                        // ================================
+                        // DETERMINE ITEM NAME
+                        // ================================
+                        const itemName = isVariation && (product as any).variationValue
+                            ? `${product.name} - ${(product as any).variationType}: ${(product as any).variationValue}`
+                            : product.name
+                        
+                        // ================================
+                        // DETERMINE ITEM CODE
+                        // ================================
+                        const itemCode = isVariation && (product as any).variationSku
+                            ? (product as any).variationSku
+                            : product.code
+                        
+                        return {
+                            id,
+                            productId: product.id,
+                            name: itemName,
+                            code: itemCode,
+                            quantity: 1,
+                            netUnitPrice: price,
+                            discount: discount,
+                            tax: tax,
+                            taxType: taxType,
+                            subtotal: initialSubtotal,
+                            productType: isVariation ? 'Variation' : 'Simple',
+                            variationId: (product as any).variationId,
+                            variationType: (product as any).variationType,
+                            variationValue: (product as any).variationValue
                         }
+                    }}
+                    onItemAdd={(item) => {
+                        setItems(prev => [...prev, item])
                     }}
                 />
 
@@ -223,6 +295,21 @@ const QuotationForm = ({
                         }
                     }}
                 />
+
+                <CustomAutocomplete
+                    name="store"
+                    label="Store"
+                    placeholder="Choose Store"
+                    radius="lg"
+                    inputSize="sm"
+                    options={storeOptions}
+                    value={selectedStoreId}
+                    onChange={(value) => {
+                        if (typeof value === 'string') {
+                            setSelectedStoreId(value)
+                        }
+                    }}
+                />
             </div>
 
             {/* ============================== */}
@@ -232,6 +319,7 @@ const QuotationForm = ({
                 items={quotationItems}
                 onQuantityChange={(itemId, quantity) => updateItem(itemId, 'quantity', quantity)}
                 onDelete={deleteItem}
+                hideStock={true}
             />
 
             {/* ============================== */}
@@ -310,14 +398,10 @@ const QuotationForm = ({
                         value: status,
                         onChange: (e) => setStatus(e.target.value),
                         options: [
-                            { value: '', label: 'Select Status' },
-                            { value: 'pending', label: 'Pending' },
-                            { value: 'paid', label: 'Paid' },
-                            { value: 'cancelled', label: 'Cancelled' },
-                            { value: 'Sent', label: 'Sent' },
-                            { value: 'Draft', label: 'Draft' },
-                            { value: 'Approved', label: 'Approved' },
-                            { value: 'Rejected', label: 'Rejected' }
+                            { value: 'draft', label: 'Draft' },
+                            { value: 'sent', label: 'Sent' },
+                            { value: 'approved', label: 'Approved' },
+                            { value: 'rejected', label: 'Rejected' }
                         ]
                     },
                     {
@@ -346,7 +430,8 @@ const QuotationForm = ({
                 <Button 
                     onPress={handleSubmit} 
                     size='sm' 
-                    isDisabled={isSubmitDisabled || isLoading}
+                    isLoading={isLoading}
+                    isDisabled={isSubmitDisabled}
                     className='px-4 bg-primary text-white h-9'>
                     {submitButtonText || (mode === 'edit' ? 'Update Quotation' : 'Create Quotation')}
                 </Button>

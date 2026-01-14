@@ -1,5 +1,5 @@
 import { TableCell, TableComponent, MenuDropdown, TrashIcon } from '@/components'
-import { EllipsisVerticalIcon, EyeIcon, PencilIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon, EyeIcon, PencilIcon, ArrowDownTrayIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { QuotationType } from '@/types'
 import moment from 'moment'
@@ -14,6 +14,8 @@ interface QuotationTableProps {
     onEdit?: (quotationId: string) => void
     onDelete?: (quotationId: string) => void
     onDownloadPDF?: (quotationId: string) => void
+    onCreateSale?: (quotationId: string) => void
+    loading?: boolean
 }
 
 const columns = [
@@ -27,11 +29,14 @@ const columns = [
 
 const QuotationTable = ({ 
     data, 
+    selectedQuotations,
     onSelectionChange, 
     onView, 
     onEdit, 
     onDelete,
-    onDownloadPDF
+    onDownloadPDF,
+    onCreateSale,
+    loading = false
 }: QuotationTableProps) => {
 
     const renderRow = (quotation: QuotationType) => {
@@ -41,7 +46,7 @@ const QuotationTable = ({
                     <span className='text-xs'>{quotation.reference}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{quotation.customer}</span>
+                    <span className='text-xs'>{quotation.customer_name || '-'}</span>
                 </TableCell>
                 <TableCell>
                     <StatusChip status={quotation.status} />
@@ -77,6 +82,11 @@ const QuotationTable = ({
                                 icon: <PencilIcon className='size-4' />
                             },
                             {
+                                key: 'createSale',
+                                label: 'Create Sales',
+                                icon: <ShoppingCartIcon className='size-4' />
+                            },
+                            {
                                 key: 'download',
                                 label: 'Download PDF',
                                 icon: <ArrowDownTrayIcon className='size-4' />
@@ -95,6 +105,8 @@ const QuotationTable = ({
                                 onView?.(id)
                             } else if (key === 'edit') {
                                 onEdit?.(id)
+                            } else if (key === 'createSale') {
+                                onCreateSale?.(id)
                             } else if (key === 'download') {
                                 onDownloadPDF?.(id)
                             } else if (key === 'delete') {
@@ -114,9 +126,9 @@ const QuotationTable = ({
             data={data}
             rowKey={(item) => String(item.id || `qt-${Math.random()}`)}
             renderRow={renderRow}
-            withCheckbox={false}
+            withCheckbox={!!onSelectionChange}
             onSelectionChange={onSelectionChange}
-            loading={false}
+            loading={loading}
         />
     )
 }

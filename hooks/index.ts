@@ -7,6 +7,7 @@ import { usePermissions } from "./usePermissions";
 import { useProductSelection, type BaseProductItem } from "./useProductSelection";
 import { useOrderTotals } from "./useOrderTotals";
 import { useFetchAllData } from "./useFetchAllData";
+import { useProductSearch } from "./useProductSearch";
 
 export {
     useClickOutside,
@@ -17,7 +18,8 @@ export {
     usePermissions,
     useProductSelection,
     useOrderTotals,
-    useFetchAllData
+    useFetchAllData,
+    useProductSearch
 }
 
 export type { BaseProductItem }

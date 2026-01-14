@@ -1,101 +1,137 @@
 'use client'
 
 import { DashboardBreadCrumb, DashboardCard } from '@/components'
-import { useToast, useGoBack } from '@/hooks'
+import { useGoBack } from '@/hooks'
 import { UpdateSaleFormData, CreateSaleFormData } from '@/types'
-import { salesData, productsData } from '@/data'
-import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import SalesForm from '../SalesForm'
-
-interface SaleItem {
-    id: string
-    productId: string
-    name: string
-    code: string
-    stock: number
-    unit: string
-    quantity: number
-    netUnitPrice: number
-    discount: number
-    tax: number
-    subtotal: number
-}
+import { useGetSaleDetail, useUpdateSale, transformSaleFormDataToPayload } from '@/services'
+import { useMemo } from 'react'
 
 const EditSaleView = () => {
+
     const params = useParams()
     const saleId = params?.id as string
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
-    const [initialData, setInitialData] = useState<any>(null)
+    
+    // ================================
+    // FETCH SALE DETAILS
+    // ================================
+    const { data: sale, isLoading } = useGetSaleDetail(Number(saleId))
+    const updateSaleMutation = useUpdateSale()
 
-    useEffect(() => {
-        const mockSale = salesData[0]
-        
-        if (mockSale) {
-            const mockItems: SaleItem[] = productsData.slice(0, 3).map((product, index) => {
-                const price = product.price || 0
-                const discount = product.discount || 0
-                const tax = product.tax || 0
-                const quantity = index + 1
-                const itemPrice = price * quantity
-                const discountAmount = (itemPrice * discount) / 100
-                const taxAmount = (itemPrice * tax) / 100
-                const subtotal = itemPrice - discountAmount + taxAmount
-                
-                return {
-                    id: `item-${index}-${Date.now()}`,
-                    productId: product.id,
-                    name: product.name,
-                    code: product.code,
-                    stock: product.stock,
-                    unit: product.unit,
-                    quantity: quantity,
-                    netUnitPrice: price,
-                    discount: discount,
-                    tax: tax,
-                    subtotal: subtotal
-                }
-            })
-            
-            setInitialData({
-                ...mockSale,
-                items: mockItems,
-                orderTax: '10',
-                orderDiscount: '50',
-                shipping: '20',
-                orderTaxIsPercentage: true,
-                orderDiscountIsPercentage: false,
-                payments: [
-                    {
-                        id: `payment-${Date.now()}`,
-                        date: '2024-01-15',
-                        reference: 'PAY-001',
-                        amount: '1000',
-                        paymentType: 'cash'
-                    }
-                ],
-                note: 'This is a mock sale for editing purposes.'
-            })
+    // ================================
+    // TRANSFORM SALE DATA TO FORM INITIAL DATA
+    // ================================
+    const initialData = useMemo(() => {
+        if (!sale) return null
+
+        const items = sale.items.map((item, index) => {
+            const itemName = item.variation
+                ? `${item.product.name} - ${item.variation.type}: ${item.variation.value}`
+                : item.product.name
+
+            return {
+                id: `item-${item.id}-${index}`,
+                productId: String(item.product.id),
+                name: itemName,
+                code: item.variation?.sku || item.product.sku,
+                stock: 0,
+                unit: '',
+                quantity: item.quantity,
+                netUnitPrice: parseFloat(item.unit_cost),
+                discount: parseFloat(item.discount),
+                tax: parseFloat(item.tax.amount),
+                taxType: item.tax.type as 'percent' | 'fixed',
+                subtotal: parseFloat(item.subtotal),
+                productType: item.variation ? 'Variation' as const : 'Simple' as const,
+                saleItemId: item.id,
+                ...(item.variation && {
+                    variationId: item.variation.id,
+                    variationType: item.variation.type,
+                    variationValue: item.variation.value
+                })
+            }
+        })
+
+        return {
+            id: sale.sale_id,
+            reference: sale.reference,
+            customerId: String(sale.customer.id),
+            storeId: String(sale.store.id),
+            status: sale.status.toLowerCase() as 'completed' | 'pending' | 'cancelled',
+            paymentStatus: sale.payment.status.toLowerCase() as 'unpaid' | 'paid',
+            paymentMethod: sale.payment.method?.id ? String(sale.payment.method.id) : '',
+            grandTotal: parseFloat(sale.grand_total),
+            created_at: sale.created_at,
+            items: items,
+            orderTax: sale.tax.amount,
+            orderDiscount: sale.discount.amount,
+            shipping: sale.shipping,
+            orderTaxIsPercentage: sale.tax.type === 'percent',
+            orderDiscountIsPercentage: sale.discount.type === 'percent',
+            note: sale.note || ''
         }
-        
-        setIsLoading(false)
-    }, [])
+    }, [sale])
 
+    // ================================
+    // HANDLE FORM SUBMIT
+    // ================================
     const handleSubmit = (formData: CreateSaleFormData | UpdateSaleFormData) => {
-        const updateData = formData as UpdateSaleFormData
-        console.log('Update sale:', updateData)
-        showSuccess('Sale updated', 'Sale updated successfully.')
+        const payload = transformSaleFormDataToPayload(formData as CreateSaleFormData)
+        
+        updateSaleMutation.mutate(
+            { id: Number(saleId), payload },
+            {
+                onSuccess: () => {
+                    goBack()
+                }
+            }
+        )
     }
 
+    // ================================
+    // LOADING STATE
+    // ================================
     if (isLoading) {
         return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">Loading...</div>
-                </DashboardCard>
-            </div>
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Sales', href: '/dashboard/sales' },
+                        { label: 'Edit Sale' }
+                    ]}
+                    title='Edit Sale'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
+        )
+    }
+
+    if (!sale || !initialData) {
+        return (
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Sales', href: '/dashboard/sales' },
+                        { label: 'Edit Sale' }
+                    ]}
+                    title='Edit Sale'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 text-center text-gray-500">
+                            Sale not found
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
         )
     }
 
@@ -104,7 +140,8 @@ const EditSaleView = () => {
             <DashboardBreadCrumb
                 items={[
                     { label: 'Sales', href: '/dashboard/sales' },
-                    { label: 'Edit Sale' }
+                    { label: sale.reference, href: `/dashboard/sales/${saleId}` },
+                    { label: 'Edit' }
                 ]}
                 title='Edit Sale'
             />
@@ -115,6 +152,7 @@ const EditSaleView = () => {
                     initialData={initialData}
                     onSubmit={handleSubmit}
                     onCancel={goBack}
+                    isLoading={updateSaleMutation.isPending}
                     submitButtonText="Update Sale"
                 />
             </div>
@@ -123,4 +161,3 @@ const EditSaleView = () => {
 }
 
 export default EditSaleView
-

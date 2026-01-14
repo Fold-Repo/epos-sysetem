@@ -1,3 +1,5 @@
+import { PaginationResponse } from './type';
+
 /**
  * Category from API
  */
@@ -12,12 +14,15 @@ export interface Category {
     status?: 'active' | 'inactive';
 }
 
+// PaginationResponse is now exported from ./type.ts
+
 /**
  * Categories list response from API
  */
 export interface CategoriesListResponse {
     status: number;
     data: Category[];
+    pagination: PaginationResponse;
 }
 
 /**

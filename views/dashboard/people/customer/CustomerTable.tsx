@@ -7,6 +7,7 @@ import { CustomerType } from '@/types'
 
 interface CustomerTableProps {
     data: CustomerType[]
+    loading?: boolean
     onEdit?: (customer: CustomerType) => void
     onDelete?: (customerId: string) => void
 }
@@ -23,6 +24,7 @@ const columns = [
 
 const CustomerTable = ({
     data,
+    loading = false,
     onEdit,
     onDelete
 }: CustomerTableProps) => {
@@ -37,7 +39,7 @@ const CustomerTable = ({
                     <span className='text-xs'>{customer.email || '-'}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{customer.phone || '-'}</span>
+                    <span className='text-xs'>{customer.phone || customer.phonenumber || '-'}</span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>{customer.country || '-'}</span>
@@ -46,7 +48,7 @@ const CustomerTable = ({
                     <span className='text-xs'>{customer.city || '-'}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{customer.address || '-'}</span>
+                    <span className='text-xs max-w-[200px] truncate'>{customer.address || '-'}</span>
                 </TableCell>
                 <TableCell>
                     <div className="flex items-center gap-2">
@@ -60,7 +62,7 @@ const CustomerTable = ({
                         </Button>
 
                         <Button 
-                            onPress={() => onDelete?.(String(customer.id))} 
+                            onPress={() => onDelete?.(String(customer.id || customer.customer_id))} 
                             isIconOnly 
                             size='sm' 
                             className='bg-gray-100/80 text-danger' 
@@ -78,13 +80,12 @@ const CustomerTable = ({
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => String(item.id || `customer-${Math.random()}`)}
+            rowKey={(item) => String(item.id || item.customer_id || `customer-${Math.random()}`)}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={loading}
         />
     )
 }
 
 export default CustomerTable
-

@@ -15,28 +15,28 @@ interface SalesTableProps {
     onView?: (saleId: string) => void
     onEdit?: (saleId: string) => void
     onDelete?: (saleId: string) => void
+    loading?: boolean
 }
 
 const columns = [
     { key: 'reference', title: 'REFERENCE' },
-    { key: 'user', title: 'USER' },
     { key: 'customer', title: 'CUSTOMER' },
+    { key: 'store_name', title: 'STORE' },
     { key: 'status', title: 'STATUS' },
-    { key: 'grandTotal', title: 'GRAND TOTAL' },
-    { key: 'paid', title: 'PAID' },
-    { key: 'due', title: 'DUE' },
     { key: 'paymentStatus', title: 'PAYMENT STATUS' },
-    { key: 'paymentType', title: 'PAYMENT TYPE' },
+    { key: 'grandTotal', title: 'GRAND TOTAL' },
     { key: 'created_at', title: 'CREATED ON' },
     { key: 'actions', title: 'ACTION' }
 ]
 
 const SalesTable = ({ 
     data, 
+    selectedSales,
     onSelectionChange, 
     onView, 
     onEdit, 
-    onDelete
+    onDelete,
+    loading = false
 }: SalesTableProps) => {
 
     const renderRow = (sale: SaleType) => {
@@ -46,34 +46,21 @@ const SalesTable = ({
                     <span className='text-xs'>{sale.reference}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{sale.user}</span>
+                    <span className='text-xs'>{sale.customer_name}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{sale.customer}</span>
+                    <span className='text-xs'>{sale.store_name ?? '-'  }</span>
                 </TableCell>
                 <TableCell>
                     <StatusChip status={sale.status} />
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs font-medium'>
-                        {sale.grandTotal ? formatCurrency(sale.grandTotal) : '-'}
-                    </span>
-                </TableCell>
-                <TableCell>
-                    <span className='text-xs font-medium'>
-                        {sale.paid !== undefined ? formatCurrency(sale.paid) : '-'}
-                    </span>
-                </TableCell>
-                <TableCell>
-                    <span className='text-xs font-medium'>
-                        {sale.due !== undefined ? formatCurrency(sale.due) : '-'}
-                    </span>
-                </TableCell>
-                <TableCell>
                     <StatusChip status={sale.paymentStatus} />
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{sale.paymentType || '-'}</span>
+                    <span className='text-xs font-medium'>
+                        {sale.grandTotal ? formatCurrency(sale.grandTotal) : '-'}
+                    </span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>
@@ -131,12 +118,11 @@ const SalesTable = ({
             data={data}
             rowKey={(item) => String(item.id || `sale-${Math.random()}`)}
             renderRow={renderRow}
-            withCheckbox={false}
+            withCheckbox={true}
             onSelectionChange={onSelectionChange}
-            loading={false}
+            loading={loading}
         />
     )
 }
 
 export default SalesTable
-

@@ -21,7 +21,7 @@ export const fetchUnits = createAsyncThunk(
     'units/fetchUnits',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await getUnits()
+            const response = await getUnits(1, 200)
             return response.data
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to fetch units')

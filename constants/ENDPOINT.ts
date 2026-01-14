@@ -43,5 +43,11 @@ export const ENDPOINT = {
     BRANDS: '/brands',
     SUPPLIERS: '/suppliers',
     PRODUCTS: '/products',
+    PAYMENT_METHODS: '/payment-methods',
+    PURCHASES: '/purchases',
+    SALES: '/sales',
+    CUSTOMERS: '/customers',
+    QUOTATIONS: '/qoutations',
+    ADJUSTMENTS: '/adjustments',
 
 } as const;

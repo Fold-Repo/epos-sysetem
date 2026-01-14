@@ -1,43 +1,39 @@
 'use client'
 
-import { DashboardCard, CustomAutocomplete, Input, Select, TextArea } from '@/components'
-import { SummaryBox, FormFieldsGrid, OrderItemsTable } from '@/views/dashboard/components'
-import { productsData, customersData } from '@/data'
+import { DashboardCard, CustomAutocomplete, ProductSelect } from '@/components'
+import { SummaryBox, FormFieldsGrid, OrderItemsTable, FormField } from '@/views/dashboard/components'
 import { useProductSelection, BaseProductItem, useOrderTotals } from '@/hooks'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { formatCurrency, getCurrencySymbol } from '@/lib'
 import { Button } from '@heroui/react'
 import { CreateSaleFormData, UpdateSaleFormData, SaleType } from '@/types'
-import { TrashIcon } from '@/components'
-import { PlusIcon } from '@heroicons/react/24/outline'
-import moment from 'moment'
+import { useAppSelector, selectPaymentMethods, selectStores, selectCustomers } from '@/store'
 
 interface SaleItem extends BaseProductItem {
     quantity: number
     netUnitPrice: number
     discount: number
     tax: number
+    taxType?: 'percent' | 'fixed'
     subtotal: number
-}
-
-interface PaymentEntry {
-    id: string
-    date: string
-    reference: string
-    amount: string
-    paymentType: string
+    productType?: 'Simple' | 'Variation'
+    variationId?: number
+    variationType?: string
+    variationValue?: string
+    saleItemId?: number
 }
 
 interface SalesFormProps {
     mode: 'create' | 'edit'
     initialData?: SaleType & {
         items?: SaleItem[]
+        storeId?: string
         orderTax?: string
         orderDiscount?: string
         shipping?: string
         orderTaxIsPercentage?: boolean
         orderDiscountIsPercentage?: boolean
-        payments?: PaymentEntry[]
+        paymentMethod?: string
         note?: string
     }
     onSubmit: (data: CreateSaleFormData | UpdateSaleFormData) => void
@@ -58,35 +54,31 @@ const SalesForm = ({
 }: SalesFormProps) => {
     
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
+    const [selectedStoreId, setSelectedStoreId] = useState<string>('')
     const [orderTax, setOrderTax] = useState('')
     const [orderTaxIsPercentage, setOrderTaxIsPercentage] = useState(true)
     const [orderDiscount, setOrderDiscount] = useState('')
     const [orderDiscountIsPercentage, setOrderDiscountIsPercentage] = useState(false)
     const [shipping, setShipping] = useState('')
     const [status, setStatus] = useState<'completed' | 'pending' | 'cancelled'>('pending')
-    const [paymentStatus, setPaymentStatus] = useState<'unpaid' | 'paid' | 'partial'>('unpaid')
-    const [payments, setPayments] = useState<PaymentEntry[]>([
-        {
-            id: `payment-${Date.now()}`,
-            date: moment().format('YYYY-MM-DD'),
-            reference: '',
-            amount: '',
-            paymentType: ''
-        }
-    ])
+    const [paymentStatus, setPaymentStatus] = useState<'unpaid' | 'paid'>('unpaid')
+    const [paymentMethod, setPaymentMethod] = useState('')
     const [note, setNote] = useState('')
 
-    const { selectedProductId, items: saleItems, setItems,
-        clearItems,
-        handleProductSelect, updateItem, deleteItem, productOptions }
+    const { items: saleItems, setItems, updateItem, deleteItem }
         = useProductSelection<SaleItem>({
-            products: productsData,
+            products: [], 
             itemMapper: (product, id) => {
                 const price = product.price || 0
                 const discount = product.discount || 0
                 const tax = product.tax || 0
+                const taxType = (product as any).taxType || 'percent'
                 const discountAmount = (price * discount) / 100
-                const taxAmount = (price * tax) / 100
+                
+                // ================================
+                // CALCULATE TAX AMOUNT
+                // ================================
+                const taxAmount = taxType === 'fixed' ? tax : (price * tax) / 100
                 const initialSubtotal = price - discountAmount + taxAmount
                 return {
                     id,
@@ -99,6 +91,7 @@ const SalesForm = ({
                     netUnitPrice: price,
                     discount: discount,
                     tax: tax,
+                    taxType: taxType,
                     subtotal: initialSubtotal
                 }
             },
@@ -108,7 +101,11 @@ const SalesForm = ({
                 if (field === 'quantity') {
                     const price = item.netUnitPrice * (item.quantity || 1)
                     const discountAmount = (price * item.discount) / 100
-                    const taxAmount = (price * item.tax) / 100
+
+                    // ================================
+                    // CALCULATE TAX AMOUNT
+                    // ================================
+                    const taxAmount = item.taxType === 'fixed' ? item.tax : (price * item.tax) / 100
                     const subtotal = price - discountAmount + taxAmount
                     return { subtotal } as Partial<SaleItem>
                 }
@@ -116,18 +113,54 @@ const SalesForm = ({
             }
         })
 
-    const customerOptions = customersData
-        .filter(c => c.id !== undefined)
-        .map(c => ({ value: String(c.id!), label: c.name }))
+    // =========================
+    // GET STORES, PAYMENT METHODS, AND CUSTOMERS FROM REDUX STATE
+    // =========================
+    const stores = useAppSelector(selectStores)
+    const paymentMethods = useAppSelector(selectPaymentMethods)
+    const customers = useAppSelector(selectCustomers)
+    
+    // =========================
+    // CUSTOMER OPTIONS
+    // =========================
+    const customerOptions = useMemo(() => {
+        return customers
+            .filter(c => (c.customer_id !== undefined || c.id !== undefined))
+            .map(c => ({ 
+                value: String(c.customer_id || c.id), 
+                label: c.name 
+            }))
+    }, [customers])
+
+    // =========================
+    // STORE OPTIONS
+    // =========================
+    const storeOptions = useMemo(() => {
+        return stores
+            .filter(s => s.store_id !== undefined)
+            .map(s => ({ value: String(s.store_id), label: s.name }))
+    }, [stores])
+
+    // =========================
+    // PAYMENT METHOD OPTIONS
+    // =========================
+    const paymentMethodOptions = useMemo(() => {
+        return paymentMethods.map(pm => ({ 
+            value: String(pm.id), 
+            label: pm.name.charAt(0).toUpperCase() + pm.name.slice(1) 
+        }))
+    }, [paymentMethods])
 
     // =========================
     // LOAD INITIAL DATA (EDIT MODE)
     // =========================
     useEffect(() => {
-        if (mode === 'edit' && initialData) {
+        if (initialData) {
             setSelectedCustomerId(initialData.customerId || '')
+            setSelectedStoreId(initialData.storeId || '')
             setStatus(initialData.status || 'pending')
             setPaymentStatus(initialData.paymentStatus || 'unpaid')
+            setPaymentMethod(initialData.paymentMethod || '')
             setOrderTax(initialData.orderTax || '')
             setOrderTaxIsPercentage(initialData.orderTaxIsPercentage ?? true)
             setOrderDiscount(initialData.orderDiscount || '')
@@ -135,15 +168,11 @@ const SalesForm = ({
             setShipping(initialData.shipping || '')
             setNote(initialData.note || '')
             
-            if (initialData.payments && initialData.payments.length > 0) {
-                setPayments(initialData.payments)
-            }
-            
             if (initialData.items) {
                 setItems(initialData.items)
             }
         }
-    }, [mode, initialData, setItems])
+    }, [initialData, setItems])
 
     // =========================
     // CALCULATE TOTALS
@@ -157,37 +186,10 @@ const SalesForm = ({
         orderDiscountIsPercentage
     })
 
-    // Calculate total paid from payments
-    const totalPaid = payments.reduce((sum, payment) => {
-        return sum + (Number(payment.amount) || 0)
-    }, 0)
-
-    const totalDue = totals.grandTotal - totalPaid
-
     // =========================
-    // PAYMENT HANDLERS
+    // CONDITIONAL FIELD LOGIC
     // =========================
-    const addPaymentRow = () => {
-        setPayments([...payments, {
-            id: `payment-${Date.now()}`,
-            date: moment().format('YYYY-MM-DD'),
-            reference: '',
-            amount: '',
-            paymentType: ''
-        }])
-    }
-
-    const removePaymentRow = (id: string) => {
-        if (payments.length > 1) {
-            setPayments(payments.filter(p => p.id !== id))
-        }
-    }
-
-    const updatePayment = (id: string, field: keyof PaymentEntry, value: string) => {
-        setPayments(payments.map(p => 
-            p.id === id ? { ...p, [field]: value } : p
-        ))
-    }
+    const showPaymentMethod = paymentStatus === 'paid'
 
     const handleSubmit = () => {
         // =========================
@@ -201,78 +203,240 @@ const SalesForm = ({
             return
         }
 
+        if (!selectedStoreId) {
+            return
+        }
+
         // =========================
         // MAP ITEMS TO BACKEND FORMAT
         // =========================
         const saleItemsData = saleItems.map(item => ({
             product_id: parseInt(item.productId),
+            ...(item.productType === 'Variation' && item.variationId && { variation_id: item.variationId }),
             quantity: item.quantity,
             net_unit_price: item.netUnitPrice,
             discount: item.discount,
             tax: item.tax,
             subtotal: item.subtotal,
-            ...(mode === 'edit' && { sale_item_id: '' })
+            ...(item.saleItemId && { sale_item_id: String(item.saleItemId) })
         }))
-
-        // Get payment type from first payment if exists (only if payment status is paid or partial)
-        const paymentType = (paymentStatus === 'paid' || paymentStatus === 'partial') && payments.length > 0 && payments[0].paymentType ? payments[0].paymentType : undefined
 
         // =========================
         // CONSTRUCT FORM DATA
         // =========================
+        const baseFormData: CreateSaleFormData = {
+            store_id: selectedStoreId,
+            customer_id: selectedCustomerId,
+            sale_items: saleItemsData,
+            order_tax: Number(orderTax || 0),
+            order_discount: Number(orderDiscount || 0),
+            shipping: Number(shipping || 0),
+            status: status,
+            payment_status: paymentStatus,
+            payment_method: showPaymentMethod ? paymentMethod : undefined,
+            note: note || '',
+            grand_total: totals.grandTotal,
+            order_tax_type: orderTaxIsPercentage ? 'percent' : 'fixed',
+            order_discount_type: orderDiscountIsPercentage ? 'percent' : 'fixed'
+        }
+        
         if (mode === 'edit' && initialData?.id) {
             const formData: UpdateSaleFormData = {
-                sale_id: initialData.id,
-                user_id: selectedCustomerId,
-                customer_id: selectedCustomerId,
-                sale_items: saleItemsData,
-                order_tax: Number(orderTax || 0),
-                order_discount: Number(orderDiscount || 0),
-                shipping: Number(shipping || 0),
-                status: status,
-                payment_status: paymentStatus,
-                payment_type: paymentType,
-                payment_amount: totalPaid > 0 ? totalPaid : undefined,
-                note: note || '',
-                grand_total: totals.grandTotal
+                ...baseFormData,
+                sale_id: initialData.id
             }
             onSubmit(formData)
         } else {
-            const formData: CreateSaleFormData = {
-                user_id: selectedCustomerId,
-                customer_id: selectedCustomerId,
-                sale_items: saleItemsData,
-                order_tax: Number(orderTax || 0),
-                order_discount: Number(orderDiscount || 0),
-                shipping: Number(shipping || 0),
-                status: status,
-                payment_status: paymentStatus,
-                payment_type: paymentType,
-                payment_amount: totalPaid > 0 ? totalPaid : undefined,
-                note: note || '',
-                grand_total: totals.grandTotal
-            }
-            onSubmit(formData)
+            onSubmit(baseFormData)
         }
     }
 
-    const isSubmitDisabled = saleItems.length === 0 || !selectedCustomerId
+    const isSubmitDisabled = saleItems.length === 0 || !selectedCustomerId || !selectedStoreId
+
+    // =========================
+    // BUILD FORM FIELDS ARRAY
+    // =========================
+    const formFields = [
+        {
+            name: 'order-tax',
+            label: 'Order Tax',
+            type: 'number' as const,
+            placeholder: '0.00',
+            value: orderTax,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                if (e.target instanceof HTMLInputElement) {
+                    setOrderTax(e.target.value)
+                }
+            },
+            endSelectOptions: [
+                { value: 'percentage', label: '%' },
+                { value: 'fixed', label: getCurrencySymbol() }
+            ],
+            endSelectValue: orderTaxIsPercentage ? 'percentage' : 'fixed',
+            onEndSelectChange: (value: string) => setOrderTaxIsPercentage(value === 'percentage'),
+        },
+        {
+            name: 'order-discount',
+            label: 'Order Discount',
+            type: 'number' as const,
+            placeholder: '0.00',
+            value: orderDiscount,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                if (e.target instanceof HTMLInputElement) {
+                    setOrderDiscount(e.target.value)
+                }
+            },
+            endSelectOptions: [
+                { value: 'percentage', label: '%' },
+                { value: 'fixed', label: getCurrencySymbol() }
+            ],
+            endSelectValue: orderDiscountIsPercentage ? 'percentage' : 'fixed',
+            onEndSelectChange: (value: string) => setOrderDiscountIsPercentage(value === 'percentage'),
+        },
+        {
+            name: 'shipping',
+            label: 'Shipping',
+            placeholder: '0.00',
+            value: shipping,
+            isCurrency: true,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                if (e.target.value) {
+                    setShipping(e.target.value)
+                }
+            },
+            startContent: <span className="text-xs text-gray-600">{getCurrencySymbol()}</span>
+        },
+        {
+            name: 'status',
+            label: 'Status',
+            type: 'select' as const,
+            value: status,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                if (e.target instanceof HTMLSelectElement) {
+                    setStatus(e.target.value as 'completed' | 'pending' | 'cancelled')
+                }
+            },
+            options: [
+                { value: '', label: 'Select Status' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'cancelled', label: 'Cancelled' }
+            ]
+        },
+        {
+            name: 'payment-status',
+            label: 'Payment Status',
+            type: 'select' as const,
+            value: paymentStatus,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                if (e.target instanceof HTMLSelectElement) {
+                    setPaymentStatus(e.target.value as 'unpaid' | 'paid')
+                }
+            },
+            options: [
+                { value: '', label: 'Select Payment Status' },
+                { value: 'unpaid', label: 'Unpaid' },
+                { value: 'paid', label: 'Paid' }
+            ]
+        },
+        
+        // ================================
+        // SHOW PAYMENT METHOD
+        // ================================
+        ...(showPaymentMethod ? [{
+            name: 'payment-method',
+            label: 'Payment Method',
+            type: 'select' as const,
+            value: paymentMethod,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                if (e.target instanceof HTMLSelectElement) {
+                    setPaymentMethod(e.target.value)
+                }
+            },
+            options: [
+                { value: '', label: 'Select Payment Method' },
+                ...paymentMethodOptions
+            ]
+        }] : []),
+        
+        {
+            name: 'notes',
+            label: 'Notes',
+            type: 'textarea' as const,
+            placeholder: 'Enter Notes',
+            value: note,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                if (e.target instanceof HTMLTextAreaElement) {
+                    setNote(e.target.value)
+                }
+            },
+            colSpan: 2,
+            formGroupClass: 'col-span-2'
+        }
+    ]
 
     return (
         <DashboardCard bodyClassName='space-y-2'>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 space-y-4">
-                <CustomAutocomplete
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 space-y-4">
+                
+                <ProductSelect
                     name="product"
                     label="Product"
-                    placeholder="Search Product by Code Name"
+                    placeholder="Search Product"
                     radius="lg"
                     inputSize="sm"
-                    options={productOptions}
-                    value={selectedProductId}
-                    onChange={(value) => {
-                        if (typeof value === 'string') {
-                            handleProductSelect(value)
+                    limit={20}
+                    existingItems={saleItems}
+                    itemMapper={(product, id) => {
+
+                        // ================================
+                        // DETERMINE IF PRODUCT IS A VARIATION
+                        // ================================
+                        const isVariation = !!(product as any).variationId
+                        const price = product.price || 0
+                        const discount = product.discount || 0
+                        const tax = (product as any).tax || product.tax || 0
+                        const taxType = (product as any).taxType || 'percent'
+                        
+                        const taxAmount = taxType === 'fixed' ? tax : (price * tax) / 100
+                        const discountAmount = (price * discount) / 100
+                        const initialSubtotal = price - discountAmount + taxAmount
+                        
+                        // ================================
+                        // DETERMINE ITEM NAME
+                        // ================================
+                        const itemName = isVariation && (product as any).variationValue
+                            ? `${product.name} - ${(product as any).variationType}: ${(product as any).variationValue}`
+                            : product.name
+                        
+                        // ================================
+                        // DETERMINE ITEM CODE
+                        // ================================
+                        const itemCode = isVariation && (product as any).variationSku
+                            ? (product as any).variationSku
+                            : product.code
+                        
+                        return {
+                            id,
+                            productId: product.id,
+                            name: itemName,
+                            code: itemCode,
+                            stock: product.stock,
+                            unit: product.unit,
+                            quantity: 1,
+                            netUnitPrice: price,
+                            discount: discount,
+                            tax: tax,
+                            taxType: taxType,
+                            subtotal: initialSubtotal,
+                            productType: isVariation ? 'Variation' : 'Simple',
+                            variationId: (product as any).variationId,
+                            variationType: (product as any).variationType,
+                            variationValue: (product as any).variationValue
                         }
+                    }}
+                    onItemAdd={(item) => {
+                        setItems(prev => [...prev, item])
                     }}
                 />
 
@@ -290,6 +454,21 @@ const SalesForm = ({
                         }
                     }}
                 />
+
+                <CustomAutocomplete
+                    name="store"
+                    label="Store"
+                    placeholder="Choose Store"
+                    radius="lg"
+                    inputSize="sm"
+                    options={storeOptions}
+                    value={selectedStoreId}
+                    onChange={(value) => {
+                        if (typeof value === 'string') {
+                            setSelectedStoreId(value)
+                        }
+                    }}
+                />
             </div>
 
             {/* ============================== */}
@@ -299,6 +478,7 @@ const SalesForm = ({
                 items={saleItems}
                 onQuantityChange={(itemId, quantity) => updateItem(itemId, 'quantity', quantity)}
                 onDelete={deleteItem}
+                hideStock={true}
             />
 
             {/* ============================== */}
@@ -331,176 +511,7 @@ const SalesForm = ({
             {/* ============================== */}
             <FormFieldsGrid
                 columns={4}
-                fields={[
-                    {
-                        name: 'order-tax',
-                        label: 'Order Tax',
-                        type: 'number' as const,
-                        placeholder: '0.00',
-                        value: orderTax,
-                        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-                            if (e.target instanceof HTMLInputElement) {
-                                setOrderTax(e.target.value)
-                            }
-                        },
-                        endSelectOptions: [
-                            { value: 'percentage', label: '%' },
-                            { value: 'fixed', label: getCurrencySymbol() }
-                        ],
-                        endSelectValue: orderTaxIsPercentage ? 'percentage' : 'fixed',
-                        onEndSelectChange: (value: string) => setOrderTaxIsPercentage(value === 'percentage'),
-                    },
-                    {
-                        name: 'order-discount',
-                        label: 'Order Discount',
-                        type: 'number' as const,
-                        placeholder: '0.00',
-                        value: orderDiscount,
-                        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-                            if (e.target instanceof HTMLInputElement) {
-                                setOrderDiscount(e.target.value)
-                            }
-                        },
-                        endSelectOptions: [
-                            { value: 'percentage', label: '%' },
-                            { value: 'fixed', label: getCurrencySymbol() }
-                        ],
-                        endSelectValue: orderDiscountIsPercentage ? 'percentage' : 'fixed',
-                        onEndSelectChange: (value: string) => setOrderDiscountIsPercentage(value === 'percentage'),
-                    },
-                    {
-                        name: 'shipping',
-                        label: 'Shipping',
-                        placeholder: '0.00',
-                        value: shipping,
-                        isCurrency: true,
-                        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-                            if (e.target.value !== '') {
-                                setShipping(e.target.value)
-                            }
-                        },
-                        startContent: <span className="text-xs text-gray-600">{getCurrencySymbol()}</span>
-                    },
-                    {
-                        name: 'status',
-                        label: 'Status',
-                        type: 'select' as const,
-                        value: status,
-                        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-                            if (e.target instanceof HTMLSelectElement) {
-                                setStatus(e.target.value as 'completed' | 'pending' | 'cancelled')
-                            }
-                        },
-                        options: [
-                            { value: '', label: 'Select Status' },
-                            { value: 'completed', label: 'Completed' },
-                            { value: 'pending', label: 'Pending' },
-                            { value: 'cancelled', label: 'Cancelled' }
-                        ]
-                    },
-                    {
-                        name: 'payment-status',
-                        label: 'Payment Status',
-                        type: 'select' as const,
-                        value: paymentStatus,
-                        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-                            if (e.target instanceof HTMLSelectElement) {
-                                setPaymentStatus(e.target.value as 'unpaid' | 'paid' | 'partial')
-                            }
-                        },
-                        options: [
-                            { value: '', label: 'Select Payment Status' },
-                            { value: 'unpaid', label: 'Unpaid' },
-                            { value: 'paid', label: 'Paid' },
-                            { value: 'partial', label: 'Partial' }
-                        ]
-                    }
-                ]}
-            />
-
-            {/* ============================== */}
-            {/* ===== PAYMENT ENTRIES ===== */}
-            {/* ============================== */}
-            {(paymentStatus === 'paid' || paymentStatus === 'partial') && (
-                <div className="space-y-3">
-                    <h6 className="text-sm font-medium text-gray-900">Payments</h6>
-
-                {payments.map((payment, index) => (
-                    <div key={payment.id} className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
-                        <Input
-                            name={`payment-date-${payment.id}`}
-                            label="Date"
-                            type="date"
-                            value={payment.date}
-                            onChange={(e) => updatePayment(payment.id, 'date', e.target.value)}
-                        />
-                        <Input
-                            name={`payment-reference-${payment.id}`}
-                            label="Reference"
-                            placeholder="Enter Reference"
-                            value={payment.reference}
-                            onChange={(e) => updatePayment(payment.id, 'reference', e.target.value)}
-                        />
-                        <Input
-                            name={`payment-amount-${payment.id}`}
-                            label="Amount"
-                            placeholder="Enter Amount"
-                            value={payment.amount}
-                            isCurrency={true}
-                            onChange={(e) => updatePayment(payment.id, 'amount', e.target.value)}
-                            startContent={<span className="text-xs text-gray-600">{getCurrencySymbol()}</span>}
-                        />
-                        <Select
-                            name={`payment-type-${payment.id}`}
-                            label="Payment Type"
-                            value={payment.paymentType}
-                            onChange={(e) => updatePayment(payment.id, 'paymentType', e.target.value)}
-                            required>
-                            <option value="">Choose Payment Type</option>
-                            <option value="cash">Cash</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="credit_card">Credit Card</option>
-                            <option value="debit_card">Debit Card</option>
-                            <option value="check">Check</option>
-                            <option value="other">Other</option>
-                        </Select>
-                        <div className="flex items-center gap-2 mt-4">
-                            {payments.length > 1 && (
-                                <Button
-                                    isIconOnly
-                                    size="sm"
-                                    color="danger"
-                                    variant="flat"
-                                    onPress={() => removePaymentRow(payment.id)}>
-                                    <TrashIcon className="size-4" />
-                                </Button>
-                            )}
-                            {index === payments.length - 1 && (
-                                <Button
-                                    isIconOnly
-                                    size="sm"
-                                    variant="flat"
-                                    onPress={addPaymentRow}
-                                    className="bg-gray-100">
-                                    <PlusIcon className="size-4" />
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                ))}
-                </div>
-            )}
-
-            {/* ============================== */}
-            {/* ===== NOTE ===== */}
-            {/* ============================== */}
-            <TextArea
-                name="note"
-                label="Note"
-                placeholder="Enter Note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                inputSize="sm"
+                fields={formFields as FormField[]}
             />
 
             <div className="flex items-center gap-3 justify-end p-3">
@@ -517,6 +528,7 @@ const SalesForm = ({
                     onPress={handleSubmit} 
                     size='sm' 
                     isDisabled={isSubmitDisabled || isLoading}
+                    isLoading={isLoading}
                     className='px-4 bg-primary text-white h-9'>
                     {submitButtonText || (mode === 'edit' ? 'Update Sale' : 'Create Sale')}
                 </Button>
@@ -526,4 +538,3 @@ const SalesForm = ({
 }
 
 export default SalesForm
-

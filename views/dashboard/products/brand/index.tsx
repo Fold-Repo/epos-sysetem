@@ -7,6 +7,7 @@ import BrandTable from './BrandTable'
 import { Brand } from '@/types/brand.type'
 import AddBrandModal from './AddBrandModal'
 import { useGetBrands, useDeleteBrand } from '@/services'
+import { useQueryParams } from '@/hooks'
 
 interface ProductBrandViewProps {
     onAddClick?: (handler: () => void) => void
@@ -19,7 +20,10 @@ const ProductBrandView = ({ onAddClick }: ProductBrandViewProps) => {
     const [deleteBrandId, setDeleteBrandId] = useState<number | undefined>(undefined)
     const [editingBrand, setEditingBrand] = useState<Brand | undefined>(undefined)
     const [searchValue, setSearchValue] = useState('')
-    const { data: brands, isLoading } = useGetBrands()
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 20
+    const { data: brands, pagination, isLoading } = useGetBrands(currentPage, LIMIT)
     const deleteBrandMutation = useDeleteBrand()
 
     useEffect(() => {
@@ -91,10 +95,12 @@ const ProductBrandView = ({ onAddClick }: ProductBrandViewProps) => {
             />
 
             <Pagination
-                currentPage={1}
-                totalItems={filteredBrands?.length || 0}
-                itemsPerPage={25}
-                onPageChange={() => { }}
+                currentPage={currentPage}
+                totalItems={pagination?.total || 0}
+                itemsPerPage={LIMIT}
+                onPageChange={(page) => {
+                    updateQueryParams({ page: page.toString() })
+                }}
                 showingText="Brands"
             />
 

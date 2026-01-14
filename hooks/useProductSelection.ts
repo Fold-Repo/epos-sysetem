@@ -75,7 +75,6 @@ export function useProductSelection<T extends BaseProductItem>(
             prev.map(item => {
                 if (item.id === id) {
                     const updatedItem = { ...item, [field]: value }
-                    // If onItemUpdate is provided, apply additional updates (e.g., recalculate subtotal)
                     if (options.onItemUpdate) {
                         const additionalUpdates = options.onItemUpdate(updatedItem, field, value)
                         return { ...updatedItem, ...additionalUpdates }

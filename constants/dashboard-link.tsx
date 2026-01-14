@@ -15,13 +15,13 @@ import {
     CurrencyDollarIcon,
     ReceiptRefundIcon,
     Cog6ToothIcon,
-    LanguageIcon,
-    ComputerDesktopIcon,
+    // LanguageIcon,
+    // ComputerDesktopIcon,
     AdjustmentsVerticalIcon,
 } from '@heroicons/react/24/outline';
 import { PermissionKey } from '@/types/permissions';
 
-// Dashboard root paths
+
 export const DASHBOARD_ROOT = '/dashboard';
 export const SALES_DASHBOARD_ROOT = '/sales/dashboard';
 
@@ -112,12 +112,12 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 text: 'Payment Methods',
                 permissionKey: PermissionKey.MANAGE_PAYMENT_METHODS
             },
-            {
-                href: `${root}/currencies`,
-                icon: <CurrencyDollarIcon className='size-5' />,
-                text: 'Currencies',
-                permissionKey: PermissionKey.MANAGE_CURRENCY
-            },
+            // {
+            //     href: `${root}/currencies`,
+            //     icon: <CurrencyDollarIcon className='size-5' />,
+            //     text: 'Currencies',
+            //     permissionKey: PermissionKey.MANAGE_CURRENCY
+            // },
             {
                 href: `${root}/expenses`,
                 icon: <ReceiptRefundIcon className='size-5' />,

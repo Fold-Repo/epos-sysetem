@@ -4,7 +4,7 @@ import { createFileLabel, createInputLabel, FileUpload, Input, Select, TextArea,
 import ImagePreview from '@/components/ui/form/ImagePreview'
 import { Button } from '@heroui/react'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { getCurrencySymbol } from '@/lib'
 import { SparklesIcon } from '@heroicons/react/24/outline'
 import { useAppSelector, selectCategories, selectBrands, selectUnits, selectVariations } from '@/store'
@@ -16,7 +16,7 @@ export interface VariationDetail {
     productPrice: string
     stockAlert: string
     orderTax: string
-    taxType: string
+    taxIsPercentage: boolean
     addProductQuantity: string
 }
 
@@ -29,7 +29,7 @@ export interface ProductFormData {
     skuBarcode: string
     brand: string
     productUnit: string
-    note: string
+    description: string
     multipleImage: FileList | null
     status: string
     productType: string
@@ -43,7 +43,7 @@ export interface ProductFormData {
     productPrice: string
     stockAlert: string
     orderTax: string
-    taxType: string
+    taxIsPercentage: boolean
     addProductQuantity: string
 }
 
@@ -79,6 +79,7 @@ const ProductForm = ({
             status: 'active',
             stockAlert: '',
             orderTax: '0',
+            taxIsPercentage: true,
             ...initialData
         }
     })
@@ -138,15 +139,22 @@ const ProductForm = ({
     // ================================
     // Get variation options when variation is selected
     // ================================
-    const selectedVariationData = variations?.find(v => v.id === selectedVariation)
+    const selectedVariationData = useMemo(() => {
+        if (!selectedVariation || !variations) return null
+        return variations.find(v => v.id === selectedVariation) || null
+    }, [selectedVariation, variations])
 
     // ================================
     // Convert variation options to CustomAutocomplete format
+    // Only show options for the selected variation
     // ================================
-    const variationTypeOptions = selectedVariationData?.options.map(option => ({
-        value: option.option,
-        label: option.option
-    })) || []
+    const variationTypeOptions = useMemo(() => {
+        if (!selectedVariationData?.options) return []
+        return selectedVariationData.options.map(option => ({
+            value: option.option,
+            label: option.option
+        }))
+    }, [selectedVariationData])
 
     // ================================
     // Clear variation data when product type changes
@@ -165,7 +173,7 @@ const ProductForm = ({
                 setValue('productPrice', '')
                 setValue('stockAlert', '')
                 setValue('orderTax', '0')
-                setValue('taxType', '')
+                setValue('taxIsPercentage', true)
                 setValue('addProductQuantity', '')
             }
         }
@@ -175,8 +183,12 @@ const ProductForm = ({
     // Clear variation types when variations dropdown changes
     // ================================
     useEffect(() => {
-        // Don't clear during initialization (edit mode)
+        // Set selected variation during initialization (edit mode)
         if (isInitializing.current) {
+            if (selectedVariationId) {
+                const id = Number(selectedVariationId)
+                setSelectedVariation(id)
+            }
             return
         }
 
@@ -202,48 +214,61 @@ const ProductForm = ({
     // Update variation details when variation types change
     // ================================
     useEffect(() => {
-        if (productType === 'variation' && selectedVariationTypes) {
-            const currentTypes = selectedVariationTypes
-            const existingTypes = fields.map(f => f.variationType)
-            
-            // Add new variation details for newly selected types
-            currentTypes.forEach(type => {
-                if (!existingTypes.includes(type)) {
-                    append({
-                        variationType: type,
-                        productCost: '',
-                        skuBarcode: '',
-                        productPrice: '',
-                        stockAlert: '',
-                        orderTax: '0',
-                        taxType: '',
-                        addProductQuantity: ''
-                    })
-                }
-            })
-            
-            // ================================
-            // Remove variation details for deselected types
-            // ================================
-            existingTypes.forEach((type, index) => {
-                if (!currentTypes.includes(type)) {
-                    remove(index)
-                }
-            })
+        if (productType !== 'variation' || !selectedVariationTypes) {
+            return
         }
-    }, [selectedVariationTypes, productType, fields, append, remove])
 
-    const handleVariationTypesChange = (values: string[]) => {
+        const currentTypes = Array.isArray(selectedVariationTypes) ? selectedVariationTypes : []
+        const currentFields = getValues('variationDetails') || []
+        const existingTypes = currentFields.map(f => f.variationType)
+        
+        // ================================
+        // Add new variation details for newly selected types
+        // ================================
+        const typesToAdd = currentTypes.filter(type => !existingTypes.includes(type))
+        typesToAdd.forEach(type => {
+            append({
+                variationType: type,
+                productCost: '',
+                skuBarcode: '',
+                productPrice: '',
+                stockAlert: '',
+                orderTax: '0',
+                taxIsPercentage: true,
+                addProductQuantity: ''
+            })
+        })
+        
+        // ================================
+        // Remove variation details for deselected types
+        // Remove in reverse order to avoid index shifting issues
+        // ================================
+        const indicesToRemove: number[] = []
+        existingTypes.forEach((type, index) => {
+            if (!currentTypes.includes(type)) {
+                indicesToRemove.push(index)
+            }
+        })
+        
+        // ================================
+        // Sort in descending order and remove
+        // ================================
+        indicesToRemove.sort((a, b) => b - a).forEach(index => {
+            remove(index)
+        })
+    }, [selectedVariationTypes, productType, append, remove, getValues])
+
+    const handleVariationTypesChange = useCallback((values: string[]) => {
         setValue('variationTypes', values, { shouldValidate: true })
         if (values.length > 0) {
             clearErrors('variationTypes')
         }
-    }
+    }, [setValue, clearErrors])
 
     // ================================
     // Generate random SKU/Barcode
     // ================================
-    const generateRandomSKU = (fieldPath?: string) => {
+    const generateRandomSKU = useCallback((fieldPath?: string) => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
         let result = ''
         for (let i = 0; i < 9; i++) {
@@ -254,7 +279,7 @@ const ProductForm = ({
         } else {
             setValue('skuBarcode', result, { shouldValidate: true })
         }
-    }
+    }, [setValue])
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-3">
@@ -386,13 +411,13 @@ const ProductForm = ({
 
                     <TextArea
                         label={createInputLabel({
-                            name: "Note",
+                            name: "Description",
                             required: true
                         })}
-                        placeholder="Enter Note"
+                        placeholder="Enter Description"
                         rows={4}
-                        {...register('note', { required: 'Note is required' })}
-                        error={errors.note?.message as string}
+                        {...register('description', { required: 'Description is required' })}
+                        error={errors.description?.message as string}
                     />
                 </div>
 
@@ -642,31 +667,37 @@ const ProductForm = ({
                         error={errors.stockAlert?.message as string}
                     />
 
-                    <Input 
-                        label={createInputLabel({
-                            name: "Order Tax",
-                            required: false
-                        })}
-                        placeholder="Enter Order Tax"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        endContent={<span className='text-gray-500 text-xs'>%</span>}
-                        defaultValue="0"
-                        {...register('orderTax')}
+                    <Controller
+                        name="orderTax"
+                        control={control}
+                        render={({ field }) => (
+                            <Input 
+                                name="orderTax"
+                                label={createInputLabel({
+                                    name: "Tax",
+                                    required: false
+                                })}
+                                placeholder="0.00"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                endContent={
+                                    <Select name="tax-type-select"
+                                        value={watch('taxIsPercentage') ? 'percent' : 'fixed'}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                            setValue('taxIsPercentage', value === 'percent')
+                                        }}
+                                        className="cursor-pointer mt-[8px] ml-3 bg-gray-200 rounded-s-none">
+                                        <option value="percent">%</option>
+                                        <option value="fixed">{getCurrencySymbol()}</option>
+                                    </Select>
+                                }
+                            />
+                        )}
                     />
-
-                    <Select 
-                        label={createInputLabel({
-                            name: "Tax Type",
-                            required: true
-                        })}
-                        {...register('taxType', { required: 'Tax type is required' })}
-                        error={errors.taxType?.message as string}>
-                        <option value="" disabled selected>Select Tax Type</option>
-                        <option value="inclusive">Inclusive</option>
-                        <option value="exclusive">Exclusive</option>
-                    </Select>
 
                     <Input 
                         label={createInputLabel({
@@ -827,36 +858,44 @@ const ProductForm = ({
                                     error={errors.variationDetails?.[index]?.stockAlert?.message as string}
                                 />
 
-                                <Input 
-                                    label={createInputLabel({
-                                        name: "Order Tax",
-                                        required: false
-                                    })}
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    endContent={<span className='text-gray-500 text-xs'>%</span>}
-                                    defaultValue="0"
-                                    {...register(`variationDetails.${index}.orderTax` as const)}
+                                <Controller
+                                    name={`variationDetails.${index}.orderTax` as const}
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input 
+                                            name={`variationDetails.${index}.orderTax`}
+                                            label={createInputLabel({
+                                                name: "Tax",
+                                                required: false
+                                            })}
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={field.value || '0'}
+                                            onChange={field.onChange}
+                                            endContent={
+                                                <Select
+                                                    name={`tax-type-select-${index}`}
+                                                    value={getValues(`variationDetails.${index}.taxIsPercentage`) ? 'percent' : 'fixed'}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value
+                                                        setValue(`variationDetails.${index}.taxIsPercentage`, value === 'percent')
+                                                    }}
+                                                    className="cursor-pointer mt-[8px] ml-3 bg-gray-200 rounded-s-none">
+                                                    <option value="percent">%</option>
+                                                    <option value="fixed">{getCurrencySymbol()}</option>
+                                                </Select>
+                                            }
+                                        />
+                                    )}
                                 />
 
-                                <Select 
-                                    label={createInputLabel({
-                                        name: "Tax Type",
-                                        required: true
-                                    })}
-                                    {...register(`variationDetails.${index}.taxType` as const, { required: 'Tax type is required' })}>
-                                    <option value="" disabled selected>Select Tax Type</option>
-                                    <option value="inclusive">Inclusive</option>
-                                    <option value="exclusive">Exclusive</option>
-                                </Select>
-
                                 <Input 
                                     label={createInputLabel({
-                                        name: "Add Product Quantity",
+                                        name: "Product Quantity",
                                         required: true
                                     })}
-                                    placeholder="Add Product Quantity"
+                                    placeholder="Product Quantity"
                                     type="number"
                                     min="1"
                                     step="1"
@@ -877,10 +916,12 @@ const ProductForm = ({
             {/* Form Actions */}
             {/* ================================ */}
             <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-                <Button type="button" variant="light" onPress={onCancel} className="px-6">
+                <Button size='sm' type="button" variant="light" color='danger' 
+                    onPress={onCancel} className="px-6">
                     {cancelButtonText}
                 </Button>
-                <Button type="submit" color="primary" className="px-6" isLoading={isSubmitting || isLoading}>
+                <Button size='sm' type="submit" color="primary" className="px-6" 
+                    isDisabled={isSubmitting || isLoading}>
                     {submitButtonText}
                 </Button>
             </div>

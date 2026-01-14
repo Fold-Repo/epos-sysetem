@@ -1,3 +1,5 @@
+import { PaginationResponse } from './type';
+
 /**
  * Variation option from API
  */
@@ -20,12 +22,15 @@ export interface Variation {
     options: VariationOption[];
 }
 
+// PaginationResponse is now exported from ./type.ts
+
 /**
  * Variations list response from API
  */
 export interface VariationsListResponse {
     status: number;
     data: Variation[];
+    pagination: PaginationResponse;
 }
 
 /**

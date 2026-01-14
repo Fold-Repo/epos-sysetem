@@ -10,12 +10,13 @@ export interface OrderItem {
     productId: string
     name: string
     code: string
-    stock: number
-    unit: string
+    stock?: number
+    unit?: string
     quantity: number
     netUnitPrice: number
     discount: number
     tax: number
+    taxType?: 'percent' | 'fixed'
     subtotal: number
 }
 
@@ -24,13 +25,14 @@ interface OrderItemsTableProps {
     onQuantityChange?: (itemId: string, quantity: number) => void
     onDelete?: (itemId: string) => void
     readOnly?: boolean
+    hideStock?: boolean
 }
 
-const OrderItemsTable = ({ items, onQuantityChange, onDelete, readOnly = false }: OrderItemsTableProps) => {
+const OrderItemsTable = ({ items, onQuantityChange, onDelete, readOnly = false, hideStock = false }: OrderItemsTableProps) => {
     const columns = [
         { key: 'product', title: 'PRODUCT' },
         { key: 'netUnitPrice', title: 'NET UNIT PRICE' },
-        { key: 'stock', title: 'STOCK' },
+        ...(hideStock ? [] : [{ key: 'stock', title: 'STOCK' }]),
         { key: 'qty', title: 'QTY' },
         { key: 'discount', title: 'DISCOUNT' },
         { key: 'tax', title: 'TAX' },
@@ -55,11 +57,13 @@ const OrderItemsTable = ({ items, onQuantityChange, onDelete, readOnly = false }
                         {formatCurrency(item.netUnitPrice)}
                     </span>
                 </TableCell>
-                <TableCell>
-                    <Chip size='sm' radius='sm' className="text-[10px] bg-primary/20 text-primary">
-                        {item.stock} {item.unit}
-                    </Chip>
-                </TableCell>
+                {!hideStock && (
+                    <TableCell>
+                        <Chip size='sm' radius='sm' className="text-[10px] bg-primary/20 text-primary">
+                            {item.stock} {item.unit}
+                        </Chip>
+                    </TableCell>
+                )}
                 <TableCell>
                     {readOnly || !onQuantityChange ? (
                         <span className='text-xs text-gray-900'>
@@ -88,7 +92,10 @@ const OrderItemsTable = ({ items, onQuantityChange, onDelete, readOnly = false }
                 </TableCell>
                 <TableCell>
                     <span className='text-xs text-gray-600'>
-                        {item.tax}%
+                        {item.taxType === 'fixed' 
+                            ? formatCurrency(item.tax)
+                            : `${item.tax}%`
+                        }
                     </span>
                 </TableCell>
                 <TableCell>
@@ -103,8 +110,7 @@ const OrderItemsTable = ({ items, onQuantityChange, onDelete, readOnly = false }
                             size="sm"
                             variant="light"
                             className="text-red-500 hover:text-red-600"
-                            onPress={() => onDelete(item.id)}
-                        >
+                            onPress={() => onDelete(item.id)}>
                             <TrashIcon className="size-4" />
                         </Button>
                     </TableCell>

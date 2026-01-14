@@ -36,7 +36,7 @@ export interface ProductImage {
  */
 export interface ProductTax {
     amount: number;
-    type: 'inclusive' | 'exclusive';
+    type: 'percent' | 'fixed';
 }
 
 /**
@@ -162,6 +162,8 @@ export interface DeleteProductResponse {
  * Product variation detail from API
  */
 export interface ProductVariationDetailResponse {
+    id: number;
+    product_id?: number;
     variation_type: string;
     value: string;
     sku: string;
@@ -170,15 +172,21 @@ export interface ProductVariationDetailResponse {
     product_quantity: number;
     stock_alert: number;
     tax_amount: string;
-    tax_type: 'inclusive' | 'exclusive';
+    tax_type: 'percent' | 'fixed';
     created_at: string;
+    updated_at?: string;
 }
 
 /**
  * Product image from detail API
  */
 export interface ProductDetailImage {
+    id: number;
+    product_id: number;
     image_url: string;
+    public_id: string;
+    is_primary: string;
+    created_at: string;
 }
 
 /**
@@ -186,33 +194,47 @@ export interface ProductDetailImage {
  */
 export interface ProductDetailResponse {
     product_id: number;
-    user_id?: number;
-    business_id?: number;
     name: string;
     sku: string;
-    barcode_symbology?: string;
-    category_id?: number;
-    brand_id?: number;
-    product_unit: string;
-    description: string | null;
-    product_cost: string | null; // For single products
-    product_price: string | null; // For single products
-    stock_alert: number | null; // For single products
-    tax_amount: string | null; // For single products
-    tax_type: 'inclusive' | 'exclusive' | null; // For single products
-    image_url: string | null; // JSON string or URL
-    image_public_id?: string | null;
-    quantity_limit: number;
-    expiry_date: string | null;
+    barcode_symbology: string;
+    business_id: number;
     product_type: 'Simple' | 'Variation';
-    status: 'Active' | 'Inactive';
+    category: {
+        id: number;
+        name: string;
+    };
+    subcategory: {
+        name: string | null;
+    };
+    brand: {
+        id: number;
+        name: string;
+    };
+    unit: {
+        id: string;
+        name: string;
+    };
+    pricing: {
+        cost_price: string | null;
+        selling_price: string | null;
+        min_price: string;
+        max_price: string;
+    };
+    stock: {
+        quantity: number;
+        alert_level: number | null;
+    };
+    tax: {
+        amount: string;
+        type: 'percent' | 'fixed' | null;
+    };
+    description: string | null;
     note: string | null;
-    min_price: string;
-    max_price: string;
+    status: 'Active' | 'Inactive';
+    expiry_date: string | null;
+    image_url: string | null;
     created_at: string;
     updated_at: string;
-    category_name: string;
-    brand_name: string;
     variations: ProductVariationDetailResponse[];
     images: ProductDetailImage[];
 }

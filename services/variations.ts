@@ -14,10 +14,14 @@ import { getErrorMessage } from "@/utils";
 
 /**
  * Get all variations
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 200 for Redux state)
  * @returns Promise with the variations list response
  */
-export async function getVariations(): Promise<VariationsListResponse> {
-    const response = await client.get(ENDPOINT.VARIATIONS);
+export async function getVariations(page: number = 1, limit: number = 200): Promise<VariationsListResponse> {
+    const response = await client.get(ENDPOINT.VARIATIONS, {
+        params: { page, limit }
+    });
     return response.data;
 }
 
@@ -53,23 +57,29 @@ export async function deleteVariation(id: number): Promise<DeleteVariationRespon
 }
 
 /**
- * React Query hook to get variations list
- * @returns Query result with data (Variation[]), isLoading, and error
+ * React Query hook to get variations list with pagination
+ * @param page - Page number (default: 1)
+ * @param limit - Items per page (default: 25)
+ * @returns Query result with data (Variation[]), pagination, isLoading, and error
  */
-export const useGetVariations = () => {
-    const { data, isLoading, error } = useQuery<Variation[]>({
-        queryKey: ['variations-list'],
+export const useGetVariations = (page: number = 1, limit: number = 25) => {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['variations-list', page, limit],
         queryFn: async () => {
-            const response = await getVariations();
-            return response.data;
+            const response = await getVariations(page, limit);
+            return {
+                data: response.data,
+                pagination: response.pagination
+            };
         },
     });
 
     return { 
-        data: data || [], 
+        data: data?.data || [], 
+        pagination: data?.pagination,
         isLoading, 
         error,
-        variations: data || [] // Alias for convenience
+        variations: data?.data || [] // Alias for convenience
     };
 };
 

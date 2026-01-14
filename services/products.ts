@@ -84,40 +84,59 @@ function transformProductListItem(item: ProductListItem): ProductType {
         minPrice: minPrice,
         maxPrice: maxPrice,
         unit: item.product_unit,
-        stock: item.quantity_limit, // Note: quantity_limit might not be actual stock
+        stock: item.quantity_limit,
         created_at: item.created_at
     };
 }
 
-/**
- * Fetch all products with pagination
- * @param page - Page number (default: 1)
- * @param limit - Items per page (default: 25)
- * @returns Promise with products list response including pagination
- */
-export async function getProducts(page: number = 1, limit: number = 25): Promise<{ products: ProductType[]; pagination: ProductsPaginationResponse }> {
+// ================================
+// PRODUCT QUERY PARAMS
+// ================================
+export interface ProductQueryParams {
+    page?: number
+    limit?: number
+    sort?: string
+    search?: string
+    category_id?: number
+    brand_id?: number
+    stock?: string
+}
+
+// ================================
+// GET PRODUCTS
+// ================================
+export async function getProducts(params: ProductQueryParams = {}): Promise<{ products: ProductType[]; pagination: ProductsPaginationResponse }> {
+    const { page = 1, limit = 25, sort, search, category_id, brand_id, stock } = params
+    
+    const requestParams: Record<string, string | number> = { page, limit }
+    
+    if (sort) requestParams.sort = sort
+    if (search) requestParams.search = search
+    if (category_id) requestParams.category_id = category_id
+    if (brand_id) requestParams.brand_id = brand_id
+    if (stock) requestParams.stock = stock
+    
     const response = await client.get<ProductsListResponse>(ENDPOINT.PRODUCTS, {
-        params: { page, limit }
-    });
+        params: requestParams
+    })
     return {
         products: response.data.data.map(transformProductListItem),
         pagination: response.data.pagination
-    };
+    }
 }
 
-/**
- * React Query hook for fetching products with pagination
- * @param page - Page number (default: 1)
- * @param limit - Items per page (default: 25)
- * @returns Query object with products data, pagination, and state
- */
-export const useGetProducts = (page: number = 1, limit: number = 25) => {
+// ================================
+// USE GET PRODUCTS HOOK
+// ================================
+export const useGetProducts = (params: ProductQueryParams = {}) => {
+    const { page = 1, limit = 25, sort, search, category_id, brand_id, stock } = params
+    
     return useQuery({
-        queryKey: ['products-list', page, limit],
-        queryFn: () => getProducts(page, limit),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-    });
-};
+        queryKey: ['products-list', page, limit, sort, search, category_id, brand_id, stock],
+        queryFn: () => getProducts({ page, limit, sort, search, category_id, brand_id, stock }),
+        staleTime: 5 * 60 * 1000,
+    })
+}
 
 /**
  * Delete a product
