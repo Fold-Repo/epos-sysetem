@@ -46,7 +46,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ link, isActive, onClick, root
     return (
         <div className="w-full">
             <Link href={hasChildren ? '#' : link.href} 
-                className={`text-xs my-0 flex items-center whitespace-nowrap rounded-lg text-dark 
+                className={`text-xs my-0 flex items-center whitespace-nowrap rounded-lg text-dark cursor-pointer
                     transition-all mb-0.5 gap-x-2 py-2.5 px-3 
                     ${isLinkActive || isActive ? 'bg-primary text-white mt-1' : ''}`}
                 onClick={handleClick}>
@@ -78,7 +78,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ link, isActive, onClick, root
                                 return (
                                     <li key={index} className="w-full">
                                         <Link href={childLink.href}
-                                            className={`text-xs my-0 flex items-center whitespace-nowrap rounded-lg text-dark cursor-pointer
+                                            className={`text-xs my-0 flex items-center whitespace-nowrap cursor-pointer rounded-lg text-dark
                                                 transition-all mb-0.5 gap-x-2 py-2 px-3 
                                                 ${isChildActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:text-primary'}`}
                                             onClick={onClick}>

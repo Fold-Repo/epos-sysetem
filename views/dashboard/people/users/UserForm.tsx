@@ -1,19 +1,20 @@
 'use client'
 
-import { createInputLabel, Input, TextArea, PhoneInput, CustomAutocomplete, PasswordInput, ProfilePictureUpload, createFileLabel } from '@/components'
+import { createInputLabel, Input, PhoneInput, CustomAutocomplete, PasswordInput } from '@/components'
 import { Button } from '@heroui/react'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-import { UserType } from '@/types'
+import { StaffUserType, RoleType, StoreType } from '@/types'
 import { useToast, useGoBack } from '@/hooks'
 import { userSchema, UserFormData } from '@/schema'
-import { storesData } from '@/data'
 import { DashboardCard } from '@/components'
+import { useEffect } from 'react'
+import { useAppSelector, selectRoles, selectStores } from '@/store'
 
 interface UserFormProps {
     mode?: 'create' | 'edit'
-    initialData?: UserType
+    initialData?: StaffUserType
     onSubmit?: (data: UserFormData) => void
     onCancel?: () => void
     submitButtonText?: string
@@ -33,12 +34,28 @@ const UserForm = ({
 
     const { showSuccess } = useToast()
     const goBack = useGoBack()
+    
+    // ================================
+    // GET ROLES AND STORES FROM REDUX STATE
+    // ================================
+    const rolesData = useAppSelector(selectRoles)
+    const storesData = useAppSelector(selectStores)
+    
+    // Transform to RoleType and StoreType format
+    const roles: RoleType[] = rolesData.map(role => ({
+        id: role.role_id,
+        name: role.name,
+        description: role.description,
+        created_at: role.created_at
+    }))
+    
+    const stores: StoreType[] = storesData.map(store => ({
+        id: store.store_id,
+        name: store.name,
+        description: store.description,
+        created_at: store.created_at
+    }))
 
-    const roleOptions = [
-        { value: 'admin', label: 'Admin' },
-        { value: 'manager', label: 'Manager' },
-        { value: 'cashier', label: 'Cashier' }
-    ]
 
     // Create a dynamic schema based on mode
     const getValidationSchema = () => {
@@ -58,20 +75,28 @@ const UserForm = ({
         return userSchema
     }
 
+    const roleOptions = roles.map(role => ({
+        value: String(role.id),
+        label: role.name
+    }))
+
+    const storeOptions = stores.map(store => ({
+        value: String(store.id),
+        label: store.name
+    }))
+
     const form = useForm<UserFormData>({
         resolver: yupResolver(getValidationSchema()) as any,
         mode: 'onChange',
         defaultValues: {
-            name: initialData?.name || '',
+            firstname: initialData?.firstname || '',
+            lastname: initialData?.lastname || '',
             email: initialData?.email || '',
-            role: initialData?.role 
-                ? roleOptions.find(opt => opt.label.toLowerCase() === initialData.role?.toLowerCase())?.value || initialData.role.toLowerCase()
-                : '',
             phone: initialData?.phone || '',
-            stores: initialData?.stores?.map(s => String(s)) || [],
+            role_id: initialData?.role_id ? Number(initialData.role_id) : undefined,
+            store_id: initialData?.store_id ? Number(initialData.store_id) : undefined,
             password: '',
-            confirmPassword: '',
-            profilePicture: undefined
+            confirmPassword: ''
         }
     })
 
@@ -82,8 +107,25 @@ const UserForm = ({
         watch,
         setValue,
         clearErrors,
+        reset,
         formState: { errors, isSubmitting }
     } = form
+
+    // Update form when initialData changes (for edit mode)
+    useEffect(() => {
+        if (initialData && mode === 'edit') {
+            reset({
+                firstname: initialData.firstname || '',
+                lastname: initialData.lastname || '',
+                email: initialData.email || '',
+                phone: initialData.phone || '',
+                role_id: initialData.role_id ? Number(initialData.role_id) : undefined,
+                store_id: initialData.store_id ? Number(initialData.store_id) : undefined,
+                password: '',
+                confirmPassword: ''
+            })
+        }
+    }, [initialData, mode, reset])
 
     const handleFormSubmit = async (data: UserFormData) => {
         try {
@@ -106,52 +148,32 @@ const UserForm = ({
         }
     }
 
-    const storeOptions = storesData
-        .filter(store => store.id !== undefined)
-        .map(store => ({
-            value: String(store.id!),
-            label: store.name
-        }))
-
     return (
         <DashboardCard bodyClassName='p-5'>
 
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col gap-y-4">
-
-                <div className="mb-1">
-                    <Controller
-                        name="profilePicture"
-                        control={control}
-                        render={({ field }) => (
-                            <ProfilePictureUpload
-                                label={createFileLabel({
-                                    name: "Change Image",
-                                    required: false
-                                })}
-                                labelClassName='font-medium mb-3'
-                                name="profilePicture"
-                                value={field.value as FileList | null}
-                                onChange={(e) => {
-                                    field.onChange(e.target.files)
-                                }}
-                                error={errors.profilePicture?.message as string}
-                                defaultImage={initialData?.email ? `https://i.pravatar.cc/150?u=${initialData.id}` : undefined}
-                            />
-                        )}
-                    />
-                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <div className="space-y-4">
                         <Input
                             label={createInputLabel({
-                                name: "Name",
+                                name: "First Name",
                                 required: true
                             })}
-                            placeholder="Enter User Name"
-                            {...register('name')}
-                            error={errors.name?.message as string}
+                            placeholder="Enter First Name"
+                            {...register('firstname')}
+                            error={errors.firstname?.message as string}
+                        />
+
+                        <Input
+                            label={createInputLabel({
+                                name: "Last Name",
+                                required: true
+                            })}
+                            placeholder="Enter Last Name"
+                            {...register('lastname')}
+                            error={errors.lastname?.message as string}
                         />
 
                         <Input
@@ -163,26 +185,6 @@ const UserForm = ({
                             placeholder="Enter Email"
                             {...register('email')}
                             error={errors.email?.message as string}
-                        />
-
-                        <CustomAutocomplete
-                            name="role"
-                            label={createInputLabel({
-                                name: "Role",
-                                required: true
-                            })}
-                            placeholder="Select Role"
-                            radius="lg"
-                            inputSize="sm"
-                            options={roleOptions}
-                            value={watch('role')}
-                            onChange={(value) => {
-                                if (typeof value === 'string') {
-                                    setValue('role', value, { shouldValidate: true })
-                                    clearErrors('role')
-                                }
-                            }}
-                            error={errors.role?.message as string}
                         />
 
                         <Controller
@@ -205,27 +207,43 @@ const UserForm = ({
 
                     <div className="space-y-4">
                         <CustomAutocomplete
-                            name="stores"
+                            name="role_id"
                             label={createInputLabel({
-                                name: "Stores",
+                                name: "Role",
                                 required: true
                             })}
-                            placeholder="Select Stores"
+                            placeholder="Select Role"
                             radius="lg"
                             inputSize="sm"
-                            multiple={true}
-                            options={storeOptions}
-                            value={(watch('stores') || []).filter((s): s is string => s !== undefined)}
+                            options={roleOptions}
+                            value={watch('role_id') ? String(watch('role_id')) : ''}
                             onChange={(value) => {
-                                if (Array.isArray(value)) {
-                                    const filteredValues = value.filter((v): v is string => typeof v === 'string')
-                                    setValue('stores', filteredValues, { shouldValidate: true })
-                                    if (filteredValues.length > 0) {
-                                        clearErrors('stores')
-                                    }
+                                if (typeof value === 'string') {
+                                    setValue('role_id', Number(value), { shouldValidate: true })
+                                    clearErrors('role_id')
                                 }
                             }}
-                            error={errors.stores?.message as string}
+                            error={errors.role_id?.message as string}
+                        />
+
+                        <CustomAutocomplete
+                            name="store_id"
+                            label={createInputLabel({
+                                name: "Store",
+                                required: true
+                            })}
+                            placeholder="Select Store"
+                            radius="lg"
+                            inputSize="sm"
+                            options={storeOptions}
+                            value={watch('store_id') ? String(watch('store_id')) : ''}
+                            onChange={(value) => {
+                                if (typeof value === 'string') {
+                                    setValue('store_id', Number(value), { shouldValidate: true })
+                                    clearErrors('store_id')
+                                }
+                            }}
+                            error={errors.store_id?.message as string}
                         />
 
                         {mode === 'create' && (

@@ -7,18 +7,18 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { createPasswordSchema, CreatePasswordFormData } from '@/schema/auth.schema'
 import { createInputLabel } from '@/components/ui/form/labelHelpers'
-import { useToast } from '@/hooks'
-import { UserType } from '@/types'
+import { StaffUserType } from '@/types'
+import { useUpdateBusinessUser } from '@/services'
 
 interface PasswordResetModalProps {
     isOpen: boolean
     onClose: () => void
-    user?: UserType
+    user?: StaffUserType
 }
 
 const PasswordResetModal = ({ isOpen, onClose, user }: PasswordResetModalProps) => {
 
-    const { showSuccess, showError } = useToast()
+    const updateUserMutation = useUpdateBusinessUser()
 
     const { register, handleSubmit, formState: { errors, isSubmitting }, reset } =
         useForm<CreatePasswordFormData>({
@@ -27,15 +27,22 @@ const PasswordResetModal = ({ isOpen, onClose, user }: PasswordResetModalProps) 
         })
 
     const handleFormSubmit = async (data: CreatePasswordFormData) => {
-        try {
-            console.log('Reset password for user:', user?.id, data)
-            showSuccess('Password reset successfully', `Password has been reset for ${user?.name || 'user'}.`)
-            reset()
-            onClose()
-        } catch (error) {
-            console.error('Form submission error:', error)
-            showError('Failed to reset password', 'Please try again later.')
-        }
+        if (!user?.staff_id && !user?.id) return
+        
+        const userId = user.staff_id || user.id
+        if (!userId) return
+
+        updateUserMutation.mutate({
+            id: Number(userId),
+            payload: {
+                password: data.newPassword
+            }
+        }, {
+            onSuccess: () => {
+                reset()
+                onClose()
+            }
+        })
     }
 
     return (
@@ -46,7 +53,7 @@ const PasswordResetModal = ({ isOpen, onClose, user }: PasswordResetModalProps) 
             onClose={onClose}
             placement="center"
             title="Reset Password"
-            description={user ? `Reset password for ${user.name}` : 'Reset user password'}
+            description={user ? `Reset password for ${user.full_name || (user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : 'user')}` : 'Reset user password'}
             icon={<KeyIcon className='size-5' />}
             className="max-h-screen rounded-2xl"
             bodyClassName='p-5'>
@@ -83,7 +90,7 @@ const PasswordResetModal = ({ isOpen, onClose, user }: PasswordResetModalProps) 
                         type="submit"
                         radius='md'
                         className='flex-1 bg-primary text-white text-xs h-10'
-                        isLoading={isSubmitting}>
+                        isLoading={isSubmitting || updateUserMutation.isPending}>
                         Reset Password
                     </Button>
                 </div>

@@ -3,14 +3,15 @@
 import { TableCell, TableComponent, TrashIcon } from '@/components'
 import { PencilIcon, KeyIcon } from '@heroicons/react/24/outline'
 import { Button, User } from '@heroui/react'
-import { UserType } from '@/types'
+import { StaffUserType } from '@/types'
 import moment from 'moment'
 
 interface UserTableProps {
-    data: UserType[]
-    onEdit?: (user: UserType) => void
-    onDelete?: (userId: string) => void
-    onResetPassword?: (user: UserType) => void
+    data: StaffUserType[]
+    isLoading?: boolean
+    onEdit?: (user: StaffUserType) => void
+    onDelete?: (userId: string) => void                         
+    onResetPassword?: (user: StaffUserType) => void
 }
 
 const columns = [
@@ -24,25 +25,26 @@ const columns = [
 
 const UserTable = ({
     data,
+    isLoading,
     onEdit,
     onDelete,
     onResetPassword
 }: UserTableProps) => {
 
-    const renderRow = (user: UserType) => {
+    const renderRow = (user: StaffUserType) => {
+        const fullName = user.full_name || `${user.firstname} ${user.lastname}`.trim()
         return (
             <>
                 <TableCell>
                     <User
                         as="div"
                         avatarProps={{
-                            src: `https://i.pravatar.cc/150?u=${user.id}`,
                             radius: "full",
                             size: 'sm'
                         }}
                         className="transition-transform"
                         description={user.email || ''}
-                        name={user.name}
+                        name={fullName}
                         classNames={{
                             name: 'text-xs font-medium',
                             description: 'text-[11px] text-gray-500',
@@ -51,17 +53,13 @@ const UserTable = ({
                     />
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{user.role || '-'}</span>
+                    <span className='text-xs'>{user.role_name || '-'}</span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>{user.phone || '-'}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>
-                        {user.storeNames && user.storeNames.length > 0 
-                            ? user.storeNames.join(', ')
-                            : '-'}
-                    </span>
+                    <span className='text-xs'>{user.store_name || '-'}</span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>
@@ -92,7 +90,7 @@ const UserTable = ({
                         </Button>
 
                         <Button 
-                            onPress={() => onDelete?.(String(user.id))} 
+                            onPress={() => onDelete?.(String(user.staff_id || user.id))} 
                             isIconOnly 
                             size='sm' 
                             className='bg-gray-100/80 text-danger' 
@@ -110,10 +108,10 @@ const UserTable = ({
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => String(item.id || `user-${Math.random()}`)}
+            loading={isLoading}
+            rowKey={(item) => String(item.staff_id || item.id || `user-${Math.random()}`)}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
         />
     )
 }

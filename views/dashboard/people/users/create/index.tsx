@@ -2,21 +2,29 @@
 
 import { DashboardBreadCrumb } from '@/components'
 import UserForm from '../UserForm'
-import { useToast, useGoBack } from '@/hooks'
+import { useGoBack } from '@/hooks'
 import { UserFormData } from '@/schema'
+import { useCreateBusinessUser } from '@/services'
 
 const CreateUserView = () => {
+    
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
+    const createUserMutation = useCreateBusinessUser()
 
     const handleSubmit = (formData: UserFormData) => {
-        try {
-            console.log('Create user:', formData)
-            showSuccess('User created', 'User created successfully.')
-            goBack()
-        } catch (error) {
-            showError('Failed to create user', 'Please try again later.')
-        }
+        createUserMutation.mutate({
+            firstname: formData.firstname,
+            lastname: formData.lastname,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+            role_id: formData.role_id!,
+            store_id: formData.store_id!
+        }, {
+            onSuccess: () => {
+                goBack()
+            }
+        })
     }
 
     return (
@@ -36,6 +44,7 @@ const CreateUserView = () => {
                     onSubmit={handleSubmit}
                     onCancel={goBack}
                     submitButtonText="Create User"
+                    isLoading={createUserMutation.isPending}
                 />
             </div>
         </>
