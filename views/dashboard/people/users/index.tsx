@@ -3,10 +3,11 @@
 import { DashboardCard, FilterBar, Pagination, StackIcon, useDisclosure, DeleteModal } from '@/components'
 import UserTable from './UserTable'
 import PasswordResetModal from './PasswordResetModal'
-import { usersData } from '@/data'
-import { UserType } from '@/types'
-import { useState, useEffect } from 'react'
+import { StaffUserType, RoleType, StoreType } from '@/types'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useGetBusinessUsers, useDeleteBusinessUser } from '@/services'
+import { useAppSelector, selectRoles, selectStores } from '@/store'
 
 interface OrgUsersViewProps {
     onAddClick?: (handler: () => void) => void
@@ -18,9 +19,50 @@ const OrgUsersView = ({ onAddClick }: OrgUsersViewProps) => {
 
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
     const { isOpen: isPasswordResetModalOpen, onOpen: onPasswordResetModalOpen, onClose: onPasswordResetModalClose } = useDisclosure()
-    const [deleteUserId, setDeleteUserId] = useState<string | undefined>(undefined)
-    const [resetPasswordUser, setResetPasswordUser] = useState<UserType | undefined>(undefined)
+    const [deleteUserId, setDeleteUserId] = useState<number | undefined>(undefined)
+    const [resetPasswordUser, setResetPasswordUser] = useState<StaffUserType | undefined>(undefined)
+    
+    // Filter states
+    const [page, setPage] = useState(1)
+    const [limit] = useState(25)
+    const [search, setSearch] = useState('')
+    const [roleId, setRoleId] = useState<number | undefined>(undefined)
+    const [storeId, setStoreId] = useState<number | undefined>(undefined)
+    const [sort, setSort] = useState<'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'role_asc' | 'role_desc' | undefined>(undefined)
 
+    // ================================
+    // GET ROLES AND STORES FROM REDUX STATE
+    // ================================
+    const rolesData = useAppSelector(selectRoles)
+    const storesData = useAppSelector(selectStores)
+    
+    // Transform to RoleType and StoreType format
+    const roles: RoleType[] = rolesData.map(role => ({
+        id: role.role_id,
+        name: role.name,
+        description: role.description,
+        created_at: role.created_at
+    }))
+    
+    const stores: StoreType[] = storesData.map(store => ({
+        id: store.store_id,
+        name: store.name,
+        description: store.description,
+        created_at: store.created_at
+    }))
+
+    // Fetch data
+    const { data: usersData, isLoading: usersLoading } = useGetBusinessUsers({
+        page,
+        limit,
+        search: search || undefined,
+        role_id: roleId,
+        store_id: storeId,
+        sort
+    })
+
+    const deleteUserMutation = useDeleteBusinessUser()
+    
     useEffect(() => {
         if (onAddClick) {
             onAddClick(() => {
@@ -30,66 +72,101 @@ const OrgUsersView = ({ onAddClick }: OrgUsersViewProps) => {
     }, [onAddClick, router])
 
     const confirmDelete = () => {
-        console.log('Delete user:', deleteUserId)
-        onDeleteModalClose()
-        setDeleteUserId(undefined)
+        if (deleteUserId) {
+            deleteUserMutation.mutate(deleteUserId, {
+                onSuccess: () => {
+                    onDeleteModalClose()
+                    setDeleteUserId(undefined)
+                }
+            })
+        }
+    }
+
+    const roleOptions = useMemo(() => {
+        const options = [{ label: 'All', key: 'all' }]
+        roles.forEach(role => {
+            options.push({ label: role.name, key: String(role.id) })
+        })
+        return options
+    }, [roles])
+
+    const storeOptions = useMemo(() => {
+        const options = [{ label: 'All', key: 'all' }]
+        stores.forEach(store => {
+            options.push({ label: store.name, key: String(store.id) })
+        })
+        return options
+    }, [stores])
+
+    const getRoleLabel = () => {
+        if (!roleId) return 'Role: All'
+        const role = roles.find(r => r.id === roleId)
+        return role ? `Role: ${role.name}` : 'Role: All'
+    }
+
+    const getStoreLabel = () => {
+        if (!storeId) return 'Store: All'
+        const store = stores.find(s => s.id === storeId)
+        return store ? `Store: ${store.name}` : 'Store: All'
+    }
+
+    const getSortLabel = () => {
+        if (!sort) return 'Sort By: All'
+        const sortLabels: Record<string, string> = {
+            'newest': 'Newest First',
+            'oldest': 'Oldest First',
+            'name_asc': 'Name (A-Z)',
+            'name_desc': 'Name (Z-A)',
+            'role_asc': 'Role (A-Z)',
+            'role_desc': 'Role (Z-A)'
+        }
+        return `Sort By: ${sortLabels[sort] || 'All'}`
     }
 
     const filterItems = [
         {
             type: 'dropdown' as const,
-            label: 'Role: All',
+            label: getRoleLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Admin', key: 'admin' },
-                { label: 'Manager', key: 'manager' },
-                { label: 'Cashier', key: 'cashier' }
-            ],
-            value: '',
+            items: roleOptions,
+            value: roleId ? String(roleId) : 'all',
             onChange: (key: string) => {
-                console.log('Role changed:', key)
+                setRoleId(key === 'all' ? undefined : Number(key))
+                setPage(1)
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Store: All',
+            label: getStoreLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Main Store', key: 'main-store' },
-                { label: 'Warehouse A', key: 'warehouse-a' },
-                { label: 'Warehouse B', key: 'warehouse-b' },
-                { label: 'Branch Store 1', key: 'branch-1' },
-                { label: 'Branch Store 2', key: 'branch-2' }
-            ],
-            value: '',
+            items: storeOptions,
+            value: storeId ? String(storeId) : 'all',
             onChange: (key: string) => {
-                console.log('Store changed:', key)
+                setStoreId(key === 'all' ? undefined : Number(key))
+                setPage(1)
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Sort By: All',
+            label: getSortLabel(),
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
             items: [
+                { label: 'All', key: 'all' },
                 { label: 'Name (A-Z)', key: 'name_asc' },
                 { label: 'Name (Z-A)', key: 'name_desc' },
+                { label: 'Role (A-Z)', key: 'role_asc' },
+                { label: 'Role (Z-A)', key: 'role_desc' },
                 { label: 'Newest First', key: 'newest' },
                 { label: 'Oldest First', key: 'oldest' }
             ],
-            value: '',
+            value: sort || 'all',
             onChange: (key: string) => {
-                console.log('Sort changed:', key)
+                setSort(key === 'all' ? undefined : key as any)
+                setPage(1)
             }
-        },
-        {
-            type: 'dateRange' as const,
-            label: 'Data',
-            placeholder: 'Select date range'
         },
     ]
 
@@ -99,20 +176,25 @@ const OrgUsersView = ({ onAddClick }: OrgUsersViewProps) => {
                 <FilterBar
                     searchInput={{
                         placeholder: 'Search by name, email, or phone',
-                        className: 'w-full md:w-72'
+                        className: 'w-full md:w-72',
+                        onSearch: (value: string) => {
+                            setSearch(value)
+                            setPage(1)
+                        }
                     }}
                     items={filterItems}
                 />
 
                 <UserTable
-                    data={usersData}
+                    isLoading={usersLoading}
+                    data={usersData?.users || []}
                     onEdit={(user) => {
-                        if (user.id) {
-                            router.push(`/dashboard/people/users/${user.id}/edit`)
+                        if (user.staff_id || user.id) {
+                            router.push(`/dashboard/people/users/${user.staff_id || user.id}/edit`)
                         }
                     }}
                     onDelete={(userId) => {
-                        setDeleteUserId(userId)
+                        setDeleteUserId(Number(userId))
                         onDeleteModalOpen()
                     }}
                     onResetPassword={(user) => {
@@ -122,11 +204,11 @@ const OrgUsersView = ({ onAddClick }: OrgUsersViewProps) => {
                 />
 
                 <Pagination
-                    currentPage={1}
-                    totalItems={100}
-                    itemsPerPage={25}
-                    onPageChange={(page) => {
-                        console.log('Page changed:', page)
+                    currentPage={page}
+                    totalItems={usersData?.pagination?.total || 0}
+                    itemsPerPage={limit}
+                    onPageChange={(newPage) => {
+                        setPage(newPage)
                     }}
                     showingText="Users"
                 />

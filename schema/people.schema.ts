@@ -63,49 +63,41 @@ export const customerSchema = yup.object({
 export type CustomerFormData = yup.InferType<typeof customerSchema>;
 
 export const userSchema = yup.object({
-    name: yup
+    firstname: yup
         .string()
-        .required('User name is required')
-        .min(2, 'User name must be at least 2 characters')
-        .max(100, 'User name must not exceed 100 characters'),
+        .required('First name is required')
+        .min(2, 'First name must be at least 2 characters')
+        .max(100, 'First name must not exceed 100 characters'),
+    lastname: yup
+        .string()
+        .required('Last name is required')
+        .min(2, 'Last name must be at least 2 characters')
+        .max(100, 'Last name must not exceed 100 characters'),
     email: yup
         .string()
         .required('Email is required')
         .email('Invalid email format')
         .max(100, 'Email must not exceed 100 characters'),
-    role: yup
-        .string()
-        .required('Role is required')
-        .max(50, 'Role must not exceed 50 characters'),
     phone: yup
         .string()
         .required('Phone is required')
         .max(20, 'Phone must not exceed 20 characters'),
-    stores: yup
-        .array()
-        .of(yup.string().required())
-        .required('At least one store is required')
-        .min(1, 'At least one store is required'),
+    role_id: yup
+        .number()
+        .required('Role is required')
+        .typeError('Role is required'),
+    store_id: yup
+        .number()
+        .required('Store is required')
+        .typeError('Store is required'),
     password: yup
         .string()
         .required('Password is required')
-        .min(6, 'Password must be at least 6 characters'),
+        .min(8, 'Password must be at least 8 characters'),
     confirmPassword: yup
         .string()
         .required('Please confirm your password')
         .oneOf([yup.ref('password')], 'Passwords must match'),
-    profilePicture: yup
-        .mixed<FileList>()
-        .optional()
-        .nullable()
-        .test('file-size', 'File size must be less than 5MB', (value) => {
-            if (!value || !(value instanceof FileList) || value.length === 0) return true
-            return Array.from(value).every(file => file.size <= 5 * 1024 * 1024)
-        })
-        .test('file-type', 'Only image files are allowed', (value) => {
-            if (!value || !(value instanceof FileList) || value.length === 0) return true
-            return Array.from(value).every(file => file.type.startsWith('image/'))
-        }),
 }).required();
 
 export type UserFormData = yup.InferType<typeof userSchema>;

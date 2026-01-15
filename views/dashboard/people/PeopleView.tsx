@@ -53,7 +53,9 @@ const PeopleView = () => {
     return (
         <>
 
-            <DashboardBreadCrumb title='Expenses' description="Manage your expenses here. Add, edit, and delete expenses as needed."
+            <DashboardBreadCrumb 
+                title='People'
+                description="Manage your people here. Add, edit, and delete people as needed."
                 endContent={
                     getButtonTitle(activeTab || '') && (
                         <Button size='sm' className='px-4 bg-primary text-white h-9'

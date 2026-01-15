@@ -10,7 +10,8 @@ import {
     fetchUnits,
     fetchVariations,
     fetchPaymentMethods,
-    fetchCustomers
+    fetchCustomers,
+    fetchRoles
 } from '@/store/slice'
 
 /**
@@ -30,6 +31,7 @@ export const useFetchAllData = () => {
         dispatch(fetchVariations())
         dispatch(fetchPaymentMethods())
         dispatch(fetchCustomers())
+        dispatch(fetchRoles())
     }, [dispatch])
 }
 

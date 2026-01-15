@@ -2,59 +2,88 @@
 
 import { DashboardBreadCrumb, DashboardCard } from '@/components'
 import UserForm from '../UserForm'
-import { useToast, useGoBack } from '@/hooks'
+import { useGoBack } from '@/hooks'
 import { UserFormData } from '@/schema'
-import { usersData } from '@/data'
-import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { UserType } from '@/types'
+import { useGetBusinessUserById, useUpdateBusinessUser } from '@/services'
 
 const EditUserView = () => {
+    
     const params = useParams()
     const userId = params?.id as string
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
-    const [initialData, setInitialData] = useState<UserType | undefined>(undefined)
-
-    useEffect(() => {
-        // Find user by ID
-        const user = usersData.find(u => String(u.id) === String(userId))
-        
-        if (user) {
-            setInitialData(user)
-        }
-        
-        setIsLoading(false)
-    }, [userId])
+    const { data: initialData, isLoading } = useGetBusinessUserById(userId ? Number(userId) : undefined)
+    const updateUserMutation = useUpdateBusinessUser()
 
     const handleSubmit = (formData: UserFormData) => {
-        try {
-            console.log('Update user:', userId, formData)
-            showSuccess('User updated', 'User updated successfully.')
-            goBack()
-        } catch (error) {
-            showError('Failed to update user', 'Please try again later.')
+        if (!userId) return
+        
+        const payload: any = {
+            firstname: formData.firstname,
+            lastname: formData.lastname,
+            email: formData.email,
+            phone: formData.phone,
+            role_id: formData.role_id!,
+            store_id: formData.store_id!
         }
+
+        if (formData.password) {
+        }
+
+        updateUserMutation.mutate({
+            id: Number(userId),
+            payload
+        }, {
+            onSuccess: () => {
+                goBack()
+            }
+        })
     }
 
+    // ================================
+    // LOADING STATE
+    // ================================
     if (isLoading) {
         return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">Loading...</div>
-                </DashboardCard>
-            </div>
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'People', href: '/dashboard/people' },
+                        { label: 'Users', href: '/dashboard/people?tab=users' },
+                        { label: 'Edit User' }
+                    ]}
+                    title='Edit User'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
         )
     }
 
     if (!initialData) {
         return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">User not found</div>
-                </DashboardCard>
-            </div>
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'People', href: '/dashboard/people' },
+                        { label: 'Users', href: '/dashboard/people?tab=users' },
+                        { label: 'Edit User' }
+                    ]}
+                    title='Edit User'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 text-center text-gray-500">
+                            User not found
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
         )
     }
 
@@ -76,6 +105,7 @@ const EditUserView = () => {
                     onSubmit={handleSubmit}
                     onCancel={goBack}
                     submitButtonText="Update User"
+                    isLoading={updateUserMutation.isPending}
                 />
             </div>
         </>
