@@ -65,17 +65,17 @@ const RegStepFour: React.FC<RegStepFourProps> = ({ onNextStep, onPrevStep, onSub
 
                 <Button 
                     type="button" 
-                    radius='md' 
+                    radius='lg' 
                     variant='bordered' 
-                    className='border border-yellow text-yellow flex-1 text-xs h-11' 
+                    className='border-2 border-gray-300 text-gray-700 flex-1 text-sm font-medium h-12 hover:bg-gray-50 transition-all duration-200' 
                     onPress={onPrevStep}>
                     Previous
                 </Button>
 
                 <Button 
                     type="submit" 
-                    radius='md' 
-                    className='bg-deep-purple text-white flex-1 text-xs h-11'
+                    radius='lg' 
+                    className='bg-primary text-white flex-1 text-sm font-medium h-12 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-200'
                     isLoading={isSubmitting}>
                     Save & Next
                 </Button>

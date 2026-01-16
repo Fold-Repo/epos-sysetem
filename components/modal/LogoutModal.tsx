@@ -45,7 +45,7 @@ const LogoutModal = ({ open, close }: LogoutModalProps) => {
                     <Button fullWidth radius='md' className='text-xs bg-red-500 text-white'
                         color='danger' onPress={async () => {
                             await logout()
-                            router.push('/signin')
+                            router.push('/')
                         }}>
                         Logout
                     </Button>

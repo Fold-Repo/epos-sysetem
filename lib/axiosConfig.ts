@@ -22,11 +22,11 @@ export const client = axios.create({
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
         const token = getCookie(AUTH_TOKEN_KEY);
-        
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         return config;
     },
     (error: AxiosError) => Promise.reject(error)
@@ -36,11 +36,11 @@ apiClient.interceptors.request.use(
 client.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
         const token = getCookie(AUTH_TOKEN_KEY);
-        
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         return config;
     },
     (error: AxiosError) => Promise.reject(error)
@@ -56,9 +56,9 @@ apiClient.interceptors.response.use(
             // ==============================
             const { logout } = await import('@/utils');
             await logout();
-            
+
             const callbackUrl = window.location.pathname || "/";
-            window.location.href = `/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+            window.location.href = `/?callbackUrl=${encodeURIComponent(callbackUrl)}`;
         }
 
         return Promise.reject(error);

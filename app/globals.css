@@ -157,17 +157,25 @@ body {
   }
 
   .form-control {
-    @apply block w-full px-3 py-2.5 md:py-3 text-xs border border-gray-300 bg-white rounded-lg outline-none transition-colors duration-300 placeholder:text-gray-500 disabled:bg-gray-100 disabled:text-gray-500;
+    @apply block w-full px-4 py-3 text-sm border border-gray-300 bg-white rounded-lg outline-none transition-all duration-200 placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .form-control:hover:not(:disabled) {
+    @apply border-gray-400;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   }
 
   .form-control:focus {
-    @apply border-primary ring-2;
+    @apply border-primary ring-2 ring-primary/20;
     border-width: 1px;
-    box-shadow: 0px 1.15px 2.3px 0px #e4e5e73d;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    outline: none;
   }
 
   .form-control.is-invalid {
-    @apply border-red-500 ring-2 ring-red-500/15;
+    @apply border-red-500 ring-2 ring-red-500/20;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
   }
 
   .form-label {
@@ -225,4 +233,31 @@ body {
 
 #react-aria1505729547-_r_5_ {
   font-size: 11px !important;
+}
+
+/* ================= Ripple Animation ================= */
+@keyframes ripple-expand {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.ripple-animation-1 {
+  animation: ripple-expand 4s ease-out infinite;
+}
+
+.ripple-animation-2 {
+  animation: ripple-expand 4s ease-out infinite 1.3s;
+}
+
+.ripple-animation-3 {
+  animation: ripple-expand 4s ease-out infinite 2.6s;
 }

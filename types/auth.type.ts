@@ -195,3 +195,18 @@ export interface RolePermissionDetailsResponse {
     status: number;
     data: RolePermissionDetailsData;
 }
+
+// ==============================
+// Google Authentication Types
+// ==============================
+export interface GoogleSignInPayload {
+    idToken: string;
+}
+
+export interface GoogleSignUpPayload extends RegistrationPayload {
+    idToken: string;
+}
+
+export interface GoogleSignInResponse extends LoginResponse {}
+
+export interface GoogleSignUpResponse extends RegistrationResponse {}

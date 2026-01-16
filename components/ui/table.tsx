@@ -7,11 +7,15 @@ const Table: React.FC<{
     className?: string;
 }> = ({ children, className = '' }) => {
     return (
-        <div className="">
+        <div className="overflow-hidden">
             <div className="flex flex-col">
-                <div className="-m-1.5 overflow-x-auto scrollbar-thin">
+                <div className="-m-1.5 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     <div className="p-1.5 min-w-full inline-block align-middle">
-                        <table className={cn("min-w-full divide-y divide-gray-100 tracking-wide", className)}>
+                        <table className={cn(
+                            "min-w-full divide-y divide-gray-200 tracking-wide",
+                            "border-collapse",
+                            className
+                        )}>
                             {children}
                         </table>
                     </div>
@@ -38,7 +42,12 @@ const TableHead: React.FC<{
     scope?: "col" | "row";
 }> = ({ children, className = '', scope = "col" }) => {
     return (
-        <th scope={scope} className={cn("px-6 py-3 bg-[#F4F6F8] text-left whitespace-nowrap font-normal", className)}>
+        <th scope={scope} className={cn(
+            "px-6 py-3 bg-[#F4F6F8] text-left whitespace-nowrap",
+            "font-semibold text-xs text-gray-700 uppercase tracking-wider",
+            "sticky top-0 z-10",
+            className
+        )}>
             {children}
         </th>
     );
@@ -63,7 +72,10 @@ const TableRow: React.FC<{
 }> = ({ children, className = '', onClick, style }) => {
     return (
         <tr 
-            className={cn(className, onClick && 'hover:bg-gray-50 transition-colors')} 
+            className={cn(
+                className,
+                onClick && 'hover:bg-gray-100 cursor-pointer transition-colors duration-150'
+            )} 
             onClick={onClick}
             style={style}
         >
@@ -78,7 +90,11 @@ const TableCell: React.FC<{
     colSpan?: number;
 }> = ({ children, className = '', colSpan }) => {
     return (
-        <td colSpan={colSpan} className={cn("px-6 py-3 text-xs whitespace-nowrap", className)}>
+        <td colSpan={colSpan} className={cn(
+            "px-6 py-4 text-xs whitespace-nowrap",
+            "text-gray-900",
+            className
+        )}>
             {children}
         </td>
     );

@@ -21,10 +21,10 @@ const AuthRedirect: React.FC<AuthRedirectProps> = ({ question, linkText, href, c
   };
 
   return (
-    <p className={cn("text-xs space-y-5 mt-4", className)}>
+    <p className={cn("text-sm text-gray-600", className)}>
       {question}{' '}
       {href ? (
-        <Link className="text-primary underline font-medium" href={href}>
+        <Link className="text-primary font-semibold hover:text-primary/80 transition-colors" href={href}>
           {linkText}
         </Link>
       ) : (
@@ -33,7 +33,7 @@ const AuthRedirect: React.FC<AuthRedirectProps> = ({ question, linkText, href, c
           onClick={handleClick} 
           disabled={disabled} 
           className={cn(
-            "text-primary underline font-medium",
+            "text-primary font-semibold hover:text-primary/80 transition-colors",
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
           )}
         >

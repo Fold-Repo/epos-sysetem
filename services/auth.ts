@@ -10,7 +10,11 @@ import {
     ResetPasswordPayload,
     ResetPasswordResponse,
     LoginPayload,
-    LoginResponse
+    LoginResponse,
+    GoogleSignInPayload,
+    GoogleSignUpPayload,
+    GoogleSignInResponse,
+    GoogleSignUpResponse
 } from "@/types";
 
 export async function register(payload: RegistrationPayload): Promise<RegistrationResponse> {
@@ -38,3 +42,12 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
     return response.data;
 }
 
+export async function googleSignIn(payload: GoogleSignInPayload): Promise<GoogleSignInResponse> {
+    const response = await client.post(ENDPOINT.AUTH.GOOGLE_SIGNIN, payload);
+    return response.data;
+}
+
+export async function googleSignUp(payload: GoogleSignUpPayload): Promise<GoogleSignUpResponse> {
+    const response = await client.post(ENDPOINT.AUTH.GOOGLE_SIGNUP, payload);
+    return response.data;
+}

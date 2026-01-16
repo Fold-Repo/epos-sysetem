@@ -10,7 +10,7 @@ export const NAV_ITEMS: NavItemType[] = [
 export const NAV_BUTTONS: NavButtonType[] = [
     {
         label: "Log in",
-        href: "/signin",
+        href: "/",
         variant: "link",
         showOnMobile: false,
     },

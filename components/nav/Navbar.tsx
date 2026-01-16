@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import Container from "../Container";
@@ -10,6 +9,7 @@ import { NAV_CONSTANT } from "@/constants";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib";
 import MobileNav from "./MobileNav";
+import { Logo } from "../reusable";
 
 const Navbar = () => {
 
@@ -23,15 +23,7 @@ const Navbar = () => {
             <Container>
                 <nav className="flex items-center justify-between">
 
-                    <Link href="/">
-                        <Image
-                            src={NAV_CONSTANT.LOGOS.light}
-                            className="w-24"
-                            width={119}
-                            height={52}
-                            alt="E-POS Logo"
-                        />
-                    </Link>
+                    <Logo href="/" textColor="text-white" size="md" />
 
                     <div className="hidden md:flex gap-x-10 lg:gap-x-16 text-sm text-white font-medium">
                         {NAV_CONSTANT.NAV_ITEMS.map((item) => (

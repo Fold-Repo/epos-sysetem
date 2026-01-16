@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib";
 import {
     Table,
     TableBody,
@@ -145,10 +146,15 @@ export const TableComponent = <T,>({
                         data.map((item, index) => {
                             const id = rowKey(item);
                             const isSelected = selectedIds.includes(id);
+                            const isEven = index % 2 === 0;
                             return (
                                 <TableRow
                                     key={id}
-                                    className={withCheckbox ? 'gap-x-1' : ''}
+                                    className={cn(
+                                        withCheckbox ? 'gap-x-1' : '',
+                                        isEven ? 'bg-white' : 'bg-gray-50/50',
+                                        onRowClick && 'hover:bg-gray-100 cursor-pointer transition-colors'
+                                    )}
                                     onClick={onRowClick ? () => onRowClick(item, index) : undefined}
                                     style={onRowClick ? { cursor: 'pointer' } : undefined}>
                                     {withCheckbox && (

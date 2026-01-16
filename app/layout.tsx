@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { SEO_TITLE, SEO_DESCRIPTION, SITE_URL, APP_KEYWORDS, APP_AUTHORS,APP_OPEN_GRAPH, APP_TWITTER, APP_ROBOTS, APP_THEME_COLOR } from "@/constants";
+import { SEO_TITLE, SEO_DESCRIPTION, SITE_URL, APP_KEYWORDS, APP_AUTHORS, APP_OPEN_GRAPH, APP_TWITTER, APP_ROBOTS, APP_THEME_COLOR } from "@/constants";
 import "./globals.css";
 import { Providers } from "./providers";
 import NextTopLoader from 'nextjs-toploader'
@@ -55,12 +55,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
 
-      <body className={`${isDev ? 'debug-screens' : ''}`}>
+      <body className={`${isDev ? 'debug-screens' : ''}`} suppressHydrationWarning>
 
         <Providers>
 
           {children}
-          
+
           <NextTopLoader color="#8b5cf6" showSpinner={true} />
 
         </Providers>

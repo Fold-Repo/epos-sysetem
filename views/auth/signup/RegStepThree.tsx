@@ -82,10 +82,22 @@ const RegStepThree: React.FC<RegStepThreeProps> = ({ onNextStep, onPrevStep, for
 
             <div className="flex gap-3 mt-9">
 
-                <Button type="button" radius='md' variant='bordered' className='border border-yellow text-yellow flex-1 text-xs h-11' onPress={onPrevStep}>Previous</Button>
+                <Button 
+                    type="button" 
+                    radius='lg' 
+                    variant='bordered' 
+                    className='border-2 border-gray-300 text-gray-700 flex-1 text-sm font-medium h-12 hover:bg-gray-50 transition-all duration-200' 
+                    onPress={onPrevStep}>
+                    Previous
+                </Button>
 
-                <Button type="submit" radius='md' className='bg-primary text-white flex-1 text-xs h-11' 
-                isLoading={isSubmitting}>Save & Next</Button>
+                <Button 
+                    type="submit" 
+                    radius='lg' 
+                    className='bg-primary text-white flex-1 text-sm font-medium h-12 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-200' 
+                    isLoading={isSubmitting}>
+                    Save & Next
+                </Button>
 
             </div>
         </form>
