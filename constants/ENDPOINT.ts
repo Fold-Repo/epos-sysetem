@@ -21,6 +21,8 @@ export const ENDPOINT = {
         PERMISSIONS: '/roles/me/permission',
         ROLES: '/roles',
         ROLE_PERMISSION_DETAILS: '/roles', // Will be used as /roles/{id}/permission
+        GOOGLE_SIGNIN: '/auth/google/signin',
+        GOOGLE_SIGNUP: '/auth/google/signup',
     },
 
     ADDRESS: {

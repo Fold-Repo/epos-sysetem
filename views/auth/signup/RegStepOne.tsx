@@ -35,7 +35,7 @@ const RegStepOne: React.FC<RegStepOneProps> = ({ onNextStep, formData }) => {
         <form onSubmit={handleSubmit(onSubmit)}>
 
             <div className="flex flex-col lg:grid grid-cols-1 lg:grid-cols-2 gap-3">
-                
+
                 <Input
                     formGroupClass='col-span-2'
                     label={createInputLabel({ name: "Business Name", required: true })}
@@ -47,8 +47,9 @@ const RegStepOne: React.FC<RegStepOneProps> = ({ onNextStep, formData }) => {
                 <Select
                     label={createInputLabel({ name: "Type of Business", required: true })}
                     {...register('businesstype')}
+                    defaultValue=""
                     error={errors.businesstype?.message as string}>
-                    <option value="" disabled selected>Select business type</option>
+                    <option value="" disabled>Select business type</option>
                     <option value="Retail">Retail</option>
                     <option value="Wholesale">Wholesale</option>
                     <option value="Manufacturing">Manufacturing</option>
@@ -81,12 +82,17 @@ const RegStepOne: React.FC<RegStepOneProps> = ({ onNextStep, formData }) => {
                 />
             </div>
 
-            <Button type="submit" radius='md' className='bg-primary text-white w-full 
-            mt-7 text-xs h-11' isLoading={isSubmitting}>
+            <Button
+                type="submit"
+                radius='lg'
+                className='bg-primary text-white w-full 
+                mt-7 text-sm font-medium h-12 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-200'
+                isLoading={isSubmitting}
+            >
                 Next
             </Button>
 
-            <AuthRedirect question="Already have an account?" linkText="Login here" href="/signin" />
+            <AuthRedirect question="Already have an account?" linkText="Login here" href="/" />
 
         </form>
     )

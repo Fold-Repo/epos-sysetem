@@ -19,6 +19,7 @@
     "apexcharts": "^5.3.6",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
+    "firebase": "^12.8.0",
     "framer-motion": "^12.23.24",
     "iconsax-reactjs": "^0.0.8",
     "moment": "^2.30.1",

@@ -24,18 +24,25 @@ const DashboardCard = ({
 }: DashboardCardProps) => {
   return (
     <div className={cn(
-      "bg-white rounded-2xl border border-gray-100",
+      "bg-white rounded-2xl border border-gray-100 shadow-sm",
+      "hover:shadow-md transition-shadow duration-200",
       className
     )}>
 
       {(title || headerActions) && (
         
-        <div className={cn("p-4 flex items-center gap-x-5 gap-y-4 flex-wrap text-text-color", headerClassName)}>
+        <div className={cn(
+          "p-4 flex items-center gap-x-5 gap-y-4 flex-wrap",
+          "border-b border-gray-100",
+          "text-text-color",
+          headerClassName
+        )}>
 
           <div className="flex items-center gap-x-1.5">
+            {icon && <span className="text-primary">{icon}</span>}
             {title && (
               <h2 className={cn(
-                'text-sm font-medium',
+                'text-sm font-semibold text-gray-900',
                 titleClassName
               )}>
                 {title}
@@ -53,7 +60,7 @@ const DashboardCard = ({
       )}
 
 
-      <div className={cn("p-4 ", bodyClassName)}>
+      <div className={cn("p-4", bodyClassName)}>
         {children}
       </div>
 

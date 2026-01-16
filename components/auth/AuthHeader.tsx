@@ -1,7 +1,5 @@
 import React from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { LOGO } from '@/constants'
+import { Logo } from '@/components'
 
 interface AuthHeaderProps {
     title: string
@@ -9,31 +7,31 @@ interface AuthHeaderProps {
     className?: string
 }
 
-const AuthHeader: React.FC<AuthHeaderProps> = ({ 
-    title, 
-    description, 
-    className = '' 
+const AuthHeader: React.FC<AuthHeaderProps> = ({
+    title,
+    description,
+    className = ''
 }) => {
-  return (
-    <div className={`space-y-1.5 flex flex-col items-center justify-center 
-            text-center pb-12 ${className}`}>
+    return (
+        <div className={`space-y-3 flex flex-col items-center justify-center 
+            text-center pb-8 ${className}`}>
 
-        <Link href="/" className='block'>
-            <Image src={LOGO.logo_1} alt="Logo" width={100} height={48} />
-        </Link>
+            <div className='mb-2'>
+                <Logo textColor="text-gray-900" size="md" iconBgColor="bg-primary" iconTextColor="text-white" />
+            </div>
 
-        <h2 className='text-lg font-medium pt-2'>
-            {title}
-        </h2>
+            <h2 className='text-2xl font-semibold text-gray-900 pt-2'>
+                {title}
+            </h2>
 
-        {description && (
-            <p className='text-sm font-light text-[#6C7278] leading-5'>
-                {description}
-            </p>
-        )}
+            {description && (
+                <p className='text-sm text-gray-600 leading-6 max-w-md'>
+                    {description}
+                </p>
+            )}
 
-    </div>
-  )
+        </div>
+    )
 }
 
 export default AuthHeader

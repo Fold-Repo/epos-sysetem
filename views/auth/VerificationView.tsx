@@ -35,7 +35,7 @@ const VerificationView = () => {
 
             if (!email) {
                 showError('Email not found. Please try signing up again.');
-                router.push('/signin');
+                router.push('/');
                 return;
             }
 

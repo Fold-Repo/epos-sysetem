@@ -41,7 +41,7 @@ const CreatePassword: React.FC<CreatePasswordProps> = ({ email, token }) => {
             });
 
             showSuccess(response.data.message || 'Password reset successfully, please login to your account.');
-            router.push('/signin');
+            router.push('/');
         } catch (error) {
             const errorMessage = getErrorMessage(error);
             showError(errorMessage);

@@ -7,8 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { Button, useDisclosure } from '@heroui/react';
 import SidebarLink from './SidebarLink';
-import { LOGO, DashboardSection } from '@/constants';
-import { LogoutIcon, LogoutModal } from '@/components';
+import { DashboardSection } from '@/constants';
+import { LogoutIcon, LogoutModal, Logo } from '@/components';
 import { UserPermissions } from '@/types';
 import { filterLinksByPermissions } from '@/utils';
 
@@ -26,7 +26,7 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
 
     const pathname = usePathname()
     const { isOpen: isLogoutOpen, onOpen: openLogoutModal, onClose: closeLogoutModal } = useDisclosure()
-    
+
     // ===============================================
     // Expanded Sections
     // ===============================================
@@ -85,9 +85,9 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
 
                 <div className="flex items-center justify-between px-5 pb-2 pt-5">
 
-                    <Link href={root} className="block" onClick={handleLinkClick}>
-                        <Image src={LOGO.logo_1} alt="Logo" width={90} height={40} />
-                    </Link>
+                    <div onClick={handleLinkClick}>
+                        <Logo href={root} textColor="text-gray-900" size="sm" iconBgColor="bg-primary" iconTextColor="text-white" />
+                    </div>
 
                     <Button size='sm' onPress={() => setOpen(false)} isIconOnly className='bg-white border-none xl:hidden rounded-full'>
                         <XMarkIcon className='size-4 text-black' />
@@ -120,10 +120,9 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
                                         )}
                                     </button>
 
-                                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                                            isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
                                         }`}>
-                                            
+
                                         <div className="items-center block w-full h-auto grow basis-full pt-3">
                                             <ul className="flex flex-col pl-0 mb-0 list-none">
                                                 {filteredLinks.map((link, linkIndex) => {
@@ -151,7 +150,7 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
                     {/*  ================= LOGOUT ================= */}
                     <div className="px-5 py-2.5 w-full mt-auto border-t border-[#0B12211A]">
 
-                        <Button fullWidth variant="light" 
+                        <Button fullWidth variant="light"
                             className='flex items-center justify-start'
                             onPress={openLogoutModal}>
                             <LogoutIcon className="text-[#0B1221]" />

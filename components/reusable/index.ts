@@ -11,6 +11,8 @@ import DashboardCard from './DashboardCard';
 import Accordion from './Accordion';
 import PasswordRequirements from './PasswordRequirements';
 import TrendIndicator from './TrendIndicator';
+import Logo from './Logo';
+import RippleEffect from './RippleEffect';
 
 export {
     SearchInput,
@@ -25,5 +27,7 @@ export {
     DashboardCard,
     Accordion,
     PasswordRequirements,
-    TrendIndicator
+    TrendIndicator,
+    Logo,
+    RippleEffect
 }
