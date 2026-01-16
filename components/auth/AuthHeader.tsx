@@ -7,6 +7,7 @@ interface AuthHeaderProps {
     className?: string
 }
 
+
 const AuthHeader: React.FC<AuthHeaderProps> = ({
     title,
     description,
