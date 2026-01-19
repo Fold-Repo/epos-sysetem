@@ -42,7 +42,7 @@ const DashboardCard = ({
             {icon && <span className="text-primary">{icon}</span>}
             {title && (
               <h2 className={cn(
-                'text-sm font-semibold text-gray-900',
+                'text-xs font-medium text-gray-900',
                 titleClassName
               )}>
                 {title}

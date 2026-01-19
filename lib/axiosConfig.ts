@@ -19,22 +19,9 @@ export const client = axios.create({
     },
 });
 
-apiClient.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        const token = getCookie(AUTH_TOKEN_KEY);
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        return config;
-    },
-    (error: AxiosError) => Promise.reject(error)
-);
-
-// Add request interceptor to client as well
 client.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
+        
         const token = getCookie(AUTH_TOKEN_KEY);
 
         if (token) {
@@ -46,11 +33,12 @@ client.interceptors.request.use(
     (error: AxiosError) => Promise.reject(error)
 );
 
-apiClient.interceptors.response.use(
+client.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        if (error.response?.status === 401) {
-
+        const status = error.response?.status;
+        
+        if (status === 401) {
             // ==============================
             // Clear all auth state and cookies
             // ==============================

@@ -17,4 +17,5 @@ export * from './customers';
 export * from './quotations';
 export * from './adjustments';
 export * from './business-users';
+export * from './dashboard';
 export type { AdjustmentQueryParams } from '@/types';

@@ -1,9 +1,10 @@
 'use client'
 
-import { FilterBar, DashboardCard, StackIcon, TableComponent, TableCell, Pagination, StatusChip } from '@/components'
+import { DashboardCard, TableComponent, TableCell, StatusChip } from '@/components'
 import { formatCurrency } from '@/lib';
-import { getRecentSalesData } from '@/data';
-import React, { useState } from 'react'
+import { useGetSales } from '@/services';
+import { Spinner } from '@heroui/react';
+import React from 'react'
 
 const columns = [
     { key: "reference", title: "Reference" },
@@ -17,10 +18,24 @@ const columns = [
 
 const RecentSales = () => {
 
-    const salesData = getRecentSalesData();
-    const [currentPage, setCurrentPage] = useState(1)
-    const totalItems = 400
-    const itemsPerPage = 25
+    // ================================
+    // FETCH LATEST 5 SALES
+    // ================================
+    const { data, isLoading } = useGetSales({
+        limit: 5,
+        sort: 'newest',
+        page: 1
+    });
+
+    const salesData = data?.sales || [];
+
+    const getPaidAndDue = (sale: typeof salesData[0]) => {
+        const grandTotal = sale.grandTotal || 0;
+        if (sale.paymentStatus === 'paid') {
+            return { paid: grandTotal, due: 0 };
+        }
+        return { paid: 0, due: grandTotal };
+    };
 
     return (
         <DashboardCard
@@ -28,72 +43,46 @@ const RecentSales = () => {
             bodyClassName='space-y-4'
             title="Recent Sales">
 
-            <FilterBar
-                searchInput={{
-                    placeholder: 'Search by reference, Customer or Amount',
-                }}
-                items={[
-                    {
-                        type: 'dropdown',
-                        label: 'Status: All',
-                        startContent: <StackIcon className="text-slate-400" />,
-                        showChevron: false,
-                        items: [
-                            { label: 'All', key: 'all' },
-                            { label: 'Pending', key: 'pending' },
-                            { label: 'Completed', key: 'completed' },
-                            { label: 'Cancelled', key: 'cancelled' }
-                        ],
-                        value: '',
-                        onChange: (key) => {
-                            console.log('Type changed:', key)
-                        }
-                    }
-                ]}
-            />
-
-            <TableComponent
-                className='border border-gray-100 overflow-hidden rounded-xl'
-                columns={columns}
-                data={salesData}
-                rowKey={(item) => `${item.reference}-${item.customer}`}
-                renderRow={(item) => {
-                    return (
-                        <>
-                            <TableCell>
-                                <span className='text-xs text-dark'>{item.reference}</span>
-                            </TableCell>
-                            <TableCell>
-                                <span className='text-xs text-dark'>{item.customer}</span>
-                            </TableCell>
-                            <TableCell>
-                                <StatusChip status={item.status as 'completed' | 'pending' | 'cancelled'} />
-                            </TableCell>
-                            <TableCell>
-                                <span className='text-xs text-dark'>{formatCurrency(item.grandTotal)}</span>
-                            </TableCell>
-                            <TableCell>
-                                <span className='text-xs text-green-400'>{formatCurrency(item.paid)}</span>
-                            </TableCell>
-                            <TableCell>
-                                <span className='text-xs text-dark'>{formatCurrency(item.due)}</span>
-                            </TableCell>
-                            <TableCell>
-                                <StatusChip status={item.paymentStatus} />
-                            </TableCell>
-                        </>
-                    );
-                }}
-            />
-
-            <Pagination
-                className='px-4'
-                currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                showingText="transactions"
-            />
+            {isLoading ? (
+                <div className="flex items-center justify-center h-full min-h-[20vh]">
+                    <Spinner color="primary" size="lg" />
+                </div>
+            ) : (
+                <TableComponent
+                    className='border border-gray-100 overflow-hidden rounded-xl'
+                    columns={columns}
+                    data={salesData}
+                    rowKey={(item) => `${item.reference}-${item.id}`}
+                    renderRow={(item) => {
+                        const { paid, due } = getPaidAndDue(item);
+                        return (
+                            <>
+                                <TableCell>
+                                    <span className='text-xs text-dark'>{item.reference || '-'}</span>
+                                </TableCell>
+                                <TableCell>
+                                    <span className='text-xs text-dark'>{item.customer_name || '-'}</span>
+                                </TableCell>
+                                <TableCell>
+                                    <StatusChip status={item.status || 'pending'} />
+                                </TableCell>
+                                <TableCell>
+                                    <span className='text-xs text-dark'>{formatCurrency(item.grandTotal || 0)}</span>
+                                </TableCell>
+                                <TableCell>
+                                    <span className='text-xs text-green-400'>{formatCurrency(paid)}</span>
+                                </TableCell>
+                                <TableCell>
+                                    <span className='text-xs text-dark'>{formatCurrency(due)}</span>
+                                </TableCell>
+                                <TableCell>
+                                    <StatusChip status={item.paymentStatus || 'unpaid'} />
+                                </TableCell>
+                            </>
+                        );
+                    }}
+                />
+            )}
 
         </DashboardCard>
     )

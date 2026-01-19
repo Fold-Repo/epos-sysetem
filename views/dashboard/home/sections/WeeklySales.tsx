@@ -1,21 +1,45 @@
 'use client'
 
 import { useState } from 'react'
-import { AreaChart, ChartLegend, DashboardCard } from '@/components'
+import { AreaChart, ChartLegend, DashboardCard, FilterContainer } from '@/components'
+import { MenuDropdown, DatePicker } from '@/components/ui'
+import { StackIcon } from '@/components/icons'
 import { formatCurrency } from '@/lib'
 import { format } from 'date-fns'
 import { ArrowTrendingUpIcon } from '@heroicons/react/24/outline'
+import { useGetWeeklyTrend } from '@/services'
 import { getCurrentWeekSalesData } from '@/data'
 import { CHART_COLORS } from '@/constants'
+import { Spinner } from '@heroui/react'
+
+// ================================
+// FILTER OPTIONS
+// ================================
+const RANGE_OPTIONS = [
+    { label: 'Weekly', key: 'weekly' },
+    { label: 'Monthly', key: 'monthly' },
+    { label: 'Custom', key: 'custom' }
+]
 
 const WeeklySales = () => {
-    
+
     const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({
         sales: true,
         purchases: true,
     });
 
-    const chartData = getCurrentWeekSalesData();
+    const [filterRange, setFilterRange] = useState<string>('weekly');
+    const [dateRange, setDateRange] = useState<{ startDate?: Date; endDate?: Date }>({
+        startDate: undefined,
+        endDate: undefined
+    });
+
+    // ================================
+    // FETCH WEEKLY TREND DATA
+    // ================================
+    const { data: apiData, isLoading } = useGetWeeklyTrend();
+
+    const chartData = apiData || [];
 
     const toggleSeries = (dataKey: string) => {
         setVisibleSeries(prev => ({
@@ -52,7 +76,7 @@ const WeeklySales = () => {
                             const isSales = item.dataKey === 'sales';
                             return (
                                 <div key={index} className="flex items-center gap-2">
-                                    <div 
+                                    <div
                                         className="w-7 h-7 rounded-full flex items-center justify-center"
                                         style={{
                                             backgroundColor: isSales ? CHART_COLORS.sales : CHART_COLORS.purchases
@@ -77,19 +101,68 @@ const WeeklySales = () => {
         return null;
     };
 
+    const getRangeLabel = () => {
+        const current = RANGE_OPTIONS.find(o => o.key === filterRange);
+        return current ? current.label : 'Weekly';
+    };
+
+    const handleRangeChange = (key: string) => {
+        setFilterRange(key);
+        if (key !== 'custom') {
+            setDateRange({ startDate: undefined, endDate: undefined });
+        }
+    };
+
+    const handleDateRangeChange = (value: Date | { startDate: Date; endDate: Date }) => {
+        if ('startDate' in value && 'endDate' in value) {
+            setDateRange({
+                startDate: value.startDate,
+                endDate: value.endDate
+            });
+        }
+    };
+
     return (
-        <DashboardCard title='This Week Sales & Purchases'
-        headerActions={
-            <ChartLegend
-                items={legendItems}
-                onToggle={toggleSeries}
-                indicatorSize="md"
-                textSize="xs"
-                gap="md"
-            />
-        }>
+        <DashboardCard title='Sales & Purchases Trend'
+            headerActions={
+                <div className="flex flex-col items-end gap-2">
+                    {/* Chart Legend */}
+                    <ChartLegend
+                        items={legendItems}
+                        onToggle={toggleSeries}
+                        indicatorSize="md"
+                        textSize="xs"
+                        gap="md"
+                    />
+
+                    <FilterContainer>
+                        <MenuDropdown
+                            label={getRangeLabel()}
+                            startContent={<StackIcon className="text-slate-400" />}
+                            showChevron={false}
+                            items={RANGE_OPTIONS}
+                            value={filterRange}
+                            onChange={handleRangeChange}
+                        />
+                        {filterRange === 'custom' && (
+                            <DatePicker
+                                startDate={dateRange.startDate}
+                                endDate={dateRange.endDate}
+                                range={true}
+                                onChange={handleDateRangeChange}
+                            />
+                        )}
+                    </FilterContainer>
+
+                </div>
+            }>
 
             {/* ================= CHART ================= */}
+            {isLoading ? (
+                <div className="flex items-center justify-center h-full min-h-[20vh]">
+                    <Spinner color="primary" size="lg" />
+                </div>
+            ) : (
             <AreaChart
                 data={chartData}
                 xAxisKey="day"
@@ -126,6 +199,7 @@ const WeeklySales = () => {
                 }}
                 height={300}
             />
+            )}
 
         </DashboardCard>
     )

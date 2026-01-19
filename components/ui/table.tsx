@@ -44,7 +44,7 @@ const TableHead: React.FC<{
     return (
         <th scope={scope} className={cn(
             "px-6 py-3 bg-[#F4F6F8] text-left whitespace-nowrap",
-            "font-semibold text-xs text-gray-700 uppercase tracking-wider",
+            "font-medium text-[11px] text-gray-700 uppercase tracking-wider",
             "sticky top-0 z-10",
             className
         )}>

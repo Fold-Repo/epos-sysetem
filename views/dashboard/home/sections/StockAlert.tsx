@@ -1,15 +1,15 @@
 'use client'
 
-import { FilterBar, DashboardCard, StackIcon, TableComponent, TableCell, Pagination } from '@/components'
-import { Chip, Image } from '@heroui/react'
-import { getStockAlertData } from '@/data'
+import { FilterBar, DashboardCard, StackIcon, TableComponent, TableCell } from '@/components'
+import { Chip, Image, Spinner } from '@heroui/react'
+import { useGetStockAlerts } from '@/services'
 import { getStockCountColor } from '@/utils'
-import React, { useState } from 'react'
+import React from 'react'
 
 const columns = [
     { key: "productName", title: "Product Name" },
     { key: "code", title: "Code" },
-    { key: "warehouse", title: "Warehouse" },
+    { key: "warehouse", title: "Store" },
     { key: "currentStock", title: "Current Stock" },
     { key: "quantity", title: "Quantity" },
     { key: "alertQuantity", title: "Alert Quantity" }
@@ -17,10 +17,7 @@ const columns = [
 
 const StockAlert = () => {
 
-    const stockData = getStockAlertData();
-    const [currentPage, setCurrentPage] = useState(1)
-    const totalItems = 400
-    const itemsPerPage = 25
+    const { data: stockData = [], isLoading } = useGetStockAlerts();
 
     return (
         <DashboardCard
@@ -28,42 +25,20 @@ const StockAlert = () => {
             bodyClassName='space-y-4'
             title="Stock Alert">
 
-            <FilterBar
-                searchInput={{
-                    placeholder: 'Search by product name, code or warehouse',
-                }}
-                items={[
-                    {
-                        type: 'dropdown',
-                        label: 'Warehouse: All',
-                        startContent: <StackIcon className="text-slate-400" />,
-                        showChevron: false,
-                        items: [
-                            { label: 'All', key: 'all' },
-                            { label: 'General Warehouse', key: 'general' },
-                            { label: 'Warehouse', key: 'warehouse' }
-                        ],
-                        value: '',
-                        onChange: (key) => {
-                            console.log('Warehouse changed:', key)
-                        }
-                    }
-                ]}
-            />
-
             <TableComponent
                 className='border border-gray-100 overflow-hidden rounded-xl'
                 columns={columns}
                 data={stockData}
                 rowKey={(item) => `${item.code}-${item.warehouse}`}
+                loading={isLoading}
                 renderRow={(item) => {
                     return (
                         <>
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     {item.productImage && (
-                                        <Image 
-                                            src={item.productImage} 
+                                        <Image
+                                            src={item.productImage}
                                             alt={item.productName}
                                             className="w-full h-full min-w-8 max-h-8 object-cover rounded-md shrink-0"
                                             fallbackSrc="/img/file-blank.png"
@@ -79,7 +54,7 @@ const StockAlert = () => {
                                 <span className='text-xs text-dark'>{item.warehouse}</span>
                             </TableCell>
                             <TableCell>
-                                <Chip size="md" 
+                                <Chip size="md"
                                     variant="flat"
                                     className="bg-yellow-50 text-yellow-600 text-[11px]">
                                     {item.currentStock} {item.currentStockUnit}
@@ -102,15 +77,6 @@ const StockAlert = () => {
                         </>
                     );
                 }}
-            />
-
-            <Pagination
-                className='px-4'
-                currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                showingText="items"
             />
 
         </DashboardCard>

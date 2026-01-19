@@ -64,7 +64,7 @@ const MetricCard = ({
 
       <div className="flex items-center justify-between">
 
-        <h3 className="text-xs 2xl:text-sm text-gray-500">
+        <h3 className="text-xs text-gray-500">
           {title}
         </h3>
 
@@ -79,10 +79,10 @@ const MetricCard = ({
 
       </div>
 
-      <h2 className='text-xl font-semibold text-black'>{value}</h2>
+      <h2 className='text-lg font-medium text-black'>{value}</h2>
 
       {description && (
-        <p className={`text-xs pt-1 ${useColorForDescription && colorClass ? colorClass : 'text-gray-400'}`}>     {description}
+        <p className={`text-[12px] pt-1 ${useColorForDescription && colorClass ? colorClass : 'text-gray-400'}`}>     {description}
         </p>
       )}
 
