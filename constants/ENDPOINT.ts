@@ -52,5 +52,6 @@ export const ENDPOINT = {
     QUOTATIONS: '/qoutations',
     ADJUSTMENTS: '/adjustments',
     BUSINESS_USERS: '/business-users',
+    DASHBOARD: '/dashboard',
 
 } as const;

@@ -106,11 +106,9 @@ const AdjustmentView = () => {
 
     const confirmDelete = async () => {
         if (isBulkDelete && selectedAdjustments.length > 0) {
-            // TODO: Implement bulk delete
             console.log('Delete adjustments:', selectedAdjustments.map(a => a.id))
             setSelectedAdjustments([])
         } else if (deleteAdjustmentId) {
-            // TODO: Implement delete
             console.log('Delete adjustment with id:', deleteAdjustmentId)
         }
         onDeleteModalClose()
