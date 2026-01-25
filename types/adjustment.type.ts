@@ -129,3 +129,21 @@ export interface AdjustmentQueryParams {
     startDate?: string;
     endDate?: string;
 }
+
+// ================================
+// ADJUSTMENT SUMMARY TYPES
+// ================================
+export interface AdjustmentSummaryMetric {
+    count: number;
+    last_month: number;
+    percentage_change: number;
+}
+
+export interface AdjustmentSummaryResponse {
+    status: number;
+    data: {
+        total_adjustments: AdjustmentSummaryMetric;
+        positive_adjustments: AdjustmentSummaryMetric;
+        negative_adjustments: AdjustmentSummaryMetric;
+    };
+}

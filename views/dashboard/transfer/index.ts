@@ -1,5 +1,6 @@
 export { default as TransferView } from './TransferView'
 export { default as TransferTable } from './TransferTable'
+export { default as TransferForm } from './TransferForm'
 export { default as CreateTransferView } from './create'
 export { default as EditTransferView } from './edit'
 export { default as TransferDetailsView } from './TransferDetailsView'

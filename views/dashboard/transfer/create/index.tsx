@@ -2,18 +2,23 @@
 
 import { DashboardBreadCrumb } from '@/components'
 import TransferForm from '../TransferForm'
-import { useToast, useGoBack } from '@/hooks'
-import { CreateTransferFormData, UpdateTransferFormData } from '@/types'
+import { useGoBack } from '@/hooks'
+import { CreateTransferPayload } from '@/types'
+import { useCreateTransfer } from '@/services'
+import { getErrorMessage } from '@/utils'
 
 const CreateTransferView = () => {
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
 
-    const handleSubmit = (formData: CreateTransferFormData | UpdateTransferFormData) => {
-        const createData = formData as CreateTransferFormData
-        console.log('Create transfer:', createData)
-        showSuccess('Transfer created', 'Transfer created successfully.')
-        // router.push('/dashboard/transfers')
+    const { mutateAsync: createTransfer, isPending } = useCreateTransfer()
+
+    const handleSubmit = async (formData: CreateTransferPayload) => {
+        try {
+            await createTransfer(formData)
+            goBack()
+        } catch (error) {
+            console.error(getErrorMessage(error))
+        }
     }
 
     return (
@@ -32,6 +37,7 @@ const CreateTransferView = () => {
                     onSubmit={handleSubmit}
                     onCancel={goBack}
                     submitButtonText="Create Transfer"
+                    isLoading={isPending}
                 />
             </div>
         </>
@@ -39,4 +45,3 @@ const CreateTransferView = () => {
 }
 
 export default CreateTransferView
-

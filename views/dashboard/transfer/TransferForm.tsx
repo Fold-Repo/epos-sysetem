@@ -1,34 +1,24 @@
 'use client'
 
-import { DashboardCard, CustomAutocomplete } from '@/components'
-import { SummaryBox, FormFieldsGrid, OrderItemsTable } from '@/views/dashboard/components'
-import { productsData, storesData } from '@/data'
-import { useProductSelection, BaseProductItem, useOrderTotals } from '@/hooks'
+import { DashboardCard, ProductSelect, Input, TextArea, Select, createInputLabel, TableComponent, TableCell } from '@/components'
+import { TrashIcon } from '@/components/icons'
 import { useState, useEffect } from 'react'
-import { formatCurrency, getCurrencySymbol } from '@/lib'
 import { Button } from '@heroui/react'
-import { CreateTransferFormData, UpdateTransferFormData, TransferType } from '@/types'
-
-interface TransferItem extends BaseProductItem {
-    quantity: number
-    netUnitPrice: number
-    discount: number
-    tax: number
-    subtotal: number
-}
+import { CreateTransferPayload } from '@/types'
+import { useAppSelector, selectStores } from '@/store'
 
 interface TransferFormProps {
     mode: 'create' | 'edit'
-    initialData?: TransferType & {
-        items?: TransferItem[]
-        orderTax?: string
-        orderDiscount?: string
-        shipping?: string
-        orderTaxIsPercentage?: boolean
-        orderDiscountIsPercentage?: boolean
-        note?: string
+    initialData?: {
+        from_store_id?: number
+        to_store_id?: number
+        product_id?: number
+        quantity?: number
+        variation_id?: number | null
+        status?: 'pending' | 'transferred' | 'received' | 'cancelled'
+        notes?: string
     }
-    onSubmit: (data: CreateTransferFormData | UpdateTransferFormData) => void
+    onSubmit: (data: CreateTransferPayload) => void
     onCancel: () => void
     isLoading?: boolean
     submitButtonText?: string
@@ -41,103 +31,75 @@ const TransferForm = ({
     onSubmit,
     onCancel,
     isLoading = false,
-    submitButtonText,
+    submitButtonText = 'Create Transfer',
     cancelButtonText = 'Cancel'
 }: TransferFormProps) => {
     
+    const stores = useAppSelector((state: any) => state.stores?.stores || [])
+    
     const [fromStoreId, setFromStoreId] = useState<string>('')
     const [toStoreId, setToStoreId] = useState<string>('')
-    const [orderTax, setOrderTax] = useState('')
-    const [orderTaxIsPercentage, setOrderTaxIsPercentage] = useState(true)
-    const [orderDiscount, setOrderDiscount] = useState('')
-    const [orderDiscountIsPercentage, setOrderDiscountIsPercentage] = useState(false)
-    const [shipping, setShipping] = useState('')
-    const [status, setStatus] = useState('')
-    const [note, setNote] = useState('')
-
-    const { selectedProductId, items: transferItems, setItems,
-        clearItems,
-        handleProductSelect, updateItem, deleteItem, productOptions }
-        = useProductSelection<TransferItem>({
-            products: productsData,
-            itemMapper: (product, id) => {
-                const price = product.price || 0
-                const discount = product.discount || 0
-                const tax = product.tax || 0
-                return {
-                    id,
-                    productId: product.id,
-                    name: product.name,
-                    code: product.code,
-                    stock: product.stock,
-                    unit: product.unit,
-                    quantity: 1,
-                    netUnitPrice: price,
-                    discount: discount,
-                    tax: tax,
-                    subtotal: price
-                }
-            },
-            duplicateErrorTitle: 'Product already added',
-            duplicateErrorMessage: (productName) => `"${productName}" is already in the transfer items list.`,
-            onItemUpdate: (item, field) => {
-                // =========================
-                // AUTO-CALCULATE SUBTOTAL
-                // =========================
-                if (field === 'quantity') {
-                    const price = item.netUnitPrice * (item.quantity || 1)
-                    const subtotal = price
-                    return { subtotal } as Partial<TransferItem>
-                }
-                return {}
-            }
-        })
-
-    const storeOptions = storesData
-        .filter(s => s.id !== undefined)
-        .map(s => ({ value: String(s.id!), label: s.name }))
+    const [productId, setProductId] = useState<string>('')
+    const [quantity, setQuantity] = useState<string>('')
+    const [status, setStatus] = useState<'pending' | 'transferred' | 'received' | 'cancelled'>('pending')
+    const [notes, setNotes] = useState('')
+    const [variationId, setVariationId] = useState<number | null>(null)
+    
+    // Product item state for table display
+    const [selectedProduct, setSelectedProduct] = useState<{
+        id: string
+        productId: string
+        name: string
+        code: string
+        quantity: number
+        variationId?: number | null
+        variationType?: string | null
+        variationValue?: string | null
+    } | null>(null)
 
     // =========================
     // LOAD INITIAL DATA (EDIT MODE)
     // =========================
     useEffect(() => {
         if (mode === 'edit' && initialData) {
-            setFromStoreId(initialData.fromStoreId || '')
-            setToStoreId(initialData.toStoreId || '')
-            setOrderTax(initialData.orderTax || '')
-            setOrderTaxIsPercentage(initialData.orderTaxIsPercentage ?? true)
-            setOrderDiscount(initialData.orderDiscount || '')
-            setOrderDiscountIsPercentage(initialData.orderDiscountIsPercentage ?? false)
-            setShipping(initialData.shipping || '')
-            setStatus(initialData.status || '')
-            setNote(initialData.note || '')
+            setFromStoreId(initialData.from_store_id?.toString() || '')
+            setToStoreId(initialData.to_store_id?.toString() || '')
+            setProductId(initialData.product_id?.toString() || '')
+            setQuantity(initialData.quantity?.toString() || '')
+            setStatus(initialData.status || 'pending')
+            setNotes(initialData.notes || '')
+            setVariationId(initialData.variation_id || null)
             
-            if (initialData.items) {
-                setItems(initialData.items)
+            // Set selected product for table display (if we have product info)
+            if (initialData.product_id) {
+                setSelectedProduct({
+                    id: 'transfer-item-1',
+                    productId: initialData.product_id.toString(),
+                    name: 'Product', // Will be populated from API in real scenario
+                    code: '',
+                    quantity: initialData.quantity || 1,
+                    variationId: initialData.variation_id || null
+                })
             }
         }
-    }, [mode, initialData, setItems])
+    }, [mode, initialData])
 
-    // =========================
-    // CALCULATE TOTALS
-    // =========================
-    const totals = useOrderTotals({
-        items: transferItems,
-        orderTax,
-        orderDiscount,
-        shipping,
-        orderTaxIsPercentage,
-        orderDiscountIsPercentage
-    })
+    const storeOptions = stores.map((store: any) => ({
+        value: store.store_id.toString(),
+        label: store.name
+    }))
+
+    const statusOptions = [
+        { value: 'pending', label: 'Pending' },
+        { value: 'transferred', label: 'Transferred' },
+        { value: 'received', label: 'Received' },
+        { value: 'cancelled', label: 'Cancelled' },
+    ]
 
     const handleSubmit = () => {
         // =========================
         // VALIDATION
         // =========================
-        if (transferItems.length === 0) {
-            return
-        }
-
         if (!fromStoreId || !toStoreId) {
             return
         }
@@ -146,203 +108,207 @@ const TransferForm = ({
             return
         }
 
-        // =========================
-        // MAP ITEMS TO BACKEND FORMAT
-        // =========================
-        const transferItemsData = transferItems.map(item => ({
-            product_id: parseInt(item.productId),
-            quantity: item.quantity,
-            ...(mode === 'edit' && { transfer_item_id: '' })
-        }))
+        if (!selectedProduct || !quantity) {
+            return
+        }
 
         // =========================
         // CONSTRUCT FORM DATA
         // =========================
-        if (mode === 'edit' && initialData?.id) {
-            const formData: UpdateTransferFormData = {
-                transfer_id: initialData.id,
-                from_store_id: fromStoreId,
-                to_store_id: toStoreId,
-                transfer_items: transferItemsData,
-                order_tax: Number(orderTax || 0),
-                order_discount: Number(orderDiscount || 0),
-                shipping: Number(shipping || 0),
-                status: status || 'pending',
-                note: note || '',
-                grand_total: totals.grandTotal
-            }
-            onSubmit(formData)
-        } else {
-            const formData: CreateTransferFormData = {
-                from_store_id: fromStoreId,
-                to_store_id: toStoreId,
-                transfer_items: transferItemsData,
-                order_tax: Number(orderTax || 0),
-                order_discount: Number(orderDiscount || 0),
-                shipping: Number(shipping || 0),
-                status: status || 'pending',
-                note: note || '',
-                grand_total: totals.grandTotal
-            }
-            onSubmit(formData)
+        const formData: CreateTransferPayload = {
+            from_store_id: parseInt(fromStoreId),
+            to_store_id: parseInt(toStoreId),
+            product_id: parseInt(productId),
+            quantity: parseInt(quantity),
+            status: status,
+            notes: notes || '',
+            ...(variationId && { variation_id: variationId })
         }
+
+        onSubmit(formData)
     }
 
-    const isSubmitDisabled = transferItems.length === 0 || !fromStoreId || !toStoreId || fromStoreId === toStoreId
+    const isSubmitDisabled = !fromStoreId || !toStoreId || fromStoreId === toStoreId || !selectedProduct || !quantity
 
     return (
-        <DashboardCard bodyClassName='space-y-2'>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 space-y-3">
-                <CustomAutocomplete
+        <DashboardCard bodyClassName='space-y-4'>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                    name="from_store_id"
+                    label={createInputLabel({
+                        name: "From Store",
+                        required: true
+                    })}
+                    value={fromStoreId}
+                    onChange={(e) => setFromStoreId(e.target.value)}
+                    radius="lg">
+                    <option value="" disabled>Select Source Store</option>
+                    {storeOptions.map((option: { value: string; label: string }) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </Select>
+
+                <Select
+                    name="to_store_id"
+                    label={createInputLabel({
+                        name: "To Store",
+                        required: true
+                    })}
+                    value={toStoreId}
+                    onChange={(e) => setToStoreId(e.target.value)}
+                    radius="lg">
+                    <option value="" disabled>Select Destination Store</option>
+                    {storeOptions.map((option: { value: string; label: string }) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </Select>
+
+                <ProductSelect
                     name="product"
                     label="Product"
-                    placeholder="Search Product by Code Name"
+                    placeholder="Search Product"
                     radius="lg"
                     inputSize="sm"
-                    options={productOptions}
-                    value={selectedProductId}
-                    onChange={(value) => {
-                        if (typeof value === 'string') {
-                            handleProductSelect(value)
+                    limit={20}
+                    existingItems={[]}
+                    itemMapper={(product, id) => ({
+                        id,
+                        productId: product.id,
+                        name: product.name,
+                        code: product.code,
+                        stock: product.stock,
+                        unit: product.unit,
+                        quantity: 1,
+                        type: 'positive' as const,
+                        productType: (product as any).variationId ? 'Variation' as const : 'Simple' as const,
+                        ...((product as any).variationId && {
+                            variationId: (product as any).variationId,
+                            variationType: (product as any).variationType,
+                            variationValue: (product as any).variationValue
+                        })
+                    })}
+                    onItemAdd={(item) => {
+                        setProductId(item.productId)
+                        setQuantity('1') // Set default quantity
+                        if (item.variationId) {
+                            setVariationId(item.variationId)
                         }
+                        
+                        // Set selected product for table display
+                        setSelectedProduct({
+                            id: 'transfer-item-1',
+                            productId: item.productId,
+                            name: item.name,
+                            code: item.code,
+                            quantity: 1,
+                            variationId: item.variationId || null,
+                            variationType: item.variationType || null,
+                            variationValue: item.variationValue || null
+                        })
                     }}
                 />
 
-                <CustomAutocomplete
-                    name="from-store"
-                    label="From Store"
-                    placeholder="Choose From Store"
-                    radius="lg"
-                    inputSize="sm"
-                    options={storeOptions}
-                    value={fromStoreId}
-                    onChange={(value) => {
-                        if (typeof value === 'string') {
-                            setFromStoreId(value)
-                        }
-                    }}
-                />
 
-                <CustomAutocomplete
-                    name="to-store"
-                    label="To Store"
-                    placeholder="Choose To Store"
-                    radius="lg"
-                    inputSize="sm"
-                    options={storeOptions}
-                    value={toStoreId}
-                    onChange={(value) => {
-                        if (typeof value === 'string') {
-                            setToStoreId(value)
-                        }
-                    }}
-                />
+                <Select
+                    name="status"
+                    label={createInputLabel({
+                        name: "Status",
+                        required: false
+                    })}
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as 'pending' | 'transferred' | 'received' | 'cancelled')}
+                    radius="lg">
+                    {statusOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </Select>
             </div>
 
             {/* ============================== */}
-            {/* ===== PRODUCT TABLE===== */}
+            {/* ===== PRODUCT TABLE ===== */}
             {/* ============================== */}
-            <OrderItemsTable
-                items={transferItems}
-                onQuantityChange={(itemId, quantity) => updateItem(itemId, 'quantity', quantity)}
-                onDelete={deleteItem}
-            />
+            {selectedProduct && (
+                <div className="space-y-2">
+                    <h6 className="text-xs font-medium text-gray-700">Selected Product</h6>
+                    <TableComponent
+                        columns={[
+                            { key: 'product', title: 'PRODUCT' },
+                            { key: 'qty', title: 'QUANTITY' },
+                            { key: 'action', title: 'ACTION' }
+                        ]}
+                        data={[selectedProduct]}
+                        rowKey={(item) => item.id}
+                        renderRow={(item) => {
+                            return (
+                                <>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs text-gray-900 font-medium">
+                                                {item.name}
+                                            </span>
+                                            <span className="text-[11px] text-gray-600 underline mt-0.5">
+                                                {item.code}
+                                            </span>
+                                            {item.variationType && item.variationValue && (
+                                                <span className="text-[11px] text-gray-500 mt-0.5">
+                                                    {item.variationType}: {item.variationValue}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Input 
+                                            name="quantity"
+                                            type="number"
+                                            min={1}
+                                            value={String(item.quantity)}
+                                            onChange={(e) => {
+                                                const qty = parseInt(e.target.value) || 1
+                                                if (qty < 1) return
+                                                setQuantity(String(qty))
+                                                setSelectedProduct({
+                                                    ...item,
+                                                    quantity: qty
+                                                })
+                                            }}
+                                            className="w-20 h-9"
+                                            inputSize="sm"
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            isIconOnly
+                                            size="sm"
+                                            variant="light"
+                                            className="text-red-500 hover:text-red-600"
+                                            onPress={() => {
+                                                setSelectedProduct(null)
+                                                setProductId('')
+                                                setQuantity('')
+                                                setVariationId(null)
+                                            }}>
+                                            <TrashIcon className="size-4" />
+                                        </Button>
+                                    </TableCell>
+                                </>
+                            )
+                        }}
+                        withCheckbox={false}
+                        loading={false}
+                    />
+                </div>
+            )}
 
-            {/* ============================== */}
-            {/* ===== SUMMARY BOX ===== */}
-            {/* ============================== */}
-            <SummaryBox
-                items={[
-                    {
-                        label: 'Order Tax',
-                        value: `${formatCurrency(totals.orderTaxAmount)} (${Number(orderTax) || 0}${orderTaxIsPercentage ? '%' : ''})`
-                    },
-                    {
-                        label: 'Discount',
-                        value: `${formatCurrency(totals.orderDiscount)} (${Number(orderDiscount) || 0}${orderDiscountIsPercentage ? '%' : ''})`
-                    },
-                    {
-                        label: 'Shipping',
-                        value: totals.shipping
-                    },
-                    {
-                        label: 'Grand Total',
-                        value: totals.grandTotal,
-                        isTotal: true
-                    }
-                ]}
-            />
-
-            {/* ============================== */}
-            {/* ===== FORM FIELDS GRID ===== */}
-            {/* ============================== */}
-            <FormFieldsGrid
-                columns={4}
-                fields={[
-                    {
-                        name: 'order-tax',
-                        label: 'Order Tax',
-                        type: 'number',
-                        placeholder: '0.00',
-                        value: orderTax,
-                        onChange: (e) => setOrderTax(e.target.value),
-                        endSelectOptions: [
-                            { value: 'percentage', label: '%' },
-                            { value: 'fixed', label: getCurrencySymbol() }
-                        ],
-                        endSelectValue: orderTaxIsPercentage ? 'percentage' : 'fixed',
-                        onEndSelectChange: (value) => setOrderTaxIsPercentage(value === 'percentage'),
-                    },
-                    {
-                        name: 'order-discount',
-                        label: 'Order Discount',
-                        type: 'number',
-                        placeholder: '0.00',
-                        value: orderDiscount,
-                        onChange: (e) => setOrderDiscount(e.target.value),
-                        endSelectOptions: [
-                            { value: 'percentage', label: '%' },
-                            { value: 'fixed', label: getCurrencySymbol() }
-                        ],
-                        endSelectValue: orderDiscountIsPercentage ? 'percentage' : 'fixed',
-                        onEndSelectChange: (value) => setOrderDiscountIsPercentage(value === 'percentage'),
-                    },
-                    {
-                        name: 'shipping',
-                        label: 'Shipping',
-                        type: 'number',
-                        placeholder: '0.00',
-                        value: shipping,
-                        isCurrency: true,
-                        onChange: (e) => setShipping(e.target.value),
-                        startContent: <span className="text-xs text-gray-600">{getCurrencySymbol()}</span>
-                    },
-                    {
-                        name: 'status',
-                        label: 'Status',
-                        type: 'select',
-                        value: status,
-                        onChange: (e) => setStatus(e.target.value),
-                        options: [
-                            { value: '', label: 'Select Status' },
-                            { value: 'pending', label: 'Pending' },
-                            { value: 'sent', label: 'Sent' },
-                            { value: 'in-transit', label: 'In-Transit' },
-                            { value: 'ongoing', label: 'Ongoing' },
-                            { value: 'completed', label: 'Completed' }
-                        ]
-                    },
-                    {
-                        name: 'notes',
-                        label: 'Notes',
-                        type: 'textarea',
-                        placeholder: 'Enter Notes',
-                        value: note,
-                        onChange: (e) => setNote(e.target.value),
-                        colSpan: 2,
-                        formGroupClass: 'col-span-2'
-                    }
-                ]}
+            <TextArea
+                name="notes"
+                label={createInputLabel({
+                    name: "Notes",
+                    required: true
+                })}
+                placeholder="Transfer for branch store inventory"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
             />
 
             <div className="flex items-center gap-3 justify-end p-3">
@@ -351,8 +317,7 @@ const TransferForm = ({
                     size='sm' 
                     color='danger' 
                     className='px-4 h-9'
-                    isDisabled={isLoading}
-                >
+                    isDisabled={isLoading}>
                     {cancelButtonText}
                 </Button>
 
@@ -360,8 +325,9 @@ const TransferForm = ({
                     onPress={handleSubmit} 
                     size='sm' 
                     isDisabled={isSubmitDisabled || isLoading}
+                    isLoading={isLoading}
                     className='px-4 bg-primary text-white h-9'>
-                    {submitButtonText || (mode === 'edit' ? 'Update Transfer' : 'Create Transfer')}
+                    {submitButtonText}
                 </Button>
             </div>
         </DashboardCard>
@@ -369,4 +335,3 @@ const TransferForm = ({
 }
 
 export default TransferForm
-

@@ -3,33 +3,35 @@
 import { TableCell, TableComponent, TrashIcon } from '@/components'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
-import { ExpenseType } from '@/types'
+import { Expense } from '@/types'
 import moment from 'moment'
 import { formatCurrency } from '@/lib'
 
 interface ExpensesListTableProps {
-    data: ExpenseType[]
-    onEdit?: (expense: ExpenseType) => void
-    onDelete?: (expenseId: string) => void
+    data: Expense[]
+    isLoading?: boolean
+    onEdit?: (expense: Expense) => void
+    onDelete?: (expenseId: number) => void
 }
 
 const columns = [
     { key: 'reference', title: 'REFERENCE' },
     { key: 'user', title: 'USER' },
-    { key: 'expenseTitle', title: 'EXPENSE TITLE' },
-    { key: 'expenseCategory', title: 'EXPENSE CATEGORY' },
+    { key: 'title', title: 'EXPENSE TITLE' },
+    { key: 'expense_category', title: 'EXPENSE CATEGORY' },
     { key: 'amount', title: 'AMOUNT' },
-    { key: 'created_at', title: 'CREATED ON' },
+    { key: 'created_on', title: 'CREATED ON' },
     { key: 'actions', title: 'ACTION' }
 ]
 
 const ExpensesListTable = ({
     data,
+    isLoading = false,
     onEdit,
     onDelete
 }: ExpensesListTableProps) => {
 
-    const renderRow = (expense: ExpenseType) => {
+    const renderRow = (expense: Expense) => {
         return (
             <>
                 <TableCell>
@@ -39,10 +41,10 @@ const ExpensesListTable = ({
                     <span className='text-xs'>{expense.user}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{expense.expenseTitle}</span>
+                    <span className='text-xs'>{expense.title}</span>
                 </TableCell>
                 <TableCell>
-                    <span className='text-xs'>{expense.expenseCategory}</span>
+                    <span className='text-xs'>{expense.expense_category}</span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs font-medium'>
@@ -51,8 +53,8 @@ const ExpensesListTable = ({
                 </TableCell>
                 <TableCell>
                     <span className='text-xs'>
-                        {expense.created_at 
-                            ? moment(expense.created_at).format('LLL')
+                        {expense.created_on 
+                            ? moment(expense.created_on).format('LLL')
                             : '-'}
                     </span>
                 </TableCell>
@@ -68,7 +70,7 @@ const ExpensesListTable = ({
                         </Button>
 
                         <Button 
-                            onPress={() => onDelete?.(String(expense.id))} 
+                            onPress={() => onDelete?.(expense.expense_id)} 
                             isIconOnly 
                             size='sm' 
                             className='bg-gray-100/80 text-danger' 
@@ -86,10 +88,10 @@ const ExpensesListTable = ({
             className='border border-gray-200 overflow-hidden rounded-xl'
             columns={columns}
             data={data}
-            rowKey={(item) => String(item.id || `expense-${Math.random()}`)}
+            rowKey={(item) => String(item.expense_id || `expense-${Math.random()}`)}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={isLoading}
         />
     )
 }

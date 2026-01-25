@@ -1,4 +1,23 @@
 // ================================
+// QUOTATION SUMMARY TYPES
+// ================================
+export interface QuotationSummaryMetric {
+    count: number;
+    last_month: number;
+    percentage_change: number;
+}
+
+export interface QuotationSummaryResponse {
+    status: number;
+    data: {
+        total_quotations: QuotationSummaryMetric;
+        sent_quotations: QuotationSummaryMetric;
+        approved_quotations: QuotationSummaryMetric;
+        draft_quotations: QuotationSummaryMetric;
+    };
+}
+
+// ================================
 // QUOTATION TYPE (UI)
 // ================================
 export interface QuotationType {

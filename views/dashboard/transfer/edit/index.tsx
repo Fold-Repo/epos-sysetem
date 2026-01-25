@@ -1,96 +1,108 @@
 'use client'
 
 import { DashboardBreadCrumb, DashboardCard } from '@/components'
-import { useToast, useGoBack } from '@/hooks'
-import { UpdateTransferFormData, CreateTransferFormData } from '@/types'
-import { transfersData, productsData } from '@/data'
-import { useState, useEffect } from 'react'
+import { useGoBack } from '@/hooks'
+import { CreateTransferPayload, UpdateTransferPayload } from '@/types'
 import { useParams } from 'next/navigation'
 import TransferForm from '../TransferForm'
-
-interface TransferItem {
-    id: string
-    productId: string
-    name: string
-    code: string
-    stock: number
-    unit: string
-    quantity: number
-    netUnitPrice: number
-    discount: number
-    tax: number
-    subtotal: number
-}
+import { useGetTransferDetail, useUpdateTransfer } from '@/services'
+import { useMemo } from 'react'
 
 const EditTransferView = () => {
+
     const params = useParams()
     const transferId = params?.id as string
     const goBack = useGoBack()
-    const { showError, showSuccess } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
-    const [initialData, setInitialData] = useState<any>(null)
+    
+    // ================================
+    // FETCH TRANSFER DETAILS
+    // ================================
+    const { data: transfer, isLoading } = useGetTransferDetail(Number(transferId))
+    const updateTransferMutation = useUpdateTransfer()
 
-    // =========================
-    // LOAD MOCK DATA
-    // =========================
-    useEffect(() => {
-        const mockTransfer = transfersData[0]
-        
-        if (mockTransfer) {
-            const mockItems: TransferItem[] = productsData.slice(0, 3).map((product, index) => {
-                const price = product.price || 0
-                const discount = product.discount || 0
-                const tax = product.tax || 0
-                const quantity = index + 1
-                const subtotal = price * quantity
-                
-                return {
-                    id: `item-${index}-${Date.now()}`,
-                    productId: product.id,
-                    name: product.name,
-                    code: product.code,
-                    stock: product.stock,
-                    unit: product.unit,
-                    quantity: quantity,
-                    netUnitPrice: price,
-                    discount: discount,
-                    tax: tax,
-                    subtotal: subtotal
-                }
-            })
-            
-            setInitialData({
-                ...mockTransfer,
-                fromStoreId: '1',
-                toStoreId: '2',
-                items: mockItems,
-                orderTax: '10',
-                orderDiscount: '50',
-                shipping: '20',
-                orderTaxIsPercentage: true,
-                orderDiscountIsPercentage: false,
-                status: 'sent',
-                note: 'This is a mock transfer for editing purposes.'
-            })
+    // ================================
+    // TRANSFORM TRANSFER DATA TO FORM INITIAL DATA
+    // ================================
+    const initialData = useMemo(() => {
+        if (!transfer) return null
+
+        return {
+            from_store_id: transfer.from_store_id,
+            to_store_id: transfer.to_store_id,
+            product_id: transfer.product_id,
+            quantity: transfer.quantity,
+            variation_id: transfer.variation_id,
+            status: transfer.status,
+            notes: transfer.notes
+        }
+    }, [transfer])
+
+    // ================================
+    // HANDLE FORM SUBMIT
+    // ================================
+    const handleSubmit = (formData: CreateTransferPayload | UpdateTransferPayload) => {
+        const payload: UpdateTransferPayload = {
+            from_store_id: formData.from_store_id,
+            to_store_id: formData.to_store_id,
+            product_id: formData.product_id,
+            quantity: formData.quantity,
+            variation_id: formData.variation_id,
+            status: formData.status,
+            notes: formData.notes
         }
         
-        setIsLoading(false)
-    }, [])
-
-    const handleSubmit = (formData: CreateTransferFormData | UpdateTransferFormData) => {
-        const updateData = formData as UpdateTransferFormData
-        console.log('Update transfer:', updateData)
-        showSuccess('Transfer updated', 'Transfer updated successfully.')
-        // router.push('/dashboard/transfers')
+        updateTransferMutation.mutate(
+            { id: Number(transferId), payload },
+            {
+                onSuccess: () => {
+                    goBack()
+                }
+            }
+        )
     }
 
+    // ================================
+    // LOADING STATE
+    // ================================
     if (isLoading) {
         return (
-            <div className="p-3">
-                <DashboardCard>
-                    <div className="p-4 text-center">Loading...</div>
-                </DashboardCard>
-            </div>
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Transfers', href: '/dashboard/transfers' },
+                        { label: 'Edit Transfer' }
+                    ]}
+                    title='Edit Transfer'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
+        )
+    }
+
+    if (!transfer || !initialData) {
+        return (
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Transfers', href: '/dashboard/transfers' },
+                        { label: 'Edit Transfer' }
+                    ]}
+                    title='Edit Transfer'
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 text-center text-gray-500">
+                            Transfer not found
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
         )
     }
 
@@ -99,7 +111,8 @@ const EditTransferView = () => {
             <DashboardBreadCrumb
                 items={[
                     { label: 'Transfers', href: '/dashboard/transfers' },
-                    { label: 'Edit Transfer' }
+                    { label: `Transfer #${transfer.transfer_id}`, href: `/dashboard/transfers/${transferId}` },
+                    { label: 'Edit' }
                 ]}
                 title='Edit Transfer'
             />
@@ -110,6 +123,7 @@ const EditTransferView = () => {
                     initialData={initialData}
                     onSubmit={handleSubmit}
                     onCancel={goBack}
+                    isLoading={updateTransferMutation.isPending}
                     submitButtonText="Update Transfer"
                 />
             </div>

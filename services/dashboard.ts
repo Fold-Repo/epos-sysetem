@@ -1,3 +1,5 @@
+'use client'
+
 import { useQuery } from "@tanstack/react-query";
 import { ENDPOINT } from "@/constants";
 import { client } from "@/lib";
@@ -31,23 +33,21 @@ export interface WeeklyTrendDataPoint extends Record<string, unknown> {
 // ================================
 export async function getWeeklyTrend(): Promise<WeeklyTrendDataPoint[]> {
     try {
-        const response = await client.get<WeeklyTrendResponse>(`${ENDPOINT.DASHBOARD}/weekly-trend`);
-        
+        const response = await client.get<WeeklyTrendResponse>(ENDPOINT.DASHBOARD.WEEKLY_TREND);
+
         if (!response.data?.data) {
             throw new Error('Invalid API response');
         }
-        
+
         const { labels, sales, purchases } = response.data.data;
-        
+
         if (!labels || !Array.isArray(labels) || labels.length === 0) {
             throw new Error('Invalid labels data');
         }
-        
-        // Calculate the current week's start date (Sunday)
+
         const today = new Date();
         const weekStart = startOfWeek(today, { weekStartsOn: 0 });
-        
-        // Map day labels to day offsets (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6, Sun=0)
+
         const dayOffsetMap: Record<string, number> = {
             'Mon': 1,
             'Tue': 2,
@@ -59,12 +59,12 @@ export async function getWeeklyTrend(): Promise<WeeklyTrendDataPoint[]> {
             'Sat': 6,
             'Sun': 0,
         };
-        
+
         // Transform API response to chart data format
         return labels.map((label, index) => {
             const dayOffset = dayOffsetMap[label] ?? index;
             const date = addDays(weekStart, dayOffset);
-            
+
             return {
                 day: label,
                 purchases: purchases?.[index] || 0,
@@ -132,14 +132,14 @@ const DISTRIBUTION_COLORS = ['yellow', 'purple', 'green', 'purpleLight', 'blue',
 // ================================
 export async function getRevenueData(): Promise<RevenueDistributionDataPoint[]> {
     try {
-        const response = await client.get<RevenueDataResponse>(`${ENDPOINT.DASHBOARD}/revenue-data`);
-        
+        const response = await client.get<RevenueDataResponse>(ENDPOINT.DASHBOARD.REVENUE_DATA);
+
         if (!response.data?.data?.distribution) {
             throw new Error('Invalid API response');
         }
-        
+
         const { distribution } = response.data.data;
-        
+
         // Transform API response to component format
         return distribution.map((item, index) => ({
             label: item.name,
@@ -183,14 +183,14 @@ export interface RevenueBreakdownResponse {
 // ================================
 export async function getRevenueBreakdownData(): Promise<RevenueBreakdownResponse> {
     try {
-        const response = await client.get<RevenueDataResponse>(`${ENDPOINT.DASHBOARD}/revenue-data`);
-        
+        const response = await client.get<RevenueDataResponse>(ENDPOINT.DASHBOARD.REVENUE_DATA);
+
         if (!response.data?.data?.breakdown) {
             throw new Error('Invalid API response');
         }
-        
+
         const { breakdown } = response.data.data;
-        
+
         // Transform API response to component format
         const data = breakdown.items.map((item) => ({
             name: item.label,
@@ -198,7 +198,7 @@ export async function getRevenueBreakdownData(): Promise<RevenueBreakdownRespons
             percentage: item.percentage,
             color: item.color,
         }));
-        
+
         return {
             data,
             total: breakdown.total,
@@ -289,21 +289,21 @@ export interface StockAlertDataPoint {
 // ================================
 export async function getStockAlerts(): Promise<StockAlertDataPoint[]> {
     try {
-        const response = await client.get<StockAlertResponse>(`${ENDPOINT.DASHBOARD}/stock-alerts`, {
+        const response = await client.get<StockAlertResponse>(ENDPOINT.DASHBOARD.STOCK_ALERTS, {
             params: { limit: 12 }
         });
-        
+
         if (!response.data?.data) {
             throw new Error('Invalid API response');
         }
-        
+
         return response.data.data.map((item) => {
-            const productName = item.variation 
+            const productName = item.variation
                 ? `${item.product.name} - ${item.variation.type}: ${item.variation.value}`
                 : item.product.name;
-            
+
             const code = item.variation ? item.variation.sku : item.product.sku;
-            
+
             return {
                 productName,
                 productImage: item.product.image_url || undefined,
@@ -330,5 +330,42 @@ export function useGetStockAlerts() {
     return useQuery({
         queryKey: ['stock-alerts'],
         queryFn: getStockAlerts,
+    });
+}
+
+// ================================
+// SUMMARY CARDS RESPONSE TYPE
+// ================================
+export interface SummaryCardMetric {
+    value: number;
+    last_month: number;
+    percentage_change: number;
+}
+
+export interface SummaryCardsResponse {
+    status: number;
+    data: {
+        totalSales: SummaryCardMetric;
+        totalPurchases: SummaryCardMetric;
+        salesReturn: SummaryCardMetric;
+        todaySales: SummaryCardMetric;
+    };
+}
+
+// ================================
+// GET SUMMARY CARDS
+// ================================
+export async function getSummaryCards(): Promise<SummaryCardsResponse['data']> {
+    const response = await client.get<SummaryCardsResponse>(ENDPOINT.DASHBOARD.SUMMARY_CARDS);
+    return response.data.data;
+}
+
+// ================================
+// USE SUMMARY CARDS HOOK
+// ================================
+export function useGetSummaryCards() {
+    return useQuery({
+        queryKey: ['summary-cards'],
+        queryFn: getSummaryCards,
     });
 }

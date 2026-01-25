@@ -10,9 +10,10 @@ import { useState, useMemo } from 'react';
 import { SaleType } from '@/types';
 import SalesTable from './SalesTable';
 import { useRouter } from 'next/navigation';
-import { useGetSales, useDeleteSale, useGetSaleSummary, SaleQueryParams } from '@/services';
-import { useQueryParams } from '@/hooks';
+import { useGetSales, useDeleteSale, useGetSaleSummary, SaleQueryParams, downloadSalePDF } from '@/services';
+import { useQueryParams, useToast } from '@/hooks';
 import { useAppSelector, selectStores } from '@/store';
+import { getErrorMessage } from '@/utils';
 
 // ================================
 // CONSTANTS
@@ -85,6 +86,11 @@ const SalesView = () => {
     // DELETE MUTATION
     // ================================
     const deleteSaleMutation = useDeleteSale()
+    
+    // ================================
+    // TOAST HOOK
+    // ================================
+    const { showError, showSuccess } = useToast()
     
     // ================================
     // DELETE MODAL STATE
@@ -397,6 +403,16 @@ const SalesView = () => {
                         onView={(saleId) => router.push(`/dashboard/sales/${saleId}`)}
                         onEdit={(saleId) => router.push(`/dashboard/sales/${saleId}/edit`)}
                         onDelete={handleDelete}
+                        onDownloadPDF={async (saleId) => {
+                            try {
+                                await downloadSalePDF(Number(saleId));
+                                showSuccess('PDF downloaded', 'Sale PDF downloaded successfully.');
+                            } catch (error: any) {
+                                const errorMessage = getErrorMessage(error);
+                                showError('Failed to download PDF', errorMessage);
+                            }
+                        }}
+                        onCreateReturn={(saleId) => router.push(`/dashboard/sale-returns/create?sale_id=${saleId}`)}
                         loading={isLoading}
                     />
 

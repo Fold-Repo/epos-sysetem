@@ -18,6 +18,7 @@ import {
     // LanguageIcon,
     // ComputerDesktopIcon,
     AdjustmentsVerticalIcon,
+    ArrowUturnLeftIcon,
 } from '@heroicons/react/24/outline';
 import { PermissionKey } from '@/types/permissions';
 
@@ -94,6 +95,18 @@ export const getDashboardSections = (root: string): DashboardSection[] => [
                 icon: <TagIcon className='size-5' />,
                 text: 'Purchases',
                 permissionKey: PermissionKey.MANAGE_PURCHASES
+            },
+            {
+                href: `${root}/purchase-returns`,
+                icon: <ArrowUturnLeftIcon className='size-5' />,
+                text: 'Purchase Return',
+                permissionKey: PermissionKey.MANAGE_PURCHASES
+            },
+            {
+                href: `${root}/sale-returns`,
+                icon: <ArrowUturnLeftIcon className='size-5' />,
+                text: 'Sales Return',
+                permissionKey: PermissionKey.MANAGE_SALES
             },
             {
                 href: `${root}/quotations`,

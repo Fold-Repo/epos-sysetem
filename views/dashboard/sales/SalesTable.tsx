@@ -1,7 +1,7 @@
 'use client'
 
 import { TableCell, TableComponent, MenuDropdown, TrashIcon } from '@/components'
-import { EllipsisVerticalIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon, EyeIcon, PencilIcon, ArrowDownTrayIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { SaleType } from '@/types'
 import moment from 'moment'
@@ -15,6 +15,8 @@ interface SalesTableProps {
     onView?: (saleId: string) => void
     onEdit?: (saleId: string) => void
     onDelete?: (saleId: string) => void
+    onDownloadPDF?: (saleId: string) => void
+    onCreateReturn?: (saleId: string) => void
     loading?: boolean
 }
 
@@ -36,6 +38,8 @@ const SalesTable = ({
     onView, 
     onEdit, 
     onDelete,
+    onDownloadPDF,
+    onCreateReturn,
     loading = false
 }: SalesTableProps) => {
 
@@ -88,6 +92,16 @@ const SalesTable = ({
                                 icon: <PencilIcon className='size-4' />
                             },
                             {
+                                key: 'download',
+                                label: 'Download PDF',
+                                icon: <ArrowDownTrayIcon className='size-4' />
+                            },
+                            {
+                                key: 'createReturn',
+                                label: 'Create Return',
+                                icon: <ArrowUturnLeftIcon className='size-4' />
+                            },
+                            {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <TrashIcon className='size-4' />,
@@ -101,6 +115,10 @@ const SalesTable = ({
                                 onView?.(id)
                             } else if (key === 'edit') {
                                 onEdit?.(id)
+                            } else if (key === 'download') {
+                                onDownloadPDF?.(id)
+                            } else if (key === 'createReturn') {
+                                onCreateReturn?.(id)
                             } else if (key === 'delete') {
                                 onDelete?.(id)
                             }

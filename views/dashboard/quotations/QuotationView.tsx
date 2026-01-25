@@ -1,17 +1,19 @@
 'use client'
 
-import { DashboardBreadCrumb, MetricCard, FilterBar, Pagination, DashboardCard, useDisclosure, TrashIcon, StackIcon } from '@/components'
+import { DashboardBreadCrumb, MetricCard, FilterBar, Pagination, DashboardCard, useDisclosure, StackIcon, TrendIndicator } from '@/components'
 import { DeleteModal } from '@/components/modal'
 import { BuildingStorefrontIcon, UserGroupIcon, CurrencyDollarIcon } from '@heroicons/react/24/solid';
+import { TrashIcon } from '@/components/icons'
 import { Button } from '@heroui/react';
 import { LuChartSpline } from 'react-icons/lu';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { QuotationType } from '@/types';
 import QuotationTable from './QuotationTable';
 import { useRouter } from 'next/navigation';
-import { useGetQuotations, QuotationQueryParams } from '@/services';
-import { useQueryParams } from '@/hooks';
+import { useGetQuotations, QuotationQueryParams, useDeleteQuotation, useGetQuotationSummary, downloadQuotationPDF } from '@/services';
+import { useQueryParams, useToast } from '@/hooks';
 import { useAppSelector, selectStores } from '@/store';
+import { getErrorMessage } from '@/utils';
 
 // ================================
 // CONSTANTS
@@ -67,6 +69,22 @@ const QuotationView = () => {
     const { quotations, pagination } = data || {}
     
     // ================================
+    // FETCH QUOTATION SUMMARY
+    // ================================
+    const { data: summaryData } = useGetQuotationSummary()
+    const summary = summaryData?.data
+    
+    // ================================
+    // DELETE MUTATION
+    // ================================
+    const deleteQuotationMutation = useDeleteQuotation()
+    
+    // ================================
+    // TOAST HOOK
+    // ================================
+    const { showError, showSuccess } = useToast()
+    
+    // ================================
     // DELETE MODAL STATE
     // ================================
     const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
@@ -74,37 +92,105 @@ const QuotationView = () => {
     const [deleteQuotationId, setDeleteQuotationId] = useState<string | undefined>(undefined)
     const [isBulkDelete, setIsBulkDelete] = useState(false)
 
-    const metricsData = [
-        {
-            title: "Total Quotations",
-            value: "1,247",
-            description: "+12% from last month",
-            colorClass: "text-[#16A34A]",
-            icon: <LuChartSpline className='size-4' />
-        },
-        {
-            title: "Sent",
-            value: "89",
-            description: "-5% from last month",
-            colorClass: "text-[#2563EB]",
-            icon: <BuildingStorefrontIcon className='size-4' />
-        },
-        {
-            title: "Approved",
-            value: "634",
-            description: "+8% from last month",
-            colorClass: "text-[#9333EA]",
-            icon: <CurrencyDollarIcon className='size-4' />
-        },
-        {
-            title: "Draft",
-            value: "524",
-            description: "+3% from last month",
-            colorClass: "text-[#EA580C]",
-            icon: <UserGroupIcon className='size-4' />
-        }
-    ]
+    // ================================
+    // FORMAT NUMBER WITH COMMAS
+    // ================================
+    const formatNumber = (num: number): string => {
+        return num.toLocaleString('en-US')
+    }
 
+    // ================================
+    // METRICS DATA
+    // ================================
+    const metricsData = useMemo(() => {
+        if (!summary) {
+            return [
+                {
+                    title: "Total Quotations",
+                    value: "0",
+                    colorClass: "text-[#16A34A]",
+                    icon: <LuChartSpline className='size-4' />,
+                    trend: 'up' as const,
+                    percentage: 0,
+                    description: "from last month"
+                },
+                {
+                    title: "Sent",
+                    value: "0",
+                    colorClass: "text-[#2563EB]",
+                    icon: <BuildingStorefrontIcon className='size-4' />,
+                    trend: 'up' as const,
+                    percentage: 0,
+                    description: "from last month"
+                },
+                {
+                    title: "Approved",
+                    value: "0",
+                    colorClass: "text-[#9333EA]",
+                    icon: <CurrencyDollarIcon className='size-4' />,
+                    trend: 'up' as const,
+                    percentage: 0,
+                    description: "from last month"
+                },
+                {
+                    title: "Draft",
+                    value: "0",
+                    colorClass: "text-[#EA580C]",
+                    icon: <UserGroupIcon className='size-4' />,
+                    trend: 'up' as const,
+                    percentage: 0,
+                    description: "from last month"
+                }
+            ]
+        }
+
+        const getTrend = (percentageChange: number): 'up' | 'down' => {
+            return percentageChange >= 0 ? 'up' : 'down'
+        }
+
+        return [
+            {
+                title: "Total Quotations",
+                value: formatNumber(summary.total_quotations.count),
+                colorClass: "text-[#16A34A]",
+                icon: <LuChartSpline className='size-4' />,
+                trend: getTrend(summary.total_quotations.percentage_change),
+                percentage: Math.abs(summary.total_quotations.percentage_change),
+                description: "from last month"
+            },
+            {
+                title: "Sent",
+                value: formatNumber(summary.sent_quotations.count),
+                colorClass: "text-[#2563EB]",
+                icon: <BuildingStorefrontIcon className='size-4' />,
+                trend: getTrend(summary.sent_quotations.percentage_change),
+                percentage: Math.abs(summary.sent_quotations.percentage_change),
+                description: "from last month"
+            },
+            {
+                title: "Approved",
+                value: formatNumber(summary.approved_quotations.count),
+                colorClass: "text-[#9333EA]",
+                icon: <CurrencyDollarIcon className='size-4' />,
+                trend: getTrend(summary.approved_quotations.percentage_change),
+                percentage: Math.abs(summary.approved_quotations.percentage_change),
+                description: "from last month"
+            },
+            {
+                title: "Draft",
+                value: formatNumber(summary.draft_quotations.count),
+                colorClass: "text-[#EA580C]",
+                icon: <UserGroupIcon className='size-4' />,
+                trend: getTrend(summary.draft_quotations.percentage_change),
+                percentage: Math.abs(summary.draft_quotations.percentage_change),
+                description: "from last month"
+            }
+        ]
+    }, [summary])
+
+    // ================================
+    // DELETE HANDLERS
+    // ================================
     const handleBulkDelete = () => {
         if (selectedQuotations.length > 0) {
             setIsBulkDelete(true)
@@ -119,15 +205,32 @@ const QuotationView = () => {
         onDeleteModalOpen()
     }
 
-    const confirmDelete = () => {
-        // TODO: Implement delete functionality
-        if (isBulkDelete) {
-            console.log('Delete quotations:', selectedQuotations.map(q => q.id))
+    // ================================
+    // DELETE HANDLERS
+    // ================================
+    const confirmDelete = async () => {
+        if (isBulkDelete && selectedQuotations.length > 0) {
+            // ===========================
+            // Bulk delete quotations
+            // ===========================
+            for (const quotation of selectedQuotations) {
+                if (quotation.id) {
+                    await deleteQuotationMutation.mutateAsync(Number(quotation.id))
+                }
+            }
             setSelectedQuotations([])
-        } else {
-            console.log('Delete quotation:', deleteQuotationId)
+            onDeleteModalClose()
+        } else if (deleteQuotationId) {
+            // ===========================
+            // Delete single quotation
+            // ===========================
+            deleteQuotationMutation.mutate(Number(deleteQuotationId), {
+                onSuccess: () => {
+                    onDeleteModalClose()
+                    setDeleteQuotationId(undefined)
+                }
+            })
         }
-        onDeleteModalClose()
     }
 
     // ================================
@@ -160,6 +263,12 @@ const QuotationView = () => {
     // FILTER ITEMS CONFIG
     // ================================
     const filterItems = [
+        ...(selectedQuotations.length > 0 ? [{
+            type: 'button' as const,
+            label: `Delete (${selectedQuotations.length})`,
+            icon: <TrashIcon className="size-4 text-slate-400" />,
+            onPress: handleBulkDelete
+        }] : []),
         {
             type: 'dateRange' as const,
             label: 'Date',
@@ -237,10 +346,15 @@ const QuotationView = () => {
                             key={index}
                             title={metric.title}
                             value={metric.value}
-                            description={metric.description}
                             colorClass={metric.colorClass}
                             icon={metric.icon}
-                        />
+                        >
+                            <TrendIndicator
+                                trend={metric.trend}
+                                percentage={metric.percentage}
+                                description={metric.description}
+                            />
+                        </MetricCard>
                     ))}
                 </div>
 
@@ -267,8 +381,14 @@ const QuotationView = () => {
                         onEdit={(quotationId) => router.push(`/dashboard/quotations/${quotationId}/edit`)}
                         onDelete={handleDelete}
                         onCreateSale={(quotationId) => router.push(`/dashboard/sales/create?from_quotation=${quotationId}`)}
-                        onDownloadPDF={(quotationId) => {
-                            console.log('Download PDF for quotation:', quotationId)
+                        onDownloadPDF={async (quotationId) => {
+                            try {
+                                await downloadQuotationPDF(Number(quotationId));
+                                showSuccess('PDF downloaded', 'Quotation PDF downloaded successfully.');
+                            } catch (error: any) {
+                                const errorMessage = getErrorMessage(error);
+                                showError('Failed to download PDF', errorMessage);
+                            }
                         }}
                         loading={isLoading}
                     />

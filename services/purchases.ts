@@ -254,3 +254,26 @@ export function useGetPurchaseSummary() {
     });
 }
 
+// ================================
+// DOWNLOAD PURCHASE PDF
+// ================================
+export async function downloadPurchasePDF(id: number): Promise<void> {
+    const response = await client.get(`${ENDPOINT.PURCHASES}/${id}/pdf`, {
+        responseType: 'blob',
+    });
+    
+    // Create a blob URL from the response
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `purchase-${id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}

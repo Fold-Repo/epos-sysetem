@@ -3,12 +3,13 @@
 import { TableCell, TableComponent, MenuDropdown, TrashIcon } from '@/components'
 import { EllipsisVerticalIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
-import { ExpenseCategoryType } from '@/types'
+import { ExpenseCategory } from '@/types'
 
 interface ExpensesCatTableProps {
-    data: ExpenseCategoryType[]
-    onEdit?: (category: ExpenseCategoryType) => void
-    onDelete?: (categoryId: string) => void
+    data: ExpenseCategory[]
+    isLoading?: boolean
+    onEdit?: (category: ExpenseCategory) => void
+    onDelete?: (categoryId: number) => void
 }
 
 const columns = [
@@ -20,11 +21,12 @@ const columns = [
 
 const ExpensesCatTable = ({
     data,
+    isLoading = false,
     onEdit,
     onDelete
 }: ExpensesCatTableProps) => {
 
-    const renderRow = (category: ExpenseCategoryType) => {
+    const renderRow = (category: ExpenseCategory) => {
         return (
             <>
                 <TableCell>
@@ -41,7 +43,7 @@ const ExpensesCatTable = ({
                             <PencilIcon className='size-3' />
                         </Button>
 
-                        <Button onPress={() => onDelete?.(String(category.id))} isIconOnly size='sm' className='bg-gray-100/80 text-danger' radius='full'>
+                        <Button onPress={() => onDelete?.(category.id)} isIconOnly size='sm' className='bg-gray-100/80 text-danger' radius='full'>
                             <TrashIcon className='size-3' />
                         </Button>
 
@@ -59,7 +61,7 @@ const ExpensesCatTable = ({
             rowKey={(item) => String(item.id || `expense-cat-${Math.random()}`)}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={isLoading}
         />
     )
 }

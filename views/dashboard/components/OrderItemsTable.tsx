@@ -13,6 +13,7 @@ export interface OrderItem {
     stock?: number
     unit?: string
     quantity: number
+    maxQuantity?: number
     netUnitPrice: number
     discount: number
     tax: number
@@ -74,11 +75,13 @@ const OrderItemsTable = ({ items, onQuantityChange, onDelete, readOnly = false, 
                             name={`qty-${item.id}`}
                             type="number"
                             min={1}
+                            max={item.maxQuantity}
                             value={String(item.quantity)}
                             onChange={(e) => {
-                                const quantity = parseInt(e.target.value) || 0
-                                if (quantity < 1) return
-                                onQuantityChange(item.id, quantity)
+                                const quantity = parseInt(e.target.value) || 1
+                                const maxQty = item.maxQuantity || 1
+                                const clampedQty = Math.min(Math.max(1, quantity), maxQty)
+                                onQuantityChange(item.id, clampedQty)
                             }}
                             className="w-20 h-9"
                             inputSize="sm"

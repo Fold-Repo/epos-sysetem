@@ -10,7 +10,8 @@ import {
     AdjustmentType,
     AdjustmentDetailApiResponse,
     AdjustmentDetailResponse,
-    AdjustmentQueryParams
+    AdjustmentQueryParams,
+    AdjustmentSummaryResponse
 } from "@/types/adjustment.type";
 import { useToast } from "@/hooks";
 import { getErrorMessage } from "@/utils";
@@ -103,6 +104,7 @@ export function useCreateAdjustment() {
         mutationFn: (payload: CreateAdjustmentPayload) => createAdjustment(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['adjustments-list'] });
+            queryClient.invalidateQueries({ queryKey: ['adjustment-summary'] });
             showSuccess('Adjustment created', 'Adjustment created successfully.');
         },
         onError: (error: any) => {
@@ -152,6 +154,7 @@ export function useUpdateAdjustment() {
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['adjustments-list'] });
             queryClient.invalidateQueries({ queryKey: ['adjustment-detail', variables.id] });
+            queryClient.invalidateQueries({ queryKey: ['adjustment-summary'] });
             showSuccess('Adjustment updated', 'Adjustment updated successfully.');
         },
         onError: (error: any) => {
@@ -161,3 +164,49 @@ export function useUpdateAdjustment() {
     });
 }
 
+// ================================
+// DELETE ADJUSTMENT
+// ================================
+export async function deleteAdjustment(id: number): Promise<{ status: number; message: string }> {
+    const response = await client.delete(`${ENDPOINT.ADJUSTMENTS}/${id}`);
+    return response.data;
+}
+
+// ================================
+// USE DELETE ADJUSTMENT HOOK
+// ================================
+export function useDeleteAdjustment() {
+    const queryClient = useQueryClient();
+    const { showError, showSuccess } = useToast();
+
+    return useMutation({
+        mutationFn: deleteAdjustment,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adjustments-list'] });
+            queryClient.invalidateQueries({ queryKey: ['adjustment-summary'] });
+            showSuccess('Adjustment deleted', 'Adjustment deleted successfully.');
+        },
+        onError: (error: any) => {
+            const errorMessage = getErrorMessage(error);
+            showError('Failed to delete adjustment', errorMessage);
+        },
+    });
+}
+
+// ================================
+// GET ADJUSTMENT SUMMARY
+// ================================
+export async function getAdjustmentSummary(): Promise<AdjustmentSummaryResponse> {
+    const response = await client.get(`${ENDPOINT.ADJUSTMENTS}/summary/cards`);
+    return response.data;
+}
+
+// ================================
+// USE ADJUSTMENT SUMMARY HOOK
+// ================================
+export function useGetAdjustmentSummary() {
+    return useQuery({
+        queryKey: ['adjustment-summary'],
+        queryFn: getAdjustmentSummary,
+    });
+}
