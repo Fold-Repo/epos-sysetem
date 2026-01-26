@@ -1,7 +1,7 @@
 'use client'
 
 import { TableCell, TableComponent, MenuDropdown, TrashIcon } from '@/components'
-import { EllipsisVerticalIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon, EyeIcon, PencilIcon, ArrowDownTrayIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 import { Button } from '@heroui/react'
 import { PurchaseType } from '@/types'
 import moment from 'moment'
@@ -15,6 +15,8 @@ interface PurchaseTableProps {
     onView?: (purchaseId: string) => void
     onEdit?: (purchaseId: string) => void
     onDelete?: (purchaseId: string) => void
+    onDownloadPDF?: (purchaseId: string) => void
+    onCreateReturn?: (purchaseId: string) => void
     loading?: boolean
 }
 
@@ -36,6 +38,8 @@ const PurchaseTable = ({
     onView, 
     onEdit, 
     onDelete,
+    onDownloadPDF,
+    onCreateReturn,
     loading = false
 }: PurchaseTableProps) => {
 
@@ -88,6 +92,16 @@ const PurchaseTable = ({
                                 icon: <PencilIcon className='size-4' />
                             },
                             {
+                                key: 'download',
+                                label: 'Download PDF',
+                                icon: <ArrowDownTrayIcon className='size-4' />
+                            },
+                            {
+                                key: 'createReturn',
+                                label: 'Create Return',
+                                icon: <ArrowUturnLeftIcon className='size-4' />
+                            },
+                            {
                                 key: 'delete',
                                 label: 'Delete',
                                 icon: <TrashIcon className='size-4' />,
@@ -101,6 +115,10 @@ const PurchaseTable = ({
                                 onView?.(id)
                             } else if (key === 'edit') {
                                 onEdit?.(id)
+                            } else if (key === 'download') {
+                                onDownloadPDF?.(id)
+                            } else if (key === 'createReturn') {
+                                onCreateReturn?.(id)
                             } else if (key === 'delete') {
                                 onDelete?.(id)
                             }

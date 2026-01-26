@@ -11,7 +11,8 @@ import {
     fetchVariations,
     fetchPaymentMethods,
     fetchCustomers,
-    fetchRoles
+    fetchRoles,
+    fetchActiveExpenseCategories
 } from '@/store/slice'
 
 /**
@@ -32,6 +33,7 @@ export const useFetchAllData = () => {
         dispatch(fetchPaymentMethods())
         dispatch(fetchCustomers())
         dispatch(fetchRoles())
+        dispatch(fetchActiveExpenseCategories())
     }, [dispatch])
 }
 

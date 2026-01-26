@@ -13,6 +13,8 @@ export * from './quotations.type';
 export * from './transfer.type';
 export * from './supplier.type';
 export * from './purchase.type';
+export * from './purchase-return.type';
+export * from './sale-return.type';
 export * from './user.type';
 export * from './sale.type';
 export * from './payment-method.type';

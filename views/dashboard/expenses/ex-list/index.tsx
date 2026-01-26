@@ -1,11 +1,13 @@
 'use client'
 
-import { DashboardCard, FilterBar, Pagination, StackIcon, useDisclosure } from '@/components'
+import { DashboardCard, FilterBar, Pagination, StackIcon, useDisclosure, DeleteModal } from '@/components'
 import ExpensesListTable from './ExpensesListTable'
 import ExpenseModal from './ExpenseModal'
-import { expensesData } from '@/data'
-import { ExpenseType } from '@/types'
-import { useState, useEffect } from 'react'
+import { Expense } from '@/types'
+import { useState, useEffect, useMemo } from 'react'
+import { useGetExpenses, useDeleteExpense } from '@/services'
+import { useQueryParams } from '@/hooks'
+import { useAppSelector, selectActiveExpenseCategories, selectStores } from '@/store'
 
 interface ExpensesListViewProps {
     onAddClick?: (handler: () => void) => void
@@ -14,7 +16,27 @@ interface ExpensesListViewProps {
 const ExpensesListView = ({ onAddClick }: ExpensesListViewProps) => {
 
     const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
-    const [editingExpense, setEditingExpense] = useState<ExpenseType | undefined>(undefined)
+    const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
+    const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined)
+    const [deleteExpenseId, setDeleteExpenseId] = useState<number | undefined>(undefined)
+    const [searchValue, setSearchValue] = useState('')
+    const [selectedCategory, setSelectedCategory] = useState<string>('all')
+    const [selectedStatus, setSelectedStatus] = useState<string>('all')
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const LIMIT = 25
+    
+    // Get data from Redux state
+    const activeCategories = useAppSelector(selectActiveExpenseCategories)
+    const stores = useAppSelector(selectStores)
+    
+    // Fetch expenses
+    const { data: expenses, pagination, isLoading } = useGetExpenses(currentPage, LIMIT, {
+        category_id: selectedCategory !== 'all' ? parseInt(selectedCategory) : undefined,
+        status: selectedStatus !== 'all' ? selectedStatus : undefined,
+        search: searchValue || undefined
+    })
+    const deleteExpenseMutation = useDeleteExpense()
 
     useEffect(() => {
         if (onAddClick) {
@@ -25,46 +47,69 @@ const ExpensesListView = ({ onAddClick }: ExpensesListViewProps) => {
         }
     }, [onAddClick, onModalOpen])
 
+    const handleDeleteExpense = (expenseId: number) => {
+        setDeleteExpenseId(expenseId)
+        onDeleteModalOpen()
+    }
+
+    const confirmDelete = async () => {
+        if (deleteExpenseId) {
+            return new Promise<void>((resolve) => {
+                deleteExpenseMutation.mutate(deleteExpenseId, {
+                    onSuccess: () => {
+                        onDeleteModalClose()
+                        setDeleteExpenseId(undefined)
+                        resolve()
+                    },
+                    onError: () => {
+                        resolve()
+                    }
+                })
+            })
+        }
+    }
+
+    const categoryFilterItems = useMemo(() => {
+        const items = [{ label: 'All', key: 'all' }]
+        activeCategories.forEach(cat => {
+            items.push({ label: cat.name, key: String(cat.id) })
+        })
+        return items
+    }, [activeCategories])
+
     const filterItems = [
         {
             type: 'dropdown' as const,
-            label: 'Category: All',
+            label: `Category: ${selectedCategory === 'all' ? 'All' : activeCategories.find(c => String(c.id) === selectedCategory)?.name || 'All'}`,
+            startContent: <StackIcon className="text-slate-400" />,
+            showChevron: false,
+            items: categoryFilterItems,
+            value: selectedCategory,
+            onChange: (key: string) => {
+                setSelectedCategory(key)
+                updateQueryParams({ page: '1' })
+            }
+        },
+        {
+            type: 'dropdown' as const,
+            label: `Status: ${selectedStatus === 'all' ? 'All' : selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)}`,
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
             items: [
                 { label: 'All', key: 'all' },
-                { label: 'Office Supplies', key: 'office-supplies' },
-                { label: 'Utilities', key: 'utilities' },
-                { label: 'Travel', key: 'travel' },
-                { label: 'Marketing', key: 'marketing' },
-                { label: 'Maintenance', key: 'maintenance' }
+                { label: 'Pending', key: 'pending' },
+                { label: 'Approved', key: 'approved' },
+                { label: 'Rejected', key: 'rejected' }
             ],
-            value: '',
+            value: selectedStatus,
             onChange: (key: string) => {
-                console.log('Category changed:', key)
-            }
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Sort By: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'Reference (A-Z)', key: 'reference_asc' },
-                { label: 'Reference (Z-A)', key: 'reference_desc' },
-                { label: 'Amount (High to Low)', key: 'amount_desc' },
-                { label: 'Amount (Low to High)', key: 'amount_asc' },
-                { label: 'Newest First', key: 'newest' },
-                { label: 'Oldest First', key: 'oldest' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Sort changed:', key)
+                setSelectedStatus(key)
+                updateQueryParams({ page: '1' })
             }
         },
         {
             type: 'dateRange' as const,
-            label: 'Data',
+            label: 'Date',
             placeholder: 'Select date range'
         },
     ]
@@ -75,28 +120,31 @@ const ExpensesListView = ({ onAddClick }: ExpensesListViewProps) => {
                 <FilterBar
                     searchInput={{
                         placeholder: 'Search by reference or title',
-                        className: 'w-full md:w-72'
+                        className: 'w-full md:w-72',
+                        onSearch: (value) => {
+                            setSearchValue(value)
+                            updateQueryParams({ page: '1' })
+                        }
                     }}
                     items={filterItems}
                 />
 
                 <ExpensesListTable
-                    data={expensesData}
+                    data={expenses}
+                    isLoading={isLoading}
                     onEdit={(expense) => {
                         setEditingExpense(expense)
                         onModalOpen()
                     }}
-                    onDelete={(expenseId) => {
-                        console.log('Delete expense:', expenseId)
-                    }}
+                    onDelete={handleDeleteExpense}
                 />
 
                 <Pagination
-                    currentPage={1}
-                    totalItems={100}
-                    itemsPerPage={25}
+                    currentPage={currentPage}
+                    totalItems={pagination?.total || 0}
+                    itemsPerPage={LIMIT}
                     onPageChange={(page) => {
-                        console.log('Page changed:', page)
+                        updateQueryParams({ page: page.toString() })
                     }}
                     showingText="Expenses"
                 />
@@ -110,6 +158,18 @@ const ExpensesListView = ({ onAddClick }: ExpensesListViewProps) => {
                 }}
                 mode={editingExpense ? 'edit' : 'add'}
                 initialData={editingExpense}
+            />
+
+            <DeleteModal
+                title="expense"
+                open={isDeleteModalOpen}
+                setOpen={(value) => {
+                    if (!value) {
+                        onDeleteModalClose()
+                        setDeleteExpenseId(undefined)
+                    }
+                }}
+                onDelete={confirmDelete}
             />
         </>
     )

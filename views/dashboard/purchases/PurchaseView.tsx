@@ -10,8 +10,9 @@ import { useState, useMemo } from 'react';
 import { PurchaseType } from '@/types';
 import PurchaseTable from './PurchaseTable';
 import { useRouter } from 'next/navigation';
-import { useGetPurchases, useDeletePurchase, useGetPurchaseSummary, PurchaseQueryParams } from '@/services';
-import { useQueryParams } from '@/hooks';
+import { useGetPurchases, useDeletePurchase, useGetPurchaseSummary, PurchaseQueryParams, downloadPurchasePDF } from '@/services';
+import { useQueryParams, useToast } from '@/hooks';
+import { getErrorMessage } from '@/utils';
 
 // ================================
 // CONSTANTS
@@ -75,6 +76,11 @@ const PurchaseView = () => {
     // DELETE MUTATION
     // ================================
     const deletePurchaseMutation = useDeletePurchase()
+    
+    // ================================
+    // TOAST HOOK
+    // ================================
+    const { showError, showSuccess } = useToast()
     
     // ================================
     // DELETE MODAL STATE
@@ -358,6 +364,16 @@ const PurchaseView = () => {
                         onView={(purchaseId) => router.push(`/dashboard/purchases/${purchaseId}`)}
                         onEdit={(purchaseId) => router.push(`/dashboard/purchases/${purchaseId}/edit`)}
                         onDelete={handleDelete}
+                        onDownloadPDF={async (purchaseId) => {
+                            try {
+                                await downloadPurchasePDF(Number(purchaseId));
+                                showSuccess('PDF downloaded', 'Purchase PDF downloaded successfully.');
+                            } catch (error: any) {
+                                const errorMessage = getErrorMessage(error);
+                                showError('Failed to download PDF', errorMessage);
+                            }
+                        }}
+                        onCreateReturn={(purchaseId) => router.push(`/dashboard/purchase-returns/create?purchase_id=${purchaseId}`)}
                         loading={isLoading}
                     />
 

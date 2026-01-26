@@ -9,7 +9,8 @@ import {
     QuotationListItem,
     QuotationType,
     QuotationDetailApiResponse,
-    QuotationDetailResponse
+    QuotationDetailResponse,
+    QuotationSummaryResponse
 } from "@/types";
 import { useToast } from "@/hooks";
 import { getErrorMessage } from "@/utils";
@@ -135,6 +136,7 @@ export function useCreateQuotation() {
         mutationFn: (payload: CreateQuotationPayload) => createQuotation(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['quotations-list'] });
+            queryClient.invalidateQueries({ queryKey: ['quotation-summary'] });
             showSuccess('Quotation created', 'Quotation created successfully.');
         },
         onError: (error: any) => {
@@ -184,6 +186,7 @@ export function useUpdateQuotation() {
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['quotations-list'] });
             queryClient.invalidateQueries({ queryKey: ['quotation-detail', variables.id] });
+            queryClient.invalidateQueries({ queryKey: ['quotation-summary'] });
             showSuccess('Quotation updated', 'Quotation updated successfully.');
         },
         onError: (error: any) => {
@@ -193,3 +196,73 @@ export function useUpdateQuotation() {
     });
 }
 
+// ================================
+// DELETE QUOTATION
+// ================================
+export async function deleteQuotation(id: number): Promise<{ status: number; message: string }> {
+    const response = await client.delete(`${ENDPOINT.QUOTATIONS}/${id}`);
+    return response.data;
+}
+
+// ================================
+// USE DELETE QUOTATION HOOK
+// ================================
+export function useDeleteQuotation() {
+    const queryClient = useQueryClient();
+    const { showError, showSuccess } = useToast();
+
+    return useMutation({
+        mutationFn: deleteQuotation,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['quotations-list'] });
+            queryClient.invalidateQueries({ queryKey: ['quotation-summary'] });
+            showSuccess('Quotation deleted', 'Quotation deleted successfully.');
+        },
+        onError: (error: any) => {
+            const errorMessage = getErrorMessage(error);
+            showError('Failed to delete quotation', errorMessage);
+        },
+    });
+}
+
+// ================================
+// GET QUOTATION SUMMARY
+// ================================
+export async function getQuotationSummary(): Promise<QuotationSummaryResponse> {
+    const response = await client.get(`${ENDPOINT.QUOTATIONS}/summary/cards`);
+    return response.data;
+}
+
+// ================================
+// USE QUOTATION SUMMARY HOOK
+// ================================
+export function useGetQuotationSummary() {
+    return useQuery({
+        queryKey: ['quotation-summary'],
+        queryFn: getQuotationSummary,
+    });
+}
+
+// ================================
+// DOWNLOAD QUOTATION PDF
+// ================================
+export async function downloadQuotationPDF(id: number): Promise<void> {
+    const response = await client.get(`${ENDPOINT.QUOTATIONS}/${id}/pdf`, {
+        responseType: 'blob',
+    });
+    
+    // Create a blob URL from the response
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `quotation-${id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}

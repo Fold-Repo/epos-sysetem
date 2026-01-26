@@ -20,7 +20,7 @@ export const ENDPOINT = {
         RESET_PASSWORD: '/auth/reset',
         PERMISSIONS: '/roles/me/permission',
         ROLES: '/roles',
-        ROLE_PERMISSION_DETAILS: '/roles', // Will be used as /roles/{id}/permission
+        ROLE_PERMISSION_DETAILS: '/roles',
         GOOGLE_SIGNIN: '/auth/google/signin',
         GOOGLE_SIGNUP: '/auth/google/signup',
     },
@@ -52,6 +52,17 @@ export const ENDPOINT = {
     QUOTATIONS: '/qoutations',
     ADJUSTMENTS: '/adjustments',
     BUSINESS_USERS: '/business-users',
-    DASHBOARD: '/dashboard',
+    EXPENSE_CATEGORIES: '/expense-categories',
+    EXPENSES: '/expenses',
+    TRANSFERS: '/transfers',
+    PURCHASES_RETURN: '/purchases-return',
+    SALES_RETURN: '/sales-return',
+    DASHBOARD: {
+        BASE: '/dashboard',
+        WEEKLY_TREND: '/dashboard/trend',
+        REVENUE_DATA: '/dashboard/revenue-data',
+        STOCK_ALERTS: '/dashboard/stock-alerts',
+        SUMMARY_CARDS: '/dashboard/summary-cards',
+    },
 
 } as const;

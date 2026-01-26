@@ -1,11 +1,147 @@
 'use client'
 
-import { DashboardBreadCrumb, DashboardCard } from '@/components'
-import { OrderItemsTable, SummaryBox } from '@/views/dashboard/components'
-import { StatusChip } from '@/components'
-import { formatCurrency } from '@/lib'
+import { DashboardBreadCrumb, DashboardCard, StatusChip } from '@/components'
+import { useGetTransferDetail } from '@/services'
+import moment from 'moment'
 
-const TransferDetailsView = ({ transferId }: { transferId: string }) => {
+interface TransferDetailsViewProps {
+    transferId: string
+}
+
+const TransferDetailsView = ({ transferId }: TransferDetailsViewProps) => {
+
+    // ================================
+    // FETCH TRANSFER DETAILS
+    // ================================
+    const { data: transfer, isLoading, error } = useGetTransferDetail(Number(transferId))
+
+    // ================================
+    // LOADING STATE
+    // ================================
+    if (isLoading) {
+        return <TransferDetailsSkeleton />
+    }
+
+    if (!transfer || error) {
+        return (
+            <>
+                <DashboardBreadCrumb
+                    items={[
+                        { label: 'Transfers', href: '/dashboard/transfers' },
+                        { label: 'Transfer Details' }
+                    ]}
+                    title="Transfer Details"
+                />
+                <div className="p-3">
+                    <DashboardCard>
+                        <div className="p-8 text-center text-gray-500">
+                            Transfer not found
+                        </div>
+                    </DashboardCard>
+                </div>
+            </>
+        )
+    }
+
+    return (
+        <>
+            <DashboardBreadCrumb
+                items={[
+                    { label: 'Transfers', href: '/dashboard/transfers' },
+                    { label: `Transfer #${transfer.transfer_id}`, href: `/dashboard/transfers/${transferId}` },
+                    { label: 'Details' }
+                ]}
+                title="Transfer Details"
+            />
+
+            <div className="p-3 space-y-3">
+                {/* ======================== STORE INFORMATION ======================== */}
+                <DashboardCard title="Store Information"
+                    className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 gap-5'>
+                    <div className="space-y-2">
+                        <h6 className="text-xs text-gray-600">From Store</h6>
+                        <p className="text-sm font-medium text-gray-900">{transfer.from_store_name || '-'}</p>
+                    </div>
+                    <div className="space-y-2">
+                        <h6 className="text-xs text-gray-600">To Store</h6>
+                        <p className="text-sm font-medium text-gray-900">{transfer.to_store_name || '-'}</p>
+                    </div>
+                </DashboardCard>
+
+                {/* ======================== TRANSFER INFORMATION ======================== */}
+                <DashboardCard title="Transfer Information"
+                    className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5'>
+                    <div className="space-y-2">
+                        <h6 className="text-xs text-gray-600">Product</h6>
+                        <p className="text-sm font-medium text-gray-900">{transfer.product_name || '-'}</p>
+                        <p className="text-xs text-gray-500">SKU: {transfer.product_sku || '-'}</p>
+                    </div>
+                    <div className="space-y-2">
+                        <h6 className="text-xs text-gray-600">Quantity</h6>
+                        <p className="text-sm font-medium text-gray-900">{transfer.quantity || '-'}</p>
+                    </div>
+                    <div className="space-y-2">
+                        <h6 className="text-xs text-gray-600">Status</h6>
+                        <StatusChip status={transfer.status || 'pending'} />
+                    </div>
+                    <div className="space-y-2">
+                        <h6 className="text-xs text-gray-600">Created On</h6>
+                        <p className="text-sm font-medium text-gray-900">
+                            {transfer.created_at ? moment(transfer.created_at).format('LLL') : '-'}
+                        </p>
+                    </div>
+                    {transfer.variation_type && transfer.variation_value && (
+                        <div className="space-y-2">
+                            <h6 className="text-xs text-gray-600">Variation</h6>
+                            <p className="text-sm font-medium text-gray-900">
+                                {transfer.variation_type}: {transfer.variation_value}
+                            </p>
+                        </div>
+                    )}
+                    <div className="space-y-2">
+                        <h6 className="text-xs text-gray-600">Created By</h6>
+                        <p className="text-sm font-medium text-gray-900">
+                            {transfer.created_by_name || '-'}
+                        </p>
+                    </div>
+                    {transfer.received_by_name && (
+                        <div className="space-y-2">
+                            <h6 className="text-xs text-gray-600">Received By</h6>
+                            <p className="text-sm font-medium text-gray-900">
+                                {transfer.received_by_name}
+                            </p>
+                        </div>
+                    )}
+                    {transfer.transferred_at && (
+                        <div className="space-y-2">
+                            <h6 className="text-xs text-gray-600">Transferred At</h6>
+                            <p className="text-sm font-medium text-gray-900">
+                                {moment(transfer.transferred_at).format('LLL')}
+                            </p>
+                        </div>
+                    )}
+                    {transfer.received_at && (
+                        <div className="space-y-2">
+                            <h6 className="text-xs text-gray-600">Received At</h6>
+                            <p className="text-sm font-medium text-gray-900">
+                                {moment(transfer.received_at).format('LLL')}
+                            </p>
+                        </div>
+                    )}
+                    <div className="space-y-2 col-span-full">
+                        <h6 className="text-xs text-gray-600">Notes</h6>
+                        <p className="text-sm text-gray-900">{transfer.notes || '-'}</p>
+                    </div>
+                </DashboardCard>
+            </div>
+        </>
+    )
+}
+
+// ================================
+// SKELETON COMPONENT FOR LOADING STATE
+// ================================
+const TransferDetailsSkeleton = () => {
     return (
         <>
             <DashboardBreadCrumb
@@ -17,104 +153,25 @@ const TransferDetailsView = ({ transferId }: { transferId: string }) => {
             />
 
             <div className="p-3 space-y-3">
-                {/* ======================== STORE INFORMATION ======================== */}
+
                 <DashboardCard title="Store Information"
                     className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 gap-5'>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">From Store</h6>
-                        <p className="text-sm font-medium text-gray-900">Main Store</p>
-                    </div>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">To Store</h6>
-                        <p className="text-sm font-medium text-gray-900">Warehouse A</p>
-                    </div>
+                    {[...Array(2)].map((_, i) => (
+                        <div key={i} className="space-y-2 animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            <div className="h-5 bg-gray-200 rounded w-32"></div>
+                        </div>
+                    ))}
                 </DashboardCard>
 
-                {/* ======================== TRANSFER INFORMATION ======================== */}
                 <DashboardCard title="Transfer Information"
                     className='p-1' bodyClassName='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5'>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Reference</h6>
-                        <p className="text-sm font-medium text-gray-900">TRF-2024-001</p>
-                    </div>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Grand Total</h6>
-                        <p className="text-sm font-medium text-gray-900">{formatCurrency(1250.00)}</p>
-                    </div>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Status</h6>
-                        <StatusChip status="sent" />
-                    </div>
-                    <div className="space-y-2">
-                        <h6 className="text-xs text-gray-600">Created On</h6>
-                        <p className="text-sm font-medium text-gray-900">2024-01-15</p>
-                    </div>
-                    <div className="space-y-2 col-span-full">
-                        <h6 className="text-xs text-gray-600">Note</h6>
-                        <p className="text-sm text-gray-900">
-                            This is a test transfer for moving products between stores, please review the details and confirm the transfer, thank you.
-                        </p>
-                    </div>
-                </DashboardCard>
-
-                {/* ======================== TRANSFER ITEMS ======================== */}
-                <DashboardCard title="Transfer Items" className='overflow-hidden' 
-                bodyClassName='p-0'>
-                    <OrderItemsTable
-                        items={[
-                            {
-                                id: '1',
-                                productId: '1',
-                                name: 'Wireless Bluetooth Headphones',
-                                code: 'WBH-001',
-                                stock: 45,
-                                unit: 'piece',
-                                quantity: 2,
-                                netUnitPrice: 129.99,
-                                discount: 5,
-                                tax: 10,
-                                subtotal: 259.98
-                            },
-                            {
-                                id: '2',
-                                productId: '2',
-                                name: 'Cotton T-Shirt',
-                                code: 'CTS-002',
-                                stock: 120,
-                                unit: 'piece',
-                                quantity: 3,
-                                netUnitPrice: 24.99,
-                                discount: 10,
-                                tax: 8,
-                                subtotal: 74.97
-                            },
-                            {
-                                id: '3',
-                                productId: '3',
-                                name: 'Running Shoes',
-                                code: 'RS-003',
-                                stock: 30,
-                                unit: 'pair',
-                                quantity: 1,
-                                netUnitPrice: 89.99,
-                                discount: 15,
-                                tax: 12,
-                                subtotal: 89.99
-                            }
-                        ]}
-                        readOnly={true}
-                    />
-
-                    <div className="px-5 pb-5">
-                        <SummaryBox
-                            items={[
-                                { label: 'Order Tax', value: formatCurrency(125.00) + ' (10%)' },
-                                { label: 'Discount', value: formatCurrency(50.00) },
-                                { label: 'Shipping', value: formatCurrency(20.00) },
-                                { label: 'Grand Total', value: formatCurrency(1250.00), isTotal: true }
-                            ]}
-                        />
-                    </div>
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="space-y-2 animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            <div className="h-5 bg-gray-200 rounded w-32"></div>
+                        </div>
+                    ))}
                 </DashboardCard>
             </div>
         </>
@@ -122,4 +179,3 @@ const TransferDetailsView = ({ transferId }: { transferId: string }) => {
 }
 
 export default TransferDetailsView
-
