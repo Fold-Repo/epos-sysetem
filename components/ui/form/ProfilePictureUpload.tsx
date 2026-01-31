@@ -13,7 +13,8 @@ interface ProfilePictureUploadProps {
     formGroupClass?: string
     labelClassName?: string
     error?: string
-    value?: FileList | null
+    /** URL string (e.g. from profile) or FileList for new upload */
+    value?: FileList | string | null
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
     defaultImage?: string
 }
@@ -40,6 +41,10 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                 setPreview(reader.result as string)
             }
             reader.readAsDataURL(file)
+        } else if (typeof value === 'string' && value) {
+            setPreview(value)
+        } else if (!value && defaultImage) {
+            setPreview(defaultImage)
         } else if (!value && !defaultImage) {
             setPreview(null)
         }

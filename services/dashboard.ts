@@ -3,25 +3,40 @@
 import { useQuery } from "@tanstack/react-query";
 import { ENDPOINT } from "@/constants";
 import { client } from "@/lib";
-import { startOfWeek, addDays, format } from "date-fns";
+import { addDays, format, parseISO } from "date-fns";
 
 // ================================
-// WEEKLY TREND RESPONSE TYPE
+// TREND QUERY PARAMS
 // ================================
-export interface WeeklyTrendResponse {
+export interface TrendQueryParams {
+    period?: 'weekly' | 'monthly';
+    startDate?: string; // YYYY-MM-DD format
+    endDate?: string; // YYYY-MM-DD format
+}
+
+// ================================
+// TREND RESPONSE TYPE
+// ================================
+export interface TrendResponse {
     status: number;
     message: string;
     data: {
+        period: string;
         labels: string[];
+        dateRange: {
+            startDate: string;
+            endDate: string;
+            days: number;
+        };
         sales: number[];
         purchases: number[];
     };
 }
 
 // ================================
-// TRANSFORMED WEEKLY TREND DATA
+// TRANSFORMED TREND DATA
 // ================================
-export interface WeeklyTrendDataPoint extends Record<string, unknown> {
+export interface TrendDataPoint extends Record<string, unknown> {
     day: string;
     purchases: number;
     sales: number;
@@ -29,41 +44,39 @@ export interface WeeklyTrendDataPoint extends Record<string, unknown> {
 }
 
 // ================================
-// GET WEEKLY TREND
+// GET TREND
 // ================================
-export async function getWeeklyTrend(): Promise<WeeklyTrendDataPoint[]> {
+export async function getTrend(params?: TrendQueryParams): Promise<TrendDataPoint[]> {
     try {
-        const response = await client.get<WeeklyTrendResponse>(ENDPOINT.DASHBOARD.WEEKLY_TREND);
+        const queryParams: Record<string, string> = {};
+        
+        if (params?.period) {
+            queryParams.period = params.period;
+        } else if (params?.startDate && params?.endDate) {
+            queryParams.startDate = params.startDate;
+            queryParams.endDate = params.endDate;
+        }
+
+        const response = await client.get<TrendResponse>(ENDPOINT.DASHBOARD.WEEKLY_TREND, {
+            params: queryParams
+        });
 
         if (!response.data?.data) {
             throw new Error('Invalid API response');
         }
 
-        const { labels, sales, purchases } = response.data.data;
+        const { labels, sales, purchases, dateRange } = response.data.data;
 
         if (!labels || !Array.isArray(labels) || labels.length === 0) {
             throw new Error('Invalid labels data');
         }
 
-        const today = new Date();
-        const weekStart = startOfWeek(today, { weekStartsOn: 0 });
-
-        const dayOffsetMap: Record<string, number> = {
-            'Mon': 1,
-            'Tue': 2,
-            'Tues': 2,
-            'Wed': 3,
-            'Thu': 4,
-            'Thur': 4,
-            'Fri': 5,
-            'Sat': 6,
-            'Sun': 0,
-        };
+        // Use startDate from API response to calculate dates
+        const startDate = parseISO(dateRange.startDate);
 
         // Transform API response to chart data format
         return labels.map((label, index) => {
-            const dayOffset = dayOffsetMap[label] ?? index;
-            const date = addDays(weekStart, dayOffset);
+            const date = addDays(startDate, index);
 
             return {
                 day: label,
@@ -74,19 +87,26 @@ export async function getWeeklyTrend(): Promise<WeeklyTrendDataPoint[]> {
         });
     } catch (error) {
         // Return empty array on error - component will use fallback data
-        console.error('Error fetching weekly trend:', error);
+        console.error('Error fetching trend:', error);
         return [];
     }
 }
 
 // ================================
-// USE WEEKLY TREND HOOK
+// USE TREND HOOK
+// ================================
+export function useGetTrend(params?: TrendQueryParams) {
+    return useQuery({
+        queryKey: ['trend', params?.period, params?.startDate, params?.endDate],
+        queryFn: () => getTrend(params),
+    });
+}
+
+// ================================
+// DEPRECATED: USE WEEKLY TREND (for backward compatibility)
 // ================================
 export function useGetWeeklyTrend() {
-    return useQuery({
-        queryKey: ['weekly-trend'],
-        queryFn: getWeeklyTrend,
-    });
+    return useGetTrend({ period: 'weekly' });
 }
 
 // ================================

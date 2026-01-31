@@ -1,23 +1,20 @@
 'use client'
 
-import { CustomAutocomplete, Input, Select, TableComponent, TableCell, Label } from "@/components"
+import { ProductSelect, Input, Select, TableComponent, TableCell, Label } from "@/components"
 import React, { useState, useRef } from "react"
 import { TrashIcon } from "@/components/icons"
 import { Button, Switch, useDisclosure } from "@heroui/react"
-import { productsData } from "@/data"
 import BarCodeModal from "./BarCodeModal"
 import BarcodeLabels from "./BarcodeLabels"
 
 interface BarcodeProduct {
     id: string
+    productId: string
     name: string
     code: string
     quantity: number
     price?: number
-}
-
-interface ProductBarcodeViewProps {
-    storeName?: string
+    variationId?: number
 }
 
 const paperSizeOptions = [
@@ -28,16 +25,14 @@ const paperSizeOptions = [
     { value: "Legal", label: "Legal" },
 ]
 
-const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarcodeViewProps) => {
+const ProductBarcodeView = () => {
     
     const [barcodeProducts, setBarcodeProducts] = useState<BarcodeProduct[]>([])
-    const [selectedProductId, setSelectedProductId] = useState<string>("")
     const [paperSize, setPaperSize] = useState<string>("A4")
     const { isOpen: isPreviewOpen, onOpen: onPreviewOpen, onClose: onPreviewClose } = useDisclosure()
     const printRef = useRef<HTMLDivElement>(null)
 
     const [showOptions, setShowOptions] = useState({
-        storeName: true,
         productName: false,
         price: false,
         border: true,
@@ -49,35 +44,17 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
         { key: 'action', title: 'ACTION' },
     ]
 
-    const handleProductSelect = (productId: string) => {
-        if (!productId) return
-
-        const product = productsData.find(p => p.id === productId)
-        if (!product) return
-
-        const existingProduct = barcodeProducts.find(p => p.id === productId)
-        if (existingProduct) {
+    const handleItemAdd = (item: BarcodeProduct) => {
+        const existing = barcodeProducts.find(
+            p => p.productId === item.productId && (p.variationId ?? 0) === (item.variationId ?? 0)
+        )
+        if (existing) {
             setBarcodeProducts(prev =>
-                prev.map(item =>
-                    item.id === productId
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
-                )
+                prev.map(p => p.id === existing.id ? { ...p, quantity: p.quantity + 1 } : p)
             )
         } else {
-            setBarcodeProducts(prev => [
-                ...prev,
-                {
-                    id: product.id,
-                    name: product.name,
-                    code: product.code,
-                    quantity: 20,
-                    price: product.price
-                }
-            ])
+            setBarcodeProducts(prev => [...prev, item])
         }
-
-        setSelectedProductId("")
     }
 
     const handleQuantityChange = (id: string, quantity: number) => {
@@ -92,10 +69,8 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
 
     const handleReset = () => {
         setBarcodeProducts([])
-        setSelectedProductId("")
         setPaperSize("A4")
         setShowOptions({
-            storeName: true,
             productName: false,
             price: false,
             border: false,
@@ -307,19 +282,32 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
             {/* ================================ FORM ================================ */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3">
 
-                <CustomAutocomplete
+                <ProductSelect
                     name="product"
                     label="Product"
-                    placeholder="Select Product"
+                    placeholder="Search Product"
                     radius="lg"
                     inputSize="sm"
-                    options={productsData.map(p => ({ value: p.id, label: p.name }))}
-                    value={selectedProductId}
-                    onChange={(value) => {
-                        if (typeof value === 'string') {
-                            handleProductSelect(value)
+                    limit={20}
+                    existingItems={barcodeProducts}
+                    itemMapper={(product, id) => {
+                        const isVariation = !!(product as { variationId?: number }).variationId
+                        const p = product as { name: string; code: string; price?: number; id: string; variationId?: number; variationType?: string; variationValue?: string; variationSku?: string }
+                        const itemName = isVariation && p.variationValue
+                            ? `${p.name} - ${p.variationType}: ${p.variationValue}`
+                            : p.name
+                        const itemCode = isVariation && p.variationSku ? p.variationSku : p.code
+                        return {
+                            id,
+                            productId: p.id,
+                            name: itemName,
+                            code: itemCode,
+                            quantity: 20,
+                            price: p.price,
+                            variationId: p.variationId,
                         }
                     }}
+                    onItemAdd={handleItemAdd}
                 />
 
                 <Select
@@ -336,15 +324,6 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
                 </Select>
 
                 <div className="flex flex-wrap justify-between items-center gap-3 pt-4 shrink-0">
-
-                    <div className="space-y-1 shrink-0">
-                        <Label label="Show Store Name" htmlFor="storeName" />
-                        <Switch 
-                            size="sm"
-                            isSelected={showOptions.storeName}
-                            onValueChange={(value) => setShowOptions(prev => ({ ...prev, storeName: value }))}
-                        />
-                    </div>
 
                     <div className="space-y-1 shrink-0">
                         <Label label="Show Product Name" htmlFor="productName" />
@@ -406,7 +385,7 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
             {/* ================================ PREVIEW MODAL ================================ */}
             <BarCodeModal isOpen={isPreviewOpen} onClose={onPreviewClose}
                 barcodeProducts={barcodeProducts} paperSize={paperSize}
-                storeName={storeNameProp} showOptions={showOptions} onPrint={handlePrint}
+                showOptions={showOptions} onPrint={handlePrint}
             />
 
             {/* ================================ HIDDEN PRINT CONTAINER (Always Rendered) ================================ */}
@@ -427,7 +406,6 @@ const ProductBarcodeView = ({ storeName: storeNameProp = "Nodje" }: ProductBarco
                 {barcodeProducts.length > 0 && (
                     <BarcodeLabels
                         barcodeProducts={barcodeProducts}
-                        storeName={storeNameProp}
                         showOptions={showOptions}
                     />
                 )}

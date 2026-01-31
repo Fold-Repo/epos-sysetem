@@ -14,9 +14,7 @@ interface BarcodeProduct {
 
 interface BarcodeLabelsProps {
     barcodeProducts: BarcodeProduct[]
-    storeName: string
     showOptions: {
-        storeName: boolean
         productName: boolean
         price: boolean
         border: boolean
@@ -25,7 +23,6 @@ interface BarcodeLabelsProps {
 
 const BarcodeLabels: React.FC<BarcodeLabelsProps> = ({
     barcodeProducts,
-    storeName,
     showOptions
 }) => {
     const columns = 5
@@ -48,9 +45,6 @@ const BarcodeLabels: React.FC<BarcodeLabelsProps> = ({
                         width: '100%',
                         maxWidth: '100%'
                     }}>
-                    {showOptions.storeName && (
-                        <div className="text-xs font-semibold mb-0.5 line-clamp-1 uppercase" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>{storeName}</div>
-                    )}
                     {showOptions.productName && (
                         <div className="text-xs mb-0 line-clamp-1" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>{product.name}</div>
                     )}

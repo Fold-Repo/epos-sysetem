@@ -6,12 +6,14 @@ export interface StoresState {
     stores: StoreListItem[]
     isLoading: boolean
     error: string | null
+    selectedStoreId: string | null
 }
 
 const initialState: StoresState = {
     stores: [],
     isLoading: false,
     error: null,
+    selectedStoreId: null,
 }
 
 // ================================
@@ -40,6 +42,9 @@ const storesSlice = createSlice({
             state.stores = []
             state.error = null
         },
+        setSelectedStoreId: (state, action: PayloadAction<string | null>) => {
+            state.selectedStoreId = action.payload
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -59,11 +64,12 @@ const storesSlice = createSlice({
     },
 })
 
-export const { setStores, clearStores } = storesSlice.actions
+export const { setStores, clearStores, setSelectedStoreId } = storesSlice.actions
 
 export const selectStores = (state: { stores: StoresState }) => state.stores.stores
 export const selectStoresLoading = (state: { stores: StoresState }) => state.stores.isLoading
 export const selectStoresError = (state: { stores: StoresState }) => state.stores.error
+export const selectSelectedStoreId = (state: { stores: StoresState }) => state.stores.selectedStoreId
 
 export default storesSlice.reducer
 

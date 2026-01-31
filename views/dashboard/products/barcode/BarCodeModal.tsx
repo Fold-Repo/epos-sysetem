@@ -18,9 +18,7 @@ interface BarCodeModalProps {
     onClose: () => void
     barcodeProducts: BarcodeProduct[]
     paperSize: string
-    storeName: string
     showOptions: {
-        storeName: boolean
         productName: boolean
         price: boolean
         border: boolean
@@ -34,7 +32,6 @@ const BarCodeModal: React.FC<BarCodeModalProps> = ({
     onClose,
     barcodeProducts,
     paperSize,
-    storeName,
     showOptions,
     onPrint,
     printRef: externalPrintRef
@@ -70,7 +67,6 @@ const BarCodeModal: React.FC<BarCodeModalProps> = ({
                 }}>
                 <BarcodeLabels
                     barcodeProducts={barcodeProducts}
-                    storeName={storeName}
                     showOptions={showOptions}
                 />
             </div>

@@ -12,7 +12,8 @@ import {
     fetchPaymentMethods,
     fetchCustomers,
     fetchRoles,
-    fetchActiveExpenseCategories
+    fetchActiveExpenseCategories,
+    fetchProfile
 } from '@/store/slice'
 
 /**
@@ -24,6 +25,7 @@ export const useFetchAllData = () => {
     const dispatch = useAppDispatch()
 
     useEffect(() => {
+        dispatch(fetchProfile())
         dispatch(fetchCategories())
         dispatch(fetchStores())
         dispatch(fetchSuppliers())

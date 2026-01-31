@@ -1,6 +1,6 @@
 import { clearCookie } from './cookies'
 import { AUTH_TOKEN_KEY, EMAIL_ADDRESS_KEY } from '@/types'
-import { clearAuth, clearPermissions, persistor, store } from '@/store'
+import { clearAuth, clearPermissions, clearProfile, persistor, store } from '@/store'
 
 /**
  * Logout utility function
@@ -16,6 +16,11 @@ export const logout = async () => {
     // Clear Redux permissions state
     // ==============================
     store.dispatch(clearPermissions())
+
+    // ==============================
+    // Clear Redux profile state
+    // ==============================
+    store.dispatch(clearProfile())
     
     // ==============================
     // Clear Redux persist storage

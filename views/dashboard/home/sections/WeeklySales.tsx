@@ -7,10 +7,10 @@ import { StackIcon } from '@/components/icons'
 import { formatCurrency } from '@/lib'
 import { format } from 'date-fns'
 import { ArrowTrendingUpIcon } from '@heroicons/react/24/outline'
-import { useGetWeeklyTrend } from '@/services'
-import { getCurrentWeekSalesData } from '@/data'
+import { useGetTrend } from '@/services'
 import { CHART_COLORS } from '@/constants'
 import { Spinner } from '@heroui/react'
+import { format as formatDate } from 'date-fns'
 
 // ================================
 // FILTER OPTIONS
@@ -35,9 +35,24 @@ const WeeklySales = () => {
     });
 
     // ================================
-    // FETCH WEEKLY TREND DATA
+    // BUILD QUERY PARAMS
     // ================================
-    const { data: apiData, isLoading } = useGetWeeklyTrend();
+    const getQueryParams = (): { period?: 'weekly' | 'monthly'; startDate?: string; endDate?: string } => {
+        if (filterRange === 'custom' && dateRange.startDate && dateRange.endDate) {
+            return {
+                startDate: formatDate(dateRange.startDate, 'yyyy-MM-dd'),
+                endDate: formatDate(dateRange.endDate, 'yyyy-MM-dd')
+            };
+        }
+        return {
+            period: filterRange === 'monthly' ? ('monthly' as const) : ('weekly' as const)
+        };
+    };
+
+    // ================================
+    // FETCH TREND DATA
+    // ================================
+    const { data: apiData, isLoading } = useGetTrend(getQueryParams());
 
     const chartData = apiData || [];
 
@@ -119,14 +134,22 @@ const WeeklySales = () => {
                 startDate: value.startDate,
                 endDate: value.endDate
             });
+        } else if (value instanceof Date) {
+            // Single date selected, use as both start and end
+            setDateRange({
+                startDate: value,
+                endDate: value
+            });
         }
     };
 
     return (
         <DashboardCard title='Sales & Purchases Trend'
+            headerClassName='items-start'
             headerActions={
                 <div className="flex flex-col items-end gap-2">
-                    {/* Chart Legend */}
+
+                    {/* ================= CHART LEGEND ================= */}
                     <ChartLegend
                         items={legendItems}
                         onToggle={toggleSeries}
