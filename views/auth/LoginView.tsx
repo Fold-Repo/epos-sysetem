@@ -12,9 +12,12 @@ import { login, requestOTP, googleSignIn } from '@/services'
 import { getErrorMessage, setCookie } from '@/utils'
 import { EMAIL_ADDRESS_KEY, AUTH_TOKEN_KEY } from '@/types'
 import { useState } from 'react'
+import { useAppDispatch } from '@/store/hooks'
+import { fetchProfile } from '@/store/slice'
 
 const LoginView = () => {
 
+    const dispatch = useAppDispatch();
     const { showSuccess, showError } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -35,6 +38,7 @@ const LoginView = () => {
             });
 
             setCookie(AUTH_TOKEN_KEY, response.data?.token || '');
+            dispatch(fetchProfile());
             showSuccess(response.message || 'Login successful, welcome back!');
             router.push(callbackUrl);
 
@@ -85,6 +89,7 @@ const LoginView = () => {
             const response = await googleSignIn({ idToken });
 
             setCookie(AUTH_TOKEN_KEY, response.data?.token || '');
+            dispatch(fetchProfile());
             showSuccess(response.message || 'Login successful, welcome back!');
             router.push(callbackUrl);
         } catch (error: any) {

@@ -173,8 +173,8 @@ function transformRoleToRoleType(role: RoleListItem): RoleType {
         id: role.role_id,
         name: role.name,
         description: role.description,
-        userCount: role.userCount,
-        permissionsCount: role.permissionsCount,
+        userCount: role.user_count,
+        permissionsCount: role.permission_count,
         created_at: role.created_at,
     };
 }

@@ -30,37 +30,50 @@ export interface PermissionsResponse {
 
 // ===============================================
 // Permission Keys
+// API returns camelCase keys; sidebar links use the values below.
+// Keys that differ from API (e.g. API: manageSale → sidebar: manageSales) are mapped in usePermissions.
 // ===============================================
 export enum PermissionKey {
-    // Dashboard
-    MANAGE_DASHBOARD = 'manageDashboard',
-
-    // Stores
-    MANAGE_STORES = 'manageStores',
-
-    // Products & Inventory
-    MANAGE_PRODUCTS = 'manageProducts',
-    MANAGE_ADJUSTMENTS = 'manageAdjustments',
-    MANAGE_QUOTATIONS = 'manageQuotations',
+    // ---------- API keys (exact match) ----------
+    MANAGE_CUSTOMERS = 'manageCustomers',
     MANAGE_TRANSFERS = 'manageTransfers',
-
-    // People & Users
-    MANAGE_USERS = 'manageUsers',
+    MANAGE_SMS_TEMPLATES = 'manageSmsTemplates',
+    MANAGE_SMS_APIS = 'manageSmsApis',
+    MANAGE_DASHBOARD = 'manageDashboard',
     MANAGE_SUPPLIERS = 'manageSuppliers',
-
-    // Sales
-    MANAGE_SALES = 'manageSales',
-    MANAGE_PURCHASES = 'managePurchases',
-    MANAGE_PAYMENT_METHODS = 'managePaymentMethods',
-    MANAGE_CURRENCY = 'manageCurrency',
-    MANAGE_EXPENSES = 'manageExpenses',
-
-    // Reports
     MANAGE_REPORTS = 'manageReports',
+    MANAGE_UNITS = 'manageUnits',
+    MANAGE_POS_SCREEN = 'managePosScreen',
+    MANAGE_PRODUCTS = 'manageProducts',
+    MANAGE_LANGUAGE = 'manageLanguage',
+    MANAGE_EXPENSE_CATEGORIES = 'manageExpenseCategories',
+    MANAGE_EMAIL_TEMPLATES = 'manageEmailTemplates',
+    MANAGE_PRODUCT_CATEGORIES = 'manageProductCategories',
+    MANAGE_PURCHASE = 'managePurchase',
+    MANAGE_STORES = 'manageStores',
+    MANAGE_VARIATIONS = 'manageVariations',
+    MANAGE_BRANDS = 'manageBrands',
+    MANAGE_USERS = 'manageUsers',
+    MANAGE_QUOTATIONS = 'manageQuotations',
+    MANAGE_EXPENSES = 'manageExpenses',
+    MANAGE_SALE_RETURN = 'manageSaleReturn',
+    MANAGE_SETTING = 'manageSetting',
+    MANAGE_PURCHASE_RETURN = 'managePurchaseReturn',
+    MANAGE_CURRENCY = 'manageCurrency',
+    MANAGE_SALE = 'manageSale',
+    MANAGE_ADJUSTMENTS = 'manageAdjustments',
+    MANAGE_ROLES = 'manageRoles',
 
-    // Settings & Configuration
+    // ---------- Sidebar aliases (used by dashboard links; mapped from API in usePermissions) ----------
+    /** Sidebar: Sales, Sale Return. API sends manageSale. */
+    MANAGE_SALES = 'manageSales',
+    /** Sidebar: Purchases, Purchase Return. API sends managePurchase. */
+    MANAGE_PURCHASES = 'managePurchases',
+    /** Sidebar: Settings. API sends manageSetting. */
     MANAGE_SETTINGS = 'manageSettings',
+    /** Sidebar: Roles/Permissions. API sends manageRoles. */
     MANAGE_ROLES_PERMISSIONS = 'manageRolesPermissions',
 
+    // ---------- Sidebar only (no API key in current response) ----------
+    MANAGE_PAYMENT_METHODS = 'managePaymentMethods',
 }
-

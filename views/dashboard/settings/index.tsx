@@ -1,9 +1,8 @@
 'use client'
 
 import { DashboardBreadCrumb, DashboardCard, FilterTabs } from '@/components'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import GeneralSettingsView from './general'
-import ReceiptSettingsView from './ReceiptSettingsView'
 
 const SettingsView = () => {
 
@@ -13,8 +12,8 @@ const SettingsView = () => {
         switch (tab) {
             case 'general':
                 return <GeneralSettingsView />
-            case 'receipt-settings':
-                return <ReceiptSettingsView />
+            // case 'receipt-settings':
+            //     return <ReceiptSettingsView />
             default:
                 return null
         }
@@ -34,13 +33,13 @@ const SettingsView = () => {
                 <DashboardCard bodyClassName='space-y-4'>
 
                     {/* ================= Tab Navigation ================= */}
-                    <div className="flex flex-wrap items-center gap-3 justify-between border-y border-slate-200 py-2">
+                    {/* <div className="flex flex-wrap items-center gap-3 justify-between border-y border-slate-200 py-2">
 
                         <FilterTabs
                             className='w-full md:w-fit'
                             items={[
                                 { label: 'General', key: 'general' },
-                                { label: 'Receipt Settings', key: 'receipt-settings' },
+                                // { label: 'Receipt Settings', key: 'receipt-settings' },
                             ]}
                             activeKey={activeTab}
                             onTabChange={(key) => {
@@ -48,7 +47,7 @@ const SettingsView = () => {
                             }}
                         />
 
-                    </div>
+                    </div> */}
 
                     {getTabContent(activeTab)}
 

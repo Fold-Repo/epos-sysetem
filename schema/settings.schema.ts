@@ -65,3 +65,24 @@ export const settingsSchema = yup.object({
 
 export type SettingsFormData = yup.InferType<typeof settingsSchema>;
 
+// ==============================
+// Company profile update (PUT /users/profile) – populate from profile, submit logo + address
+// ==============================
+export const companyProfileSchema = yup.object({
+    logo: yup
+        .string()
+        .nullable()
+        .optional()
+        .transform((v) => v || undefined)
+        .test('url', 'Must be a valid URL', (v) => !v || /^https?:\/\//.test(v)),
+    postcode: yup.string().optional().default(''),
+    selectedAddress: yup.string().optional().default(''),
+    line1: yup.string().optional().default(''),
+    line2: yup.string().nullable().optional().default(''),
+    town: yup.string().optional().default(''),
+    city: yup.string().optional().default(''),
+    country: yup.string().optional().default(''),
+}).required();
+
+export type CompanyProfileFormData = yup.InferType<typeof companyProfileSchema>;
+

@@ -28,6 +28,14 @@ client.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
+        // ================================
+        // Add store ID header from axios defaults (set in SideBar)
+        // ================================
+        const storeId = client.defaults.headers.common['x-store-id'];
+        if (storeId) {
+            config.headers['x-store-id'] = storeId as string;
+        }
+
         return config;
     },
     (error: AxiosError) => Promise.reject(error)

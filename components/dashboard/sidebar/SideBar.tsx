@@ -1,16 +1,17 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import Image from 'next/image';
-import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { Button, useDisclosure } from '@heroui/react';
 import SidebarLink from './SidebarLink';
 import { DashboardSection } from '@/constants';
-import { LogoutIcon, LogoutModal, Logo } from '@/components';
+import { LogoutIcon, LogoutModal, Logo, MenuDropdown } from '@/components';
 import { UserPermissions } from '@/types';
 import { filterLinksByPermissions } from '@/utils';
+import { useAppSelector, useAppDispatch, selectStores, selectSelectedStoreId, setSelectedStoreId } from '@/store';
+import { client } from '@/lib';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 interface SidebarProps {
@@ -26,6 +27,69 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
 
     const pathname = usePathname()
     const { isOpen: isLogoutOpen, onOpen: openLogoutModal, onClose: closeLogoutModal } = useDisclosure()
+    const queryClient = useQueryClient()
+
+    // ===============================================
+    // Stores from State
+    // ===============================================
+    const dispatch = useAppDispatch()
+    const stores = useAppSelector(selectStores)
+    const selectedStoreId = useAppSelector(selectSelectedStoreId)
+    const selectedStore = selectedStoreId || 'all'
+
+    // ===============================================
+    // Sync axios header with Redux state on mount/change
+    // ===============================================
+    useEffect(() => {
+        if (selectedStoreId) {
+            client.defaults.headers.common['x-store-id'] = selectedStoreId;
+        } else {
+            delete client.defaults.headers.common['x-store-id'];
+        }
+    }, [selectedStoreId])
+
+    // ===============================================
+    // Refetch all queries when store ID changes
+    // ===============================================
+    const isInitialMount = useRef(true);
+    const prevStoreId = useRef<string | null>(selectedStoreId);
+
+    useEffect(() => {
+        // ================================
+        // Skip refetch on initial mount
+        // ================================
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            prevStoreId.current = selectedStoreId;
+            return;
+        }
+
+        // ================================
+        // Only refetch if store ID actually changed
+        // ================================
+        if (prevStoreId.current !== selectedStoreId) {
+            // ================================
+            // Invalidate all queries to trigger refetch with new store ID
+            // ================================
+            queryClient.invalidateQueries();
+            prevStoreId.current = selectedStoreId;
+        }
+    }, [selectedStoreId, queryClient])
+
+    // ===============================================
+    // Transform stores for MenuDropdown
+    // ===============================================
+    const storeOptions = useMemo(() => {
+        const options = [{ key: 'all', label: 'Select Store' }]
+        stores.forEach(store => {
+            options.push({
+                key: store.store_id.toString(),
+                label: store.name
+            })
+        })
+        return options
+    }, [stores])
+
 
     // ===============================================
     // Expanded Sections
@@ -94,6 +158,33 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
                     </Button>
 
                 </div>
+
+                {/* ========================= DROPDOWN SELECT STORES ========================= */}
+                <div className="pt-5 px-4">
+                    <MenuDropdown
+                        triggerClassName="w-full border border-gray-200 rounded-lg bg-white text-sm text-text-color justify-between text-xs font-light px-3 py-2.5"
+                        items={storeOptions}
+                        value={selectedStore}
+                        onChange={(value) => {
+                            const storeId = value === 'all' ? null : value
+                            
+                            // ================================
+                            // Update Redux state
+                            // ================================
+                            dispatch(setSelectedStoreId(storeId))
+                            
+                            // ================================
+                            // Set axios header directly for immediate effect
+                            // ================================
+                            if (storeId) {
+                                client.defaults.headers.common['x-store-id'] = storeId;
+                            } else {
+                                delete client.defaults.headers.common['x-store-id'];
+                            }
+                        }}
+                    />
+                </div>
+
 
                 <div className="flex flex-col flex-1 overflow-y-auto">
 

@@ -5,6 +5,7 @@ export enum UPLOAD_FOLDER {
     PRODUCTS = 'products',
     CATEGORIES = 'categories',
     EXPENSES = 'expenses',
+    BUSINESS = 'business',
 }
 
 // ==============================

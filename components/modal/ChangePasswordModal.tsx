@@ -26,7 +26,6 @@ const ChangePasswordModal = ({ open, close }: ChangePasswordModalProps) => {
 
     const handleFormSubmit = async (data: ChangePasswordFormData) => {
         try {
-            console.log('Change password API call:', data);
             showSuccess('Password changed successfully');
             reset();
             close();

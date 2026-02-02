@@ -10,6 +10,10 @@ export const API_BASE_URL = BASE_URL[currentEnv];
 
 export const ENDPOINT = {
 
+    USERS: {
+        PROFILE: '/users/profile',
+    },
+
     AUTH: {
         ROLE_PERMISSIONS: '/role-permissions',
         LOGIN: '/auth/login',

@@ -13,7 +13,8 @@ import {
     paymentMethodsReducer,
     customersReducer,
     rolesReducer,
-    expenseCategoriesReducer
+    expenseCategoriesReducer,
+    profileReducer
 } from "./slice"
 
 const rootReducer = combineReducers({
@@ -29,12 +30,13 @@ const rootReducer = combineReducers({
     customers: customersReducer,
     roles: rolesReducer,
     expenseCategories: expenseCategoriesReducer,
+    profile: profileReducer,
 })
 
 const persistConfig = {
     key: "root",
     storage: storageSession,
-    whitelist: ['auth', 'permissions', 'categories', 'stores', 'suppliers', 'brands', 'units', 'variations', 'paymentMethods', 'customers', 'roles', 'expenseCategories'], 
+    whitelist: ['auth', 'permissions', 'categories', 'stores', 'suppliers', 'brands', 'units', 'variations', 'paymentMethods', 'customers', 'roles', 'expenseCategories', 'profile'], 
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

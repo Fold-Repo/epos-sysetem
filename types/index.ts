@@ -26,3 +26,4 @@ export * from './store.type';
 export * from './auth.type';
 export * from './upload.type';
 export * from './business-user.type';
+export * from './profile.type';
