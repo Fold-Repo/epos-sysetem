@@ -92,7 +92,7 @@ const RegStepOne: React.FC<RegStepOneProps> = ({ onNextStep, formData }) => {
                 Next
             </Button>
 
-            <AuthRedirect question="Already have an account?" linkText="Login here" href="/" />
+            <AuthRedirect className='mt-5' question="Already have an account?" linkText="Login here" href="/" />
 
         </form>
     )

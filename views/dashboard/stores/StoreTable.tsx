@@ -11,13 +11,13 @@ interface StoreTableProps {
     isLoading?: boolean
     onEdit?: (store: StoreType) => void
     onDelete?: (storeId: string) => void
-    onStatusChange?: (storeId: string, status: 'active' | 'inactive') => void
+    // onStatusChange?: (storeId: string, status: 'active' | 'inactive') => void
 }
 
 const columns = [
     { key: 'name', title: 'NAME' },
     { key: 'users', title: 'USERS' },
-    { key: 'status', title: 'STATUS' },
+    // { key: 'status', title: 'STATUS' },
     { key: 'actions', title: 'ACTION' }
 ]
 
@@ -34,7 +34,7 @@ const StoreTable = ({
     isLoading = false,
     onEdit,
     onDelete,
-    onStatusChange
+    // onStatusChange
 }: StoreTableProps) => {
 
     const renderRow = (store: StoreType) => {
@@ -47,7 +47,7 @@ const StoreTable = ({
                 <TableCell>
                     <span className='text-xs'>{userCount}</span>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                     <Switch
                         size="sm"
                         color="primary"
@@ -61,7 +61,7 @@ const StoreTable = ({
                             }
                         }}
                     />
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                     <div className="flex items-center gap-2">
                         <Button 

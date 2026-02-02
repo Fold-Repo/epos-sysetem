@@ -115,10 +115,11 @@ export interface LoginResponse {
 
 export interface RolePermissionsResponse {
     status: number;
-    data: Array<{
+    data: {
         name: string;
+        description?: string;
         permissions: UserPermissions;
-    }>;
+    };
 }
 
 // ==============================
@@ -165,9 +166,8 @@ export interface RoleListItem {
     name: string;
     description: string;
     created_at: string;
-    updated_at: string | null;
-    userCount?: number;
-    permissionsCount?: number;
+    permission_count: number;
+    user_count: number;
 }
 
 export interface RolesListResponse {

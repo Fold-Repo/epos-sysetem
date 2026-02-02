@@ -75,10 +75,8 @@ const CurrencyModal = ({
     const handleFormSubmit = async (data: CurrencyFormData) => {
         try {
             if (mode === 'edit' && initialData) {
-                console.log('Update currency:', initialData.id, data)
                 showSuccess('Currency updated', 'Currency updated successfully.')
             } else {
-                console.log('Create currency:', data)
                 showSuccess('Currency created', 'Currency created successfully.')
             }
             onClose()

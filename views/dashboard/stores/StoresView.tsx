@@ -51,9 +51,9 @@ const StoresView = () => {
         }
     }
 
-    const handleStatusChange = (storeId: string, status: 'active' | 'inactive') => {
-        console.log('Status changed for store:', storeId, 'to', status)
-    }
+    // const handleStatusChange = (storeId: string, status: 'active' | 'inactive') => {
+    //     console.log('Status changed for store:', storeId, 'to', status)
+    // }
 
     const handleAdd = () => {
         setEditingStore(undefined)
@@ -100,7 +100,7 @@ const StoresView = () => {
                             setDeleteStoreId(storeId)
                             onDeleteModalOpen()
                         }}
-                        onStatusChange={handleStatusChange}
+                        // onStatusChange={handleStatusChange}
                     />
 
                     <Pagination

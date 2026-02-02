@@ -4,7 +4,7 @@ import { DashboardBreadCrumb, DashboardCard } from '@/components'
 import RoleForm from '../RoleForm'
 import { useGoBack } from '@/hooks'
 import { useUpdateRole, useGetRolePermissionsList, useGetRolePermissions, transformPermissionsToAPI } from '@/services'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { Spinner } from '@heroui/react'
 
@@ -43,18 +43,19 @@ const EditRoleView = () => {
         }
     } | undefined>(undefined)
 
+    const lastInitializedRoleId = useRef<string | null>(null)
+
     useEffect(() => {
-        if (roleData && roleId) {
-            // ==============================
-            // Set initial data with fetched role data and permissions
-            // ==============================
-            setInitialData({
-                id: Number(roleId),
-                name: roleData.name,
-                description: roleData.description || '',
-                permissions: roleData.permissions || {}
-            })
-        }
+        if (!roleData || !roleId) return
+        // Only set initial data once per roleId to avoid infinite loop (roleData reference changes on re-render)
+        if (lastInitializedRoleId.current === roleId) return
+        lastInitializedRoleId.current = roleId
+        setInitialData({
+            id: Number(roleId),
+            name: roleData.name,
+            description: roleData.description || '',
+            permissions: roleData.permissions || {}
+        })
     }, [roleData, roleId])
 
     const handleSubmit = (formData: RoleFormData) => {

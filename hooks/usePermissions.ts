@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react';
-import { UserPermissions } from '@/types';
+import { UserPermissions, Permission } from '@/types';
 import { useAppDispatch, useAppSelector, selectPermissions, setPermissions } from '@/store';
 import { getPermissions } from '@/services';
 
@@ -29,18 +29,31 @@ export const usePermissions = () => {
         
         const response = await getPermissions();
         
-        // Extract permissions from the first role in the data array
-        if (response.status === 200 && response.data && response.data.length > 0) {
-          const rawPermissions = response.data[0].permissions;
-          
-          // Convert all permission keys from snake_case to camelCase
-          // e.g., "manage_adjustments" -> "manageAdjustments"
+        // ===============================================
+        // Extract permissions from data: { name, description, permissions }
+        // ===============================================
+        const data = response?.data;
+        const rawPermissions =
+          data && typeof data === 'object' && !Array.isArray(data) && 'permissions' in data
+            ? (data as { permissions: Record<string, unknown> }).permissions
+            : undefined;
+
+        if (response.status === 200 && rawPermissions && typeof rawPermissions === 'object') {
+          // ===============================================
+          // Convert permission keys from snake_case to camelCase (e.g. "manage_adjustments" -> "manageAdjustments")
+          // ===============================================
           const permissions: UserPermissions = {};
           Object.keys(rawPermissions).forEach(key => {
             const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-            permissions[camelKey] = rawPermissions[key];
+            permissions[camelKey] = rawPermissions[key] as Permission;
           });
-          
+          // ===============================================
+          // Map API keys to sidebar PermissionKey (API uses singular/different names; sidebar uses plural/aliases)
+          // ===============================================
+          if (permissions.manageSale) permissions.manageSales = permissions.manageSale;
+          if (permissions.managePurchase) permissions.managePurchases = permissions.managePurchase;
+          if (permissions.manageSetting) permissions.manageSettings = permissions.manageSetting;
+          if (permissions.manageRoles) permissions.manageRolesPermissions = permissions.manageRoles;
           dispatch(setPermissions(permissions));
         } else {
           dispatch(setPermissions(null));
@@ -53,15 +66,7 @@ export const usePermissions = () => {
       }
     };
 
-    dispatch(setPermissions(null));
-
-    // ===============================================
-    // Fetch Permissions if not already loaded
-    // ===============================================
-    // if (permissions === null) {
-    //   fetchPermissions();
-    // }
-
+    fetchPermissions();
   }, [dispatch]);
 
   return { 
