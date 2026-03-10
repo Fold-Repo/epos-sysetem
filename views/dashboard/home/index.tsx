@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import { DashboardBreadCrumb, MetricCard, TrendIndicator } from '@/components'
+import { Button, DashboardBreadCrumb, MetricCard, TrendIndicator } from '@/components'
 import { formatCurrency } from '@/lib';
 import {
     BuildingStorefrontIcon,
@@ -11,6 +11,9 @@ import { LuChartSpline } from 'react-icons/lu';
 import { RecentSales, RevenueBreakdown, RevenueDistribution, StockAlert, WeeklySales } from './sections';
 import { useGetSummaryCards } from '@/services';
 import { useMemo } from 'react';
+import { usePersonaVerification } from '@/hooks';
+import { useAppSelector } from '@/store/hooks';
+import { selectProfile } from '@/store/slice';
 
 const DashboardView = () => {
 
@@ -18,6 +21,13 @@ const DashboardView = () => {
     // FETCH SUMMARY CARDS
     // ================================
     const { data: summaryData, isLoading } = useGetSummaryCards()
+
+    // ================================
+    // PERSONA VERIFICATION
+    // ================================
+    const { startVerification, isVerifying } = usePersonaVerification();
+    const profile = useAppSelector(selectProfile);
+    const personaVerified = profile?.user?.persona_verified;
 
     // ================================
     // METRICS DATA
@@ -110,10 +120,19 @@ const DashboardView = () => {
 
     return (
         <>
-        
+
             <DashboardBreadCrumb
                 title="Dashboard"
                 description="Welcome back! Here's what's happening with your store today."
+                endContent={
+                    !personaVerified ? (
+                        <Button size='sm' className='bg-primary text-white h-9'
+                            onPress={() => startVerification()} isLoading={isVerifying}
+                            isDisabled={isVerifying}>
+                            Persona Verification
+                        </Button>
+                    ) : null
+                }
             />
 
             <div className="p-3 space-y-3">
@@ -126,8 +145,7 @@ const DashboardView = () => {
                             title={metric.title}
                             value={metric.value}
                             colorClass={metric.colorClass}
-                            icon={metric.icon}
-                        >
+                            icon={metric.icon}>
                             <TrendIndicator
                                 trend={metric.trend}
                                 percentage={metric.percentage}
