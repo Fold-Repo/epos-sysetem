@@ -1,6 +1,6 @@
 const BASE_URL = {
-    development: "https://shorp-epos-backend.onrender.com/api/v1",
-    production: "https://shorp-epos-backend.onrender.com/api/v1",
+    development: "https://api.dfoldlab.co.uk/api/v1",
+    production: "https://api.dfoldlab.co.uk/api/v1",
 } as const;
 
 type Env = keyof typeof BASE_URL;
@@ -15,6 +15,7 @@ export const ENDPOINT = {
     },
 
     AUTH: {
+        PERSONA_VERIFICATION_CREATE: '/auth/persona/verification/create',
         ROLE_PERMISSIONS: '/role-permissions',
         LOGIN: '/auth/login',
         SIGNUP: '/auth/signup',
@@ -27,6 +28,8 @@ export const ENDPOINT = {
         ROLE_PERMISSION_DETAILS: '/roles',
         GOOGLE_SIGNIN: '/auth/google/signin',
         GOOGLE_SIGNUP: '/auth/google/signup',
+        BUSINESS_TYPES: '/business-types',
+        VALIDATE_COMPANY: '/auth/validate-company',
     },
 
     ADDRESS: {

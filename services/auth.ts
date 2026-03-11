@@ -1,6 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { ENDPOINT } from "@/constants";
 import { client } from "@/lib";
 import { 
+    BusinessTypesResponse,
     RegistrationPayload, 
     RegistrationResponse, 
     RequestOTPPayload, 
@@ -14,8 +16,39 @@ import {
     GoogleSignInPayload,
     GoogleSignUpPayload,
     GoogleSignInResponse,
-    GoogleSignUpResponse
+    GoogleSignUpResponse,
+    ValidateCompanyPayload,
+    ValidateCompanyResponse,
+    PersonaVerificationCreatePayload,
+    PersonaVerificationCreateResponse,
 } from "@/types";
+
+export async function getBusinessTypes(): Promise<BusinessTypesResponse> {
+    const response = await client.get<BusinessTypesResponse>(ENDPOINT.AUTH.BUSINESS_TYPES);
+    return response.data;
+}
+
+export function useBusinessTypes() {
+    return useQuery({
+        queryKey: ['business-types'],
+        queryFn: getBusinessTypes,
+    });
+}
+
+export async function validateCompany(payload: ValidateCompanyPayload): Promise<ValidateCompanyResponse> {
+    const response = await client.post<ValidateCompanyResponse>(ENDPOINT.AUTH.VALIDATE_COMPANY, payload);
+    return response.data;
+}
+
+export async function createPersonaVerification(
+    payload: PersonaVerificationCreatePayload
+): Promise<PersonaVerificationCreateResponse> {
+    const response = await client.post<PersonaVerificationCreateResponse>(
+        ENDPOINT.AUTH.PERSONA_VERIFICATION_CREATE,
+        payload
+    );
+    return response.data;
+}
 
 export async function register(payload: RegistrationPayload): Promise<RegistrationResponse> {
     const response = await client.post(ENDPOINT.AUTH.SIGNUP, payload);

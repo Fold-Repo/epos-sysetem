@@ -13,6 +13,9 @@ export interface ProfileUser {
     isVerify: boolean;
     is_business_owner: boolean;
     created_at: string;
+    persona_verification_status?: string | null;
+    persona_verified_at?: string | null;
+    persona_verified?: boolean;
 }
 
 export interface ProfileRole {

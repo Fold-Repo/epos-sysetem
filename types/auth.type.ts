@@ -3,8 +3,68 @@ import { UserPermissions } from './permissions';
 export const AUTH_TOKEN_KEY = 'authToken'
 export const EMAIL_ADDRESS_KEY = 'userEmail'
 
+// Business types (for registration)
+export interface BusinessType {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    is_active: boolean;
+    sort_order: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface BusinessTypesResponse {
+    status: number;
+    message: string;
+    data: BusinessType[];
+}
+
+export interface ValidateCompanyPayload {
+    company_number: string;
+    businessname?: string;
+}
+
+export interface ValidateCompanyResponse {
+    status: number;
+    message: string;
+    data: {
+        success: boolean;
+        company?: {
+            company_name: string;
+            company_status?: string;
+            registered_office_address?: {
+                address_line_1?: string;
+                address_line_2?: string;
+                country?: string;
+                locality?: string;
+                postal_code?: string;
+            };
+        };
+        validation?: { isValid: boolean; mismatches?: Record<string, { provided: string; registered: string }> };
+        officers?: unknown[];
+    };
+}
+
+export interface PersonaVerificationCreatePayload {
+    template_id: string;
+    reference_id: string;
+    redirect_uri: string;
+}
+
+export interface PersonaVerificationCreateResponse {
+    status: number;
+    message: string;
+    data: {
+        inquiry_id: string;
+        client_token: string;
+        status: string;
+    };
+}
+
 export interface RegistrationPayload {
-    businessname: string;
+    businessname?: string;
     businesstype: string;
     tin: string;
     website: string | null;

@@ -3,8 +3,9 @@ import * as yup from 'yup';
 export const registrationStepOneSchema = yup.object({
     businessname: yup
         .string()
-        .required('Business name is required')
-        .min(2, 'Business name must be at least 2 characters'),
+        .notRequired()
+        .nullable()
+        .default(undefined),
     businesstype: yup
         .string()
         .required('Type of business is required'),
