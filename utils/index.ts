@@ -6,5 +6,6 @@ export * from "./errorHandler";
 export * from "./cookies";
 export * from "./logout";
 export * from "./helper";
+export * from "./stripeOnboarding";
 
 export { InternetCheck, debounce };
