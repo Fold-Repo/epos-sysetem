@@ -27,7 +27,7 @@ const BreadCrumb = ({
     <div className={cn("px-3 py-3 bg-[#F4F6F8] border-y border-[#6C72781A] space-y-0.5", className)}>
 
       {(title || description || endContent) && (
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
             {title && (
               <h2 className='text-sm font-medium text-text-color'>{title}</h2>

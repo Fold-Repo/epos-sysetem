@@ -20,6 +20,7 @@ export * from './quotations';
 export * from './adjustments';
 export * from './business-users';
 export * from './dashboard';
+export * from './business';
 export * from './expense-categories';
 export * from './expenses';
 export * from './transfers';

@@ -32,6 +32,12 @@ export const ENDPOINT = {
         VALIDATE_COMPANY: '/auth/validate-company',
     },
 
+    BUSINESS: {
+        ONBOARD: '/business/onboard',
+        ONBOARD_LINK: '/business/onboard-link',
+        CONNECT_STATUS: '/business/connect-status',
+    },
+
     ADDRESS: {
         AUTOCOMPLETE: '/autocomplete',
         GET: '/get',

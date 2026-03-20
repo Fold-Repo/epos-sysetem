@@ -24,3 +24,6 @@ export { default as expenseCategoriesReducer } from './expenseCategoriesSlice'
 export * from './expenseCategoriesSlice'
 export { default as profileReducer } from './profileSlice'
 export * from './profileSlice'
+
+export { default as businessReducer } from './businessSlice'
+export * from './businessSlice'
