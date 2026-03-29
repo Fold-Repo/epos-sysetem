@@ -159,12 +159,12 @@ const DashboardView = () => {
     const handleConnectAccount = async (): Promise<boolean> => {
 
         if (onboardingLoading) return false;
-        if (connectButtonDisabled) return false;
+        // if (connectButtonDisabled) return false;
 
-        if (!personaVerified) {
-            showError("Please verify identity before connecting your account.");
-            return false;
-        }
+        // if (!personaVerified) {
+        //     showError("Please verify identity before connecting your account.");
+        //     return false;
+        // }
 
         setOnboardingLoading(true);
 
@@ -236,9 +236,17 @@ const DashboardView = () => {
                         <Button size='sm' className='bg-primary text-white h-9 px-4 text-[11px]'
                             onPress={handleConnectAccount} isLoading={onboardingLoading}
                             title={!personaVerified ? 'Verify Identity before connecting your account' : connectButtonText}
-                            isDisabled={onboardingLoading || connectButtonDisabled || !personaVerified}>
+                            isDisabled={onboardingLoading}>
                             {connectButtonText}
                         </Button>
+
+
+                        {/* <Button size='sm' className='bg-primary text-white h-9 px-4 text-[11px]'
+                            onPress={handleConnectAccount} isLoading={onboardingLoading}
+                            title={!personaVerified ? 'Verify Identity before connecting your account' : connectButtonText}
+                            isDisabled={onboardingLoading || connectButtonDisabled || !personaVerified}>
+                            {connectButtonText}
+                        </Button> */}
 
                     </div>
                 }
