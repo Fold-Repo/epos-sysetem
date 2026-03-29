@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { Button, useDisclosure } from '@heroui/react';
 import SidebarLink from './SidebarLink';
@@ -10,7 +10,6 @@ import { LogoutIcon, LogoutModal, Logo, MenuDropdown } from '@/components';
 import { UserPermissions } from '@/types';
 import { filterLinksByPermissions } from '@/utils';
 import { useAppSelector, useAppDispatch, selectStores, selectSelectedStoreId, setSelectedStoreId } from '@/store';
-import { client } from '@/lib';
 import { useQueryClient } from '@tanstack/react-query';
 
 
@@ -37,44 +36,9 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
     const selectedStoreId = useAppSelector(selectSelectedStoreId)
     const selectedStore = selectedStoreId || 'all'
 
-    // ===============================================
-    // Sync axios header with Redux state on mount/change
-    // ===============================================
-    useEffect(() => {
-        if (selectedStoreId) {
-            client.defaults.headers.common['x-store-id'] = selectedStoreId;
-        } else {
-            delete client.defaults.headers.common['x-store-id'];
-        }
-    }, [selectedStoreId])
-
-    // ===============================================
-    // Refetch all queries when store ID changes
-    // ===============================================
-    const isInitialMount = useRef(true);
-    const prevStoreId = useRef<string | null>(selectedStoreId);
-
-    useEffect(() => {
-        // ================================
-        // Skip refetch on initial mount
-        // ================================
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            prevStoreId.current = selectedStoreId;
-            return;
-        }
-
-        // ================================
-        // Only refetch if store ID actually changed
-        // ================================
-        if (prevStoreId.current !== selectedStoreId) {
-            // ================================
-            // Invalidate all queries to trigger refetch with new store ID
-            // ================================
-            queryClient.invalidateQueries();
-            prevStoreId.current = selectedStoreId;
-        }
-    }, [selectedStoreId, queryClient])
+    // x-store-id is applied in axios from Redux (see registerReduxSelectedStoreIdGetter).
+    // Invalidate React Query only when the user changes store here — not on persist rehydrate
+    // (that was causing duplicate refetches on first load).
 
     // ===============================================
     // Transform stores for MenuDropdown
@@ -167,20 +131,8 @@ const SideBar: React.FC<SidebarProps> = ({ open, setOpen, sections = [], root, p
                         value={selectedStore}
                         onChange={(value) => {
                             const storeId = value === 'all' ? null : value
-                            
-                            // ================================
-                            // Update Redux state
-                            // ================================
                             dispatch(setSelectedStoreId(storeId))
-                            
-                            // ================================
-                            // Set axios header directly for immediate effect
-                            // ================================
-                            if (storeId) {
-                                client.defaults.headers.common['x-store-id'] = storeId;
-                            } else {
-                                delete client.defaults.headers.common['x-store-id'];
-                            }
+                            queryClient.invalidateQueries()
                         }}
                     />
                 </div>

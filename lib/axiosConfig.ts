@@ -17,7 +17,19 @@ export const client = axios.create({
     headers: {
         "Content-Type": "application/json",
     },
-});
+})
+
+// ===============================================
+// Set once from app Providers so `x-store-id` always matches Redux (including after persist rehydrate), without racing SideBar useEffect.
+// ===============================================
+let getSelectedStoreIdFromRedux: (() => string | null) | null = null
+
+// ===============================================
+// Register the getter function to get the selected store ID from Redux
+// ===============================================
+export function registerReduxSelectedStoreIdGetter(getter: () => string | null) {
+    getSelectedStoreIdFromRedux = getter
+}
 
 client.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -28,12 +40,11 @@ client.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // ================================
-        // Add store ID header from axios defaults (set in SideBar)
-        // ================================
-        const storeId = client.defaults.headers.common['x-store-id'];
+        const storeId =
+            getSelectedStoreIdFromRedux?.() ??
+            client.defaults.headers.common['x-store-id']
         if (storeId) {
-            config.headers['x-store-id'] = storeId as string;
+            config.headers['x-store-id'] = storeId as string
         }
 
         return config;
