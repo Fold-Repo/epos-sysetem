@@ -5,6 +5,9 @@ import { HeroUIProvider, ToastProvider } from '@heroui/react'
 import { ReactQueryProvider } from './ReactQueryProvider'
 import { store } from '@/store'
 import { Provider } from 'react-redux'
+import { registerReduxSelectedStoreIdGetter } from '@/lib/axiosConfig'
+
+registerReduxSelectedStoreIdGetter(() => store.getState().stores.selectedStoreId)
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (

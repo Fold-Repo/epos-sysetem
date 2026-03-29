@@ -18,6 +18,7 @@ import { useToast } from '@/hooks';
 import { buildStripeOnboardingReturnUrl, clearStripeOnboardingSuccessPending, createStripeOneTimeToken, getErrorMessage, markStripeOnboardingSuccessPending, shouldOpenStripeOnboardingSuccessModal } from '@/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import StripeConnectionSuccessModal from '@/components/dashboard/StripeConnectionSuccessModal';
+import PersonaVerificationSuccessModal from '@/components/dashboard/PersonaVerificationSuccessModal';
 
 const DashboardView = () => {
 
@@ -29,7 +30,12 @@ const DashboardView = () => {
     // ================================
     // PERSONA VERIFICATION
     // ================================
-    const { startVerification, isVerifying } = usePersonaVerification();
+    const {
+        startVerification,
+        isVerifying,
+        isPersonaSuccessModalOpen,
+        closePersonaSuccessModal,
+    } = usePersonaVerification();
     const profile = useAppSelector(selectProfile);
     const personaVerified = profile?.user?.persona_verified;
     const [onboardingLoading, setOnboardingLoading] = useState(false);
@@ -150,14 +156,14 @@ const DashboardView = () => {
         ]
     }, [summaryData, isLoading])
 
-    const handleConnectAccount = async () => {
-        
-        if (onboardingLoading) return;
-        if (connectButtonDisabled) return;
+    const handleConnectAccount = async (): Promise<boolean> => {
+
+        if (onboardingLoading) return false;
+        if (connectButtonDisabled) return false;
 
         if (!personaVerified) {
             showError("Please verify identity before connecting your account.");
-            return;
+            return false;
         }
 
         setOnboardingLoading(true);
@@ -187,20 +193,27 @@ const DashboardView = () => {
             // ======================================================
             if (!url) {
                 showError(res?.message || "Onboarding url not returned.");
-                return;
+                return false;
             }
 
             // ======================================================
             // OPEN ONBOARDING URL IN NEW TAB
             // ======================================================
             window.open(url, "_blank", "noopener,noreferrer");
+            return true;
 
         } catch (error) {
             showError(getErrorMessage(error));
+            return false;
         } finally {
             setOnboardingLoading(false);
         }
 
+    };
+
+    const handleContinueToStripeFromPersonaModal = async () => {
+        const ok = await handleConnectAccount();
+        if (ok) closePersonaSuccessModal();
     };
 
     return (
@@ -238,6 +251,14 @@ const DashboardView = () => {
                     router.replace('/dashboard')
                     clearStripeOnboardingSuccessPending()
                 }}
+            />
+
+            <PersonaVerificationSuccessModal
+                isOpen={isPersonaSuccessModalOpen}
+                onClose={closePersonaSuccessModal}
+                onContinueToStripe={handleContinueToStripeFromPersonaModal}
+                stripeOnboardingCompleted={stripeOnboardingCompleted}
+                isStripeLoading={onboardingLoading}
             />
 
             <div className="p-3 space-y-3">

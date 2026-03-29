@@ -8,7 +8,7 @@ import { useProductSelection, type BaseProductItem } from "./useProductSelection
 import { useOrderTotals } from "./useOrderTotals";
 import { useFetchAllData } from "./useFetchAllData";
 import { useProductSearch } from "./useProductSearch";
-import { usePersonaVerification } from "./usePersonaVerification";
+import { PersonaVerificationProvider, usePersonaVerification } from "./PersonaVerificationProvider";
 
 export {
     useClickOutside,
@@ -21,6 +21,7 @@ export {
     useOrderTotals,
     useFetchAllData,
     useProductSearch,
+    PersonaVerificationProvider,
     usePersonaVerification,
 }
 

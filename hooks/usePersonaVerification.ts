@@ -22,13 +22,18 @@ interface PersonaSessionState {
     updatedAt: string;
 }
 
-export function usePersonaVerification() {
+export function usePersonaVerificationImpl() {
 
     const { showError, showSuccess } = useToast();
     const dispatch = useAppDispatch();
     const profile = useAppSelector(selectProfile);
     const [isVerifying, setIsVerifying] = useState(false);
+    const [isPersonaSuccessModalOpen, setIsPersonaSuccessModalOpen] = useState(false);
     const hasPreloadedRef = useRef(false);
+
+    const closePersonaSuccessModal = useCallback(() => {
+        setIsPersonaSuccessModalOpen(false);
+    }, []);
 
     const getSession = useCallback(
         async (options: StartVerificationOptions = {}, silent = false): Promise<PersonaSessionState | null> => {
@@ -182,8 +187,13 @@ export function usePersonaVerification() {
                             updatedAt: new Date().toISOString(),
                         };
                         window.sessionStorage.setItem(storageKey, JSON.stringify(completedSession));
-                        void dispatch(fetchProfile());
-                        showSuccess("Verification completed.");
+                        void (async () => {
+                            try {
+                                await dispatch(fetchProfile()).unwrap();
+                            } catch {
+                            }
+                            setIsPersonaSuccessModalOpen(true);
+                        })();
                     },
                     onCancel: () => {
                         const cancelledSession: PersonaSessionState = {
@@ -212,6 +222,8 @@ export function usePersonaVerification() {
     return {
         startVerification,
         isVerifying,
+        isPersonaSuccessModalOpen,
+        closePersonaSuccessModal,
     };
 }
 

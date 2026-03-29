@@ -3,12 +3,12 @@
 import { NavBar, SideBar } from '@/components'
 import React, { useState } from 'react'
 import { DASHBOARD_ROOT, DASHBOARD_SECTIONS } from '@/constants'
-import { usePermissions, useFetchAllData, usePersonaVerification } from '@/hooks'
+import { usePermissions, useFetchAllData, PersonaVerificationProvider, usePersonaVerification } from '@/hooks'
 import { useAppSelector } from '@/store/hooks'
 import { selectProfile } from '@/store/slice'
 import { useEffect, useRef } from 'react'
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
     const [open, setOpen] = useState<boolean>(false)
     const { permissions } = usePermissions()
@@ -114,6 +114,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             </main>
 
         </>
+    )
+}
+
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <PersonaVerificationProvider>
+            <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        </PersonaVerificationProvider>
     )
 }
 
