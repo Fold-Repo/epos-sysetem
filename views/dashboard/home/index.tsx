@@ -43,9 +43,18 @@ const DashboardView = () => {
     const connectStatus = useAppSelector(selectBusinessConnectStatus);
     const hasStripeConnected = Boolean(connectStatus?.stripe_account_id);
     const stripeOnboardingCompleted = Boolean(connectStatus?.stripe_onboarding_completed);
+    const stripeChargesEnabled = Boolean(connectStatus?.stripe_charges_enabled);
+    const stripePayoutsEnabled = Boolean(connectStatus?.stripe_payouts_enabled);
 
-    const connectButtonDisabled = stripeOnboardingCompleted;
-    const connectButtonText = stripeOnboardingCompleted
+    // ======================================================
+    // CHECK IF STRIPE ALL CHECKS ARE SUCCESSFUL
+    // ======================================================
+    const stripeAllChecksSuccessful = Boolean(
+        stripeOnboardingCompleted && stripeChargesEnabled && stripePayoutsEnabled
+    );
+
+    const connectButtonDisabled = stripeAllChecksSuccessful;
+    const connectButtonText = stripeAllChecksSuccessful
         ? 'Connected'
         : 'Continue stripe onboarding';
 
@@ -159,12 +168,12 @@ const DashboardView = () => {
     const handleConnectAccount = async (): Promise<boolean> => {
 
         if (onboardingLoading) return false;
-        // if (connectButtonDisabled) return false;
+        if (connectButtonDisabled) return false;
 
-        // if (!personaVerified) {
-        //     showError("Please verify identity before connecting your account.");
-        //     return false;
-        // }
+        if (!personaVerified) {
+            showError("Please verify identity before connecting your account.");
+            return false;
+        }
 
         setOnboardingLoading(true);
 
@@ -233,20 +242,14 @@ const DashboardView = () => {
                             </Button>
                         ) : null}
 
-                        <Button size='sm' className='bg-primary text-white h-9 px-4 text-[11px]'
-                            onPress={handleConnectAccount} isLoading={onboardingLoading}
-                            title={!personaVerified ? 'Verify Identity before connecting your account' : connectButtonText}
-                            isDisabled={onboardingLoading}>
-                            {connectButtonText}
-                        </Button>
-
-
-                        {/* <Button size='sm' className='bg-primary text-white h-9 px-4 text-[11px]'
-                            onPress={handleConnectAccount} isLoading={onboardingLoading}
-                            title={!personaVerified ? 'Verify Identity before connecting your account' : connectButtonText}
-                            isDisabled={onboardingLoading || connectButtonDisabled || !personaVerified}>
-                            {connectButtonText}
-                        </Button> */}
+                        {!stripeAllChecksSuccessful ? (
+                            <Button size='sm' className='bg-primary text-white h-9 px-4 text-[11px]'
+                                onPress={handleConnectAccount} isLoading={onboardingLoading}
+                                title={!personaVerified ? 'Verify Identity before connecting your account' : connectButtonText}
+                                isDisabled={onboardingLoading || connectButtonDisabled || !personaVerified}>
+                                {connectButtonText}
+                            </Button>
+                        ) : null}
 
                     </div>
                 }

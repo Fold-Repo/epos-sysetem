@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Persona verification test – Moss API</title>
+  <!-- Replace version if needed: https://docs.withpersona.com/embedded-flow-changelog -->
+  <script id="persona-sdk" src="https://cdn.withpersona.com/dist/persona-v5.7.0.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 640px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    h1 { color: #333; margin-bottom: 8px; }
+    .hint { color: #666; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+    .container {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 28px;
+      background-color: #f9f9f9;
+      margin-bottom: 24px;
+    }
+    .config label {
+      display: block;
+      font-weight: 600;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      color: #333;
+      font-size: 13px;
+    }
+    .config input, .config textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .config textarea { min-height: 56px; resize: vertical; }
+    .config .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .config .row button.secondary {
+      padding: 10px 14px;
+      font-size: 13px;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .config .row button.secondary:hover { background: #e5e5e5; }
+    p.intro { color: #666; line-height: 1.6; margin-bottom: 20px; }
+    button.primary {
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button.primary:hover { background-color: #0052a3; }
+    button.primary:disabled { background-color: #ccc; cursor: not-allowed; }
+    .user-info {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .user-info h3 { margin-top: 0; color: #333; }
+    .user-info p { margin: 8px 0; color: #555; }
+    #debug-info, #error-info {
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 4px;
+      min-height: 2em;
+    }
+    #error-info { border-color: #c00; color: #a00; margin-top: 8px; }
+    h2 { font-size: 15px; color: #444; margin: 20px 0 8px; }
+  </style>
+</head>
+<body>
+  <h1>Persona verification (test)</h1>
+  <p class="hint">
+    Calls <code>POST /api/v1/auth/persona/verification/create</code> with your Bearer token, then opens the embedded flow using
+    <code>inquiryId</code> + <code>sessionToken</code> (your API’s <code>client_token</code>). Serve this file from your API host or enable CORS for your origin.
+  </p>
+
+  <div class="container config">
+    <h2 style="margin-top:0">Connection &amp; Persona</h2>
+    <label for="api-base">API base URL (no trailing slash)</label>
+    <div class="row">
+      <input type="url" id="api-base" placeholder="http://localhost:8000 or https://api.example.com" autocomplete="off" />
+      <button type="button" class="secondary" id="btn-use-origin">Use this page’s origin</button>
+    </div>
+
+    <label for="persona-env">Persona environment ID (<code>env_…</code>)</label>
+    <input type="text" id="persona-env" placeholder="env_xxxxxxxx" autocomplete="off" />
+
+    <label for="persona-sdk-url">Persona SDK script URL (optional)</label>
+    <input type="url" id="persona-sdk-url" placeholder="https://cdn.withpersona.com/dist/persona-v5.7.0.js" autocomplete="off" />
+
+    <label for="bearer">Bearer access token (login via your app first)</label>
+    <textarea id="bearer" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." autocomplete="off"></textarea>
+
+    <label for="template-id">template_id (optional body field — must match backend / Persona, e.g. itmpl_…)</label>
+    <input type="text" id="template-id" placeholder="itmpl_… (optional if your server supplies a default)" autocomplete="off" />
+
+    <p class="hint" style="margin-top:12px">
+      Values for API base, environment ID, SDK URL, and template id are saved in <code>localStorage</code> (not the token).
+    </p>
+  </div>
+
+  <div class="container">
+    <h1 style="font-size:22px">Welcome 🐕</h1>
+    <p class="intro">
+      Before you can start, we need to verify your identity. Click the button to create an inquiry via your backend and open Persona.
+    </p>
+
+    <div class="user-info">
+      <h3>Your Information</h3>
+      <p><strong>Name:</strong> (from your logged-in account on the API)</p>
+      <p><strong>Flow:</strong> Server-owned inquiry + embedded client</p>
+    </div>
+
+    <button type="button" class="primary" id="verify-button">Start verifying</button>
+  </div>
+
+  <h2>Debug</h2>
+  <div id="error-info" style="display:none"></div>
+  <div id="debug-info"></div>
+
+  <script>
+(function () {
+  var STORAGE_PREFIX = 'moss_persona_test_';
+  var KEYS = {
+    apiBase: STORAGE_PREFIX + 'api_base',
+    envId: STORAGE_PREFIX + 'persona_env',
+    sdkUrl: STORAGE_PREFIX + 'persona_sdk_url',
+    templateId: STORAGE_PREFIX + 'template_id'
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  function loadStored() {
+    try {
+      if (localStorage.getItem(KEYS.apiBase)) $('api-base').value = localStorage.getItem(KEYS.apiBase);
+      if (localStorage.getItem(KEYS.envId)) $('persona-env').value = localStorage.getItem(KEYS.envId);
+      if (localStorage.getItem(KEYS.sdkUrl)) $('persona-sdk-url').value = localStorage.getItem(KEYS.sdkUrl);
+      if (localStorage.getItem(KEYS.templateId)) $('template-id').value = localStorage.getItem(KEYS.templateId);
+    } catch (e) { /* ignore */ }
+  }
+
+  function saveStored() {
+    try {
+      localStorage.setItem(KEYS.apiBase, $('api-base').value.trim());
+      localStorage.setItem(KEYS.envId, $('persona-env').value.trim());
+      localStorage.setItem(KEYS.sdkUrl, $('persona-sdk-url').value.trim());
+      localStorage.setItem(KEYS.templateId, $('template-id').value.trim());
+    } catch (e) { /* ignore */ }
+  }
+
+  $('btn-use-origin').addEventListener('click', function () {
+    $('api-base').value = window.location.origin.replace(/\/$/, '');
+    saveStored();
+  });
+
+  ['api-base', 'persona-env', 'persona-sdk-url', 'template-id'].forEach(function (id) {
+    $(id).addEventListener('change', saveStored);
+    $(id).addEventListener('blur', saveStored);
+  });
+
+  loadStored();
+  if (!$('api-base').value) {
+    var o = window.location.origin;
+    if (o && /^https?:\/\//i.test(o)) {
+      $('api-base').value = o.replace(/\/$/, '');
+    } else {
+      $('api-base').value = 'http://localhost:8000';
+    }
+  }
+
+  function showErr(msg) {
+    var el = $('error-info');
+    el.style.display = msg ? 'block' : 'none';
+    el.textContent = msg || '';
+  }
+
+  function appendDebug(line) {
+    var el = $('debug-info');
+    el.textContent += (el.textContent ? '\n' : '') + line;
+  }
+
+  function loadPersonaSdk(url) {
+    return new Promise(function (resolve, reject) {
+      if (window.Persona && window.Persona.Client) {
+        resolve();
+        return;
+      }
+      var existing = document.getElementById('persona-sdk');
+      if (existing) existing.remove();
+      var s = document.createElement('script');
+      s.id = 'persona-sdk';
+      s.src = url;
+      s.crossOrigin = 'anonymous';
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error('Failed to load Persona SDK from ' + url)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  $('verify-button').addEventListener('click', async function () {
+    showErr('');
+    $('debug-info').textContent = '';
+    saveStored();
+
+    var apiBase = $('api-base').value.trim().replace(/\/$/, '');
+    var environmentId = $('persona-env').value.trim();
+    var bearer = $('bearer').value.trim();
+    var templateId = $('template-id').value.trim();
+    var sdkUrlInput = $('persona-sdk-url').value.trim();
+
+    if (!apiBase) {
+      showErr('Set API base URL.');
+      return;
+    }
+    if (!environmentId || !environmentId.startsWith('env_')) {
+      showErr('Set a valid Persona environment ID (env_…).');
+      return;
+    }
+    if (!bearer) {
+      showErr('Paste a Bearer access token from a logged-in session.');
+      return;
+    }
+
+    var sdkUrl = sdkUrlInput || 'https://cdn.withpersona.com/dist/persona-v5.7.0.js';
+    try {
+      await loadPersonaSdk(sdkUrl);
+    } catch (e) {
+      showErr(e.message);
+      return;
+    }
+
+    if (!window.Persona || !window.Persona.Client) {
+      showErr('Persona SDK did not expose Persona.Client. Check the SDK URL.');
+      return;
+    }
+
+    $('verify-button').disabled = true;
+
+    try {
+      var body = {};
+      if (templateId) body.template_id = templateId;
+
+      var createUrl = apiBase + '/api/v1/auth/persona/verification/create';
+      appendDebug('POST ' + createUrl);
+
+      var response = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + bearer
+        },
+        body: JSON.stringify(body)
+      });
+
+      var rawText = await response.text();
+      var json;
+      try {
+        json = JSON.parse(rawText);
+      } catch (e) {
+        throw new Error('Non-JSON response (' + response.status + '): ' + rawText.slice(0, 500));
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          (json && json.message) || json.error || ('HTTP ' + response.status + ': ' + rawText.slice(0, 300))
+        );
+      }
+
+      var data = json.data || {};
+      var inquiryId = data.inquiry_id;
+      var sessionToken = data.client_token;
+
+      appendDebug('inquiry_id: ' + inquiryId);
+      appendDebug('client_token present: ' + !!sessionToken);
+
+      if (!inquiryId) {
+        throw new Error('Response missing data.inquiry_id');
+      }
+      if (!sessionToken) {
+        throw new Error('data.client_token is null — backend could not issue a session token; check Persona API / resume logs.');
+      }
+
+      // Server-created inquiry: resume with inquiryId + sessionToken (do not pass templateId).
+      var clientConfig = {
+        inquiryId: inquiryId,
+        sessionToken: sessionToken,
+        environmentId: environmentId,
+        onReady: function () { client.open(); },
+        onComplete: function (payload) {
+          var id = payload && payload.inquiryId != null ? payload.inquiryId : inquiryId;
+          var st = payload && payload.status != null ? payload.status : '';
+          appendDebug('onComplete inquiryId: ' + id + ' status: ' + st);
+          document.getElementById('debug-info').textContent +=
+            '\\n\\nCompleted. Save inquiry id for support: ' + id;
+          try { client.destroy(); } catch (e) { /* ignore */ }
+        },
+        onCancel: function () {
+          appendDebug('onCancel');
+        },
+        onError: function (error) {
+          console.error('Persona onError', error);
+          showErr('Persona error: ' + (error && error.message ? error.message : String(error)));
+        }
+      };
+
+      var client = new window.Persona.Client(clientConfig);
+    } catch (error) {
+      console.error(error);
+      showErr(error.message || String(error));
+    } finally {
+      $('verify-button').disabled = false;
+    }
+  });
+})();
+  </script>
+</body>
+</html>
+

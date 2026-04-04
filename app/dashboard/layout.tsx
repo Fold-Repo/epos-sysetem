@@ -32,7 +32,21 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         if (personaVerified) return;
         if (!userId) return;
 
-        const storageKey = `persona_verification_${userId}`;
+        // If Persona already redirected back with `status=completed`, don't auto-start verification again.
+        // The success modal will be handled by `usePersonaVerification`.
+        try {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("status") === "completed") {
+                hasAutoStartedRef.current = true;
+                return;
+            }
+        } catch {
+            // ignore
+        }
+
+        const appBaseUrl = window.location.origin;
+        const storageKey = `persona_verification_${userId}_${encodeURIComponent(appBaseUrl)}`;
+        
         let cancelled = false;
 
         const tryOpen = (attemptsLeft: number) => {
