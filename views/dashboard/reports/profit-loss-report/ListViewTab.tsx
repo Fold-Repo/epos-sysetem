@@ -1,143 +1,65 @@
 'use client'
 
-import { FilterBar, ExportButton, TableCell, TableComponent } from '@/components'
+import { TableCell, TableComponent } from '@/components'
 import { formatCurrency } from '@/lib'
+import { ProfitLossPeriodItem } from '@/services'
 
-const ListViewTab = () => {
+interface ListViewTabProps {
+    data: ProfitLossPeriodItem[]
+    loading?: boolean
+}
 
-    const months = ['Jan 2025', 'Feb 2025', 'Mar 2025', 'Apr 2025', 'May 2025', 'Jun 2025']
-    
-    // Income data
-    const incomeData = [
-        {
-            id: 'income-1',
-            category: 'Sales',
-            jan: 50000,
-            feb: 50000,
-            mar: 50000,
-            apr: 50000,
-            may: 50000,
-            jun: 50000,
-            total: 300000,
-            isBold: false
-        },
-        {
-            id: 'income-2',
-            category: 'Service',
-            jan: 30000,
-            feb: 30000,
-            mar: 30000,
-            apr: 30000,
-            may: 30000,
-            jun: 30000,
-            total: 180000,
-            isBold: false
-        },
-        {
-            id: 'income-3',
-            category: 'Purchase Return',
-            jan: 7000,
-            feb: 7000,
-            mar: 7000,
-            apr: 7000,
-            may: 7000,
-            jun: 7000,
-            total: 42000,
-            isBold: false
-        },
-        {
-            id: 'income-4',
-            category: 'Gross Profit',
-            jan: 8000,
-            feb: 8000,
-            mar: 8000,
-            apr: 8000,
-            may: 8000,
-            jun: 8000,
-            total: 48000,
-            isBold: true
-        }
+type ReportRow = {
+    id: string
+    category: string
+    isBold: boolean
+    values: Record<string, number>
+}
+
+const getMonthLabel = (period: string) => {
+    const parsedDate = new Date(`${period}-01`)
+    return parsedDate.toLocaleString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()
+}
+
+const ListViewTab = ({ data, loading = false }: ListViewTabProps) => {
+    const periods = data.map((item) => item.period)
+
+    const createRow = (
+        id: string,
+        category: string,
+        isBold: boolean,
+        getValue: (item: ProfitLossPeriodItem) => number
+    ): ReportRow => ({
+        id,
+        category,
+        isBold,
+        values: Object.fromEntries(data.map((item) => [item.period, getValue(item)]))
+    })
+
+    const incomeData: ReportRow[] = [
+        createRow('income-sales', 'Sales', false, (item) => item.income.sales),
+        createRow('income-service', 'Service', false, (item) => item.income.service),
+        createRow('income-purchase-return', 'Purchase Return', false, (item) => item.income.purchase_return),
+        createRow('income-gross-profit', 'Gross Profit', true, (item) => item.income.gross_profit),
     ]
 
-    // Expenses data
-    const expensesData = [
-        {
-            id: 'expense-1',
-            category: 'Sales',
-            jan: 50000,
-            feb: 50000,
-            mar: 50000,
-            apr: 50000,
-            may: 50000,
-            jun: 50000,
-            total: 300000,
-            isBold: false
-        },
-        {
-            id: 'expense-2',
-            category: 'Purchase',
-            jan: 30000,
-            feb: 30000,
-            mar: 30000,
-            apr: 30000,
-            may: 30000,
-            jun: 30000,
-            total: 180000,
-            isBold: false
-        },
-        {
-            id: 'expense-3',
-            category: 'Sales Return',
-            jan: 7000,
-            feb: 7000,
-            mar: 7000,
-            apr: 7000,
-            may: 7000,
-            jun: 7000,
-            total: 42000,
-            isBold: false
-        },
-        {
-            id: 'expense-4',
-            category: 'Total Expense',
-            jan: 8000,
-            feb: 8000,
-            mar: 8000,
-            apr: 8000,
-            may: 8000,
-            jun: 8000,
-            total: 48000,
-            isBold: true
-        }
+    const expensesData: ReportRow[] = [
+        createRow('expense-sales', 'Sales', false, (item) => item.expenses.sales),
+        createRow('expense-purchase', 'Purchase', false, (item) => item.expenses.purchase),
+        createRow('expense-sales-return', 'Sales Return', false, (item) => item.expenses.sales_return),
+        createRow('expense-total-expense', 'Total Expense', true, (item) => item.expenses.total_expense),
     ]
 
-    // Net Profit data
-    const netProfitData = [
-        {
-            id: 'net-profit',
-            category: 'Net Profit',
-            jan: 8000,
-            feb: 8000,
-            mar: 8000,
-            apr: 8000,
-            may: 8000,
-            jun: 8000,
-            total: 48000,
-            isBold: true
-        }
+    const netProfitData: ReportRow[] = [
+        createRow('net-profit', 'Net Profit', true, (item) => item.netProfit),
     ]
 
     const columns = [
         { key: 'category', title: 'CATEGORY' },
-        { key: 'jan', title: 'JAN 2025' },
-        { key: 'feb', title: 'FEB 2025' },
-        { key: 'mar', title: 'MAR 2025' },
-        { key: 'apr', title: 'APR 2025' },
-        { key: 'may', title: 'MAY 2025' },
-        { key: 'jun', title: 'JUN 2025' }
+        ...periods.map((period) => ({ key: period, title: getMonthLabel(period) }))
     ]
 
-    const renderRow = (item: typeof incomeData[0]) => {
+    const renderRow = (item: ReportRow) => {
         return (
             <>
                 <TableCell>
@@ -145,59 +67,19 @@ const ListViewTab = () => {
                         {item.category}
                     </span>
                 </TableCell>
-                <TableCell>
-                    <span className={`text-xs ${item.isBold ? 'font-bold' : ''}`}>
-                        {formatCurrency(item.jan)}
-                    </span>
-                </TableCell>
-                <TableCell>
-                    <span className={`text-xs ${item.isBold ? 'font-bold' : ''}`}>
-                        {formatCurrency(item.feb)}
-                    </span>
-                </TableCell>
-                <TableCell>
-                    <span className={`text-xs ${item.isBold ? 'font-bold' : ''}`}>
-                        {formatCurrency(item.mar)}
-                    </span>
-                </TableCell>
-                <TableCell>
-                    <span className={`text-xs ${item.isBold ? 'font-bold' : ''}`}>
-                        {formatCurrency(item.apr)}
-                    </span>
-                </TableCell>
-                <TableCell>
-                    <span className={`text-xs ${item.isBold ? 'font-bold' : ''}`}>
-                        {formatCurrency(item.may)}
-                    </span>
-                </TableCell>
-                <TableCell>
-                    <span className={`text-xs ${item.isBold ? 'font-bold' : ''}`}>
-                        {formatCurrency(item.jun)}
-                    </span>
-                </TableCell>
+                {periods.map((period) => (
+                    <TableCell key={`${item.id}-${period}`}>
+                        <span className={`text-xs ${item.isBold ? 'font-bold' : ''}`}>
+                            {formatCurrency(item.values[period] ?? 0)}
+                        </span>
+                    </TableCell>
+                ))}
             </>
         )
     }
 
-    const filterItems = [
-        {
-            type: 'dateRange' as const,
-            label: 'Date Range',
-            placeholder: 'Select date range'
-        }
-    ]
-
     return (
         <div className="space-y-6">
-            
-            <FilterBar
-                searchInput={{
-                    placeholder: 'Search...',
-                    className: 'w-full md:w-72'
-                }}
-                items={filterItems}
-            />
-
             {/* ================= Income Section ================= */}
             <div className="space-y-2">
 
@@ -210,7 +92,7 @@ const ListViewTab = () => {
                     rowKey={(item) => item.id}
                     renderRow={renderRow}
                     withCheckbox={false}
-                    loading={false}
+                    loading={loading}
                 />
             </div>
 
@@ -226,7 +108,7 @@ const ListViewTab = () => {
                     rowKey={(item) => item.id}
                     renderRow={renderRow}
                     withCheckbox={false}
-                    loading={false}
+                    loading={loading}
                 />
             </div>
 
@@ -242,7 +124,7 @@ const ListViewTab = () => {
                     rowKey={(item) => item.id}
                     renderRow={renderRow}
                     withCheckbox={false}
-                    loading={false}
+                    loading={loading}
                 />
             </div>
 

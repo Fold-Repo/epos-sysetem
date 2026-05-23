@@ -18,6 +18,7 @@ interface TaxData {
 
 interface TaxReportTableProps {
     data: TaxData[]
+    loading?: boolean
 }
 
 const columns = [
@@ -31,7 +32,7 @@ const columns = [
     { key: 'taxAmount', title: 'TAX AMOUNT' }
 ]
 
-const TaxReportTable = ({ data }: TaxReportTableProps) => {
+const TaxReportTable = ({ data, loading = false }: TaxReportTableProps) => {
 
     const renderRow = (item: TaxData) => {
         return (
@@ -80,7 +81,7 @@ const TaxReportTable = ({ data }: TaxReportTableProps) => {
             rowKey={(item) => item.id}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={loading}
         />
     )
 }

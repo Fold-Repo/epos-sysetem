@@ -18,6 +18,7 @@ interface ProductSalesData {
 
 interface SalesReportTableProps {
     data: ProductSalesData[]
+    loading?: boolean
 }
 
 const columns = [
@@ -30,7 +31,7 @@ const columns = [
     { key: 'instockQty', title: 'INSTOCK QTY' }
 ]
 
-const SalesReportTable = ({ data }: SalesReportTableProps) => {
+const SalesReportTable = ({ data, loading = false }: SalesReportTableProps) => {
 
     const renderRow = (item: ProductSalesData) => {
         return (
@@ -80,7 +81,7 @@ const SalesReportTable = ({ data }: SalesReportTableProps) => {
             rowKey={(item) => item.id}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={loading}
         />
     )
 }

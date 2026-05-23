@@ -3,13 +3,29 @@
 import IncomeOverview from './IncomeOverview'
 import ProfitLossTrend from './ProfitLossTrend'
 
-const ChartViewTab = () => {
+interface ChartViewTabProps {
+    labels: string[]
+    incomeOverview: Array<{
+        sales: number
+        service: number
+        purchaseReturn: number
+        grossProfit: number
+    }>
+    trend: Array<{
+        grossProfit: number
+        totalExpense: number
+        netProfit: number
+    }>
+    loading?: boolean
+}
+
+const ChartViewTab = ({ labels, incomeOverview, trend, loading = false }: ChartViewTabProps) => {
     return (
         <div className="space-y-6">
 
-            <IncomeOverview />
+            <IncomeOverview labels={labels} data={incomeOverview} loading={loading} />
             
-            <ProfitLossTrend />
+            <ProfitLossTrend labels={labels} data={trend} loading={loading} />
 
         </div>
     )

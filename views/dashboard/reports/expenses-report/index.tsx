@@ -2,116 +2,90 @@
 
 import { DashboardBreadCrumb, MetricCard, FilterBar, Pagination, DashboardCard, StackIcon, ExportButton } from '@/components'
 import { CurrencyDollarIcon, CheckCircleIcon, ClockIcon } from '@heroicons/react/24/solid';
-import { useState } from 'react';
 import { formatCurrency } from '@/lib';
 import ExpensesReportTable from './ExpensesReportTable';
+import { useQueryParams } from '@/hooks';
+import { ExpensesReportQueryParams, useGetActiveExpenseCategories, useGetExpensesReport } from '@/services';
 
 const ExpensesReportView = () => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 25;
+    const { searchParams, updateQueryParams } = useQueryParams();
 
-    // Hardcoded expenses data
-    const expensesData = [
-        {
-            id: '1',
-            expenseName: 'AC Repair Service',
-            category: 'Repairs & Maintenance',
-            description: 'AC Repair for Office',
-            date: '2024-11-27',
-            amount: 800,
-            status: 'approved'
-        },
-        {
-            id: '2',
-            expenseName: 'Business Flight Ticket',
-            category: 'Travel Expenses',
-            description: 'Flight tickets for meetings',
-            date: '2024-10-14',
-            amount: 1200,
-            status: 'approved'
-        },
-        {
-            id: '3',
-            expenseName: 'Chair Purchase',
-            category: 'Office Supplies',
-            description: 'Ergonomic chairs for staff',
-            date: '2024-10-03',
-            amount: 750,
-            status: 'approved'
-        },
-        {
-            id: '4',
-            expenseName: 'Client Meeting',
-            category: 'Travel Expenses',
-            description: 'Travel fare for client meeting',
-            date: '2024-11-06',
-            amount: 700,
-            status: 'approved'
-        },
-        {
-            id: '5',
-            expenseName: 'Electricity Payment',
-            category: 'Utilities',
-            description: 'Electricity Bill',
-            date: '2024-12-24',
-            amount: 200,
-            status: 'approved'
-        },
-        {
-            id: '6',
-            expenseName: 'Internet Bill Payment',
-            category: 'Utilities',
-            description: 'Monthly internet subscription',
-            date: '2024-09-10',
-            amount: 300,
-            status: 'pending'
-        }
-    ]
+    const categoryIdParam = searchParams.get('category_id');
+    const parsedCategoryId = categoryIdParam ? parseInt(categoryIdParam, 10) : undefined;
 
-    // Calculate stats
-    const totalExpenses = expensesData.reduce((sum, expense) => sum + expense.amount, 0)
-    const approvedExpenses = expensesData.filter(e => e.status === 'approved')
-    const totalApproved = approvedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-    const pendingExpenses = expensesData.filter(e => e.status === 'pending')
-    const totalPending = pendingExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+    const queryParams: ExpensesReportQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: parseInt(searchParams.get('limit') || '10', 10),
+        search: searchParams.get('search') || undefined,
+        category_id: parsedCategoryId && !Number.isNaN(parsedCategoryId) ? parsedCategoryId : undefined,
+        status: searchParams.get('status') || undefined,
+        startDate: searchParams.get('startDate') || undefined,
+        endDate: searchParams.get('endDate') || undefined,
+    };
+
+    const { data, isLoading } = useGetExpensesReport(queryParams);
+    const { data: activeCategories } = useGetActiveExpenseCategories();
+
+    const expensesData = data?.expenses ?? [];
+    const summary = data?.summary;
+    const pagination = data?.pagination;
+
+    const statusOptions = [
+        { label: 'All', key: 'all' },
+        { label: 'Approved', key: 'approved' },
+        { label: 'Pending', key: 'pending' },
+    ];
+
+    const selectedCategory = activeCategories?.find((item) => item.id === queryParams.category_id);
+    const selectedStatus = statusOptions.find((item) => item.key === (queryParams.status || 'all'));
 
     const filterItems = [
         {
             type: 'dateRange' as const,
-            label: 'Date Range',
-            placeholder: 'Select date range'
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Category: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Repairs & Maintenance', key: 'repairs' },
-                { label: 'Travel Expenses', key: 'travel' },
-                { label: 'Office Supplies', key: 'office' },
-                { label: 'Utilities', key: 'utilities' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Category changed:', key)
+            startDate: queryParams.startDate ? new Date(queryParams.startDate) : undefined,
+            endDate: queryParams.endDate ? new Date(queryParams.endDate) : undefined,
+            onChange: (value: Date | { startDate: Date; endDate: Date }) => {
+                if ('startDate' in value && 'endDate' in value) {
+                    updateQueryParams({
+                        startDate: value.startDate.toISOString().split('T')[0],
+                        endDate: value.endDate.toISOString().split('T')[0],
+                        page: 1
+                    })
+                }
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Status: All',
+            label: selectedCategory ? `Category: ${selectedCategory.name}` : 'Category: All',
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
             items: [
                 { label: 'All', key: 'all' },
-                { label: 'Approved', key: 'approved' },
-                { label: 'Pending', key: 'pending' },
-                { label: 'Rejected', key: 'rejected' }
+                ...(activeCategories || []).map((category) => ({
+                    label: category.name,
+                    key: String(category.id)
+                }))
             ],
-            value: '',
+            value: queryParams.category_id ? String(queryParams.category_id) : 'all',
             onChange: (key: string) => {
-                console.log('Status changed:', key)
+                updateQueryParams({
+                    category_id: key === 'all' ? null : key,
+                    page: 1
+                })
+            }
+        },
+        {
+            type: 'dropdown' as const,
+            label: selectedStatus ? `Status: ${selectedStatus.label}` : 'Status: All',
+            startContent: <StackIcon className="text-slate-400" />,
+            showChevron: false,
+            items: statusOptions,
+            value: queryParams.status || 'all',
+            onChange: (key: string) => {
+                updateQueryParams({
+                    status: key === 'all' ? null : key,
+                    page: 1
+                })
             }
         }
     ]
@@ -128,23 +102,23 @@ const ExpensesReportView = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <MetricCard
                         title="Total Expenses"
-                        value={formatCurrency(totalExpenses)}
+                        value={formatCurrency(summary?.total_expenses || 0)}
                         icon={<CurrencyDollarIcon className="size-6" />}
                     />
                     <MetricCard
                         title="Approved"
-                        value={formatCurrency(totalApproved)}
+                        value={formatCurrency(summary?.approved || 0)}
                         icon={<CheckCircleIcon className="size-6" />}
                     />
                     <MetricCard
                         title="Pending"
-                        value={formatCurrency(totalPending)}
+                        value={formatCurrency(summary?.pending || 0)}
                         icon={<ClockIcon className="size-6" />}
                     />
                     
                     <MetricCard
                         title="Average Expense"
-                        value={formatCurrency(totalExpenses / expensesData.length)}
+                        value={formatCurrency(summary?.average_expense || 0)}
                         icon={<CurrencyDollarIcon className="size-6" />}
                     />
                 </div>
@@ -153,24 +127,31 @@ const ExpensesReportView = () => {
                     <FilterBar
                         searchInput={{
                             placeholder: 'Search by expense name or description',
-                            className: 'w-full md:w-72'
+                            className: 'w-full md:w-72',
+                            onSearch: (value: string) => {
+                                updateQueryParams({
+                                    search: value || null,
+                                    page: 1
+                                })
+                            }
                         }}
                         items={filterItems}
                         endContent={<ExportButton />}
                     />
 
-                    <ExpensesReportTable data={expensesData} />
+                    <ExpensesReportTable data={expensesData} loading={isLoading} />
 
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={expensesData.length}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={(page) => {
-                            setCurrentPage(page)
-                            console.log('Page changed:', page)
-                        }}
-                        showingText="Expenses"
-                    />
+                    {pagination && (
+                        <Pagination
+                            currentPage={pagination.page}
+                            totalItems={pagination.total}
+                            itemsPerPage={pagination.limit}
+                            onPageChange={(page) => {
+                                updateQueryParams({ page })
+                            }}
+                            showingText="Expenses"
+                        />
+                    )}
                 </DashboardCard>
             </div>
         </>
