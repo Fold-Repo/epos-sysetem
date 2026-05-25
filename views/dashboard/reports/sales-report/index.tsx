@@ -1,139 +1,66 @@
 'use client'
 
-import { DashboardBreadCrumb, MetricCard, FilterBar, Pagination, DashboardCard, StackIcon, ExportButton } from '@/components'
+import { DashboardBreadCrumb, MetricCard, FilterBar, Pagination, DashboardCard, StackIcon } from '@/components'
 import { CurrencyDollarIcon, BanknotesIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
-import { useState } from 'react';
 import { formatCurrency } from '@/lib';
 import SalesReportTable from './SalesReportTable';
-import Image from 'next/image';
+import { useQueryParams } from '@/hooks';
+import { SalesReportQueryParams, useGetBrands, useGetCategories, useGetSalesReport } from '@/services';
 
 const SalesReportView = () => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 25;
+    
+    const { searchParams, updateQueryParams } = useQueryParams();
+    const brandIdParam = searchParams.get('brand_id');
+    const categoryIdParam = searchParams.get('category_id');
+    const parsedBrandId = brandIdParam ? parseInt(brandIdParam, 10) : undefined;
+    const parsedCategoryId = categoryIdParam ? parseInt(categoryIdParam, 10) : undefined;
 
-    // Hardcoded product sales data
-    const productSalesData = [
-        {
-            id: '1',
-            sku: 'PT001',
-            productName: 'Lenovo IdeaPad 3',
-            productImage: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&h=100&fit=crop',
-            brand: 'Lenovo',
-            category: 'Computers',
-            soldQty: 5,
-            soldAmount: 3000,
-            instockQty: 100
-        },
-        {
-            id: '2',
-            sku: 'PT002',
-            productName: 'Beats Pro',
-            productImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop',
-            brand: 'Beats',
-            category: 'Electronics',
-            soldQty: 10,
-            soldAmount: 1600,
-            instockQty: 140
-        },
-        {
-            id: '3',
-            sku: 'PT003',
-            productName: 'Nike Jordan',
-            productImage: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
-            brand: 'Nike',
-            category: 'Shoe',
-            soldQty: 8,
-            soldAmount: 880,
-            instockQty: 300
-        },
-        {
-            id: '4',
-            sku: 'PT004',
-            productName: 'Apple Series 5 Watch',
-            productImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop',
-            brand: 'Apple',
-            category: 'Electronics',
-            soldQty: 10,
-            soldAmount: 1200,
-            instockQty: 450
-        },
-        {
-            id: '5',
-            sku: 'PT005',
-            productName: 'Amazon Echo Dot',
-            productImage: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=100&h=100&fit=crop',
-            brand: 'Amazon',
-            category: 'Electronics',
-            soldQty: 5,
-            soldAmount: 400,
-            instockQty: 320
-        },
-        {
-            id: '6',
-            sku: 'PT006',
-            productName: 'Sanford Chair Sofa',
-            productImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=100&h=100&fit=crop',
-            brand: 'Modern Wave',
-            category: 'Furniture',
-            soldQty: 7,
-            soldAmount: 2240,
-            instockQty: 650
-        },
-        {
-            id: '7',
-            sku: 'PT007',
-            productName: 'Red Premium Satchel',
-            productImage: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=100&h=100&fit=crop',
-            brand: 'Dior',
-            category: 'Bags',
-            soldQty: 15,
-            soldAmount: 900,
-            instockQty: 700
-        },
-        {
-            id: '8',
-            sku: 'PT008',
-            productName: 'Iphone 14 Pro',
-            productImage: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=100&h=100&fit=crop',
-            brand: 'Apple',
-            category: 'Phone',
-            soldQty: 12,
-            soldAmount: 6480,
-            instockQty: 630
-        }
-    ];
+    const queryParams: SalesReportQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: parseInt(searchParams.get('limit') || '10', 10),
+        search: searchParams.get('search') || undefined,
+        brand_id: parsedBrandId && !Number.isNaN(parsedBrandId) ? parsedBrandId : undefined,
+        category_id: parsedCategoryId && !Number.isNaN(parsedCategoryId) ? parsedCategoryId : undefined,
+        startDate: searchParams.get('startDate') || undefined,
+        endDate: searchParams.get('endDate') || undefined,
+    };
 
-    // Calculate metrics
-    const totalAmount = productSalesData.reduce((sum, item) => sum + item.soldAmount, 0);
-    const totalPaid = Math.floor(totalAmount * 0.56); // 56% paid
-    const totalUnpaid = Math.floor(totalAmount * 0.33); // 33% unpaid
-    const overdue = Math.floor(totalAmount * 0.11); // 11% overdue
+    const { data, isLoading } = useGetSalesReport(queryParams);
+    const { data: brands } = useGetBrands(1, 200);
+    const { data: categories } = useGetCategories(1, 200);
+
+    const summary = data?.summary;
+    const productSalesData = data?.salesReport ?? [];
+    const pagination = data?.pagination;
+
+    const selectedBrand = brands.find((brand) => brand.id === queryParams.brand_id);
+    const selectedCategory = categories.find((category) => category.category_id === queryParams.category_id);
 
     const metricsData = [
         {
             title: "Total Amount",
-            value: formatCurrency(totalAmount),
+            value: formatCurrency(summary?.total_amount || 0),
             description: "Total sales amount",
             colorClass: "text-[#16A34A]",
             icon: <CurrencyDollarIcon className='size-4' />
         },
         {
             title: "Total Paid",
-            value: formatCurrency(totalPaid),
+            value: formatCurrency(summary?.total_paid || 0),
             description: "Amount received",
             colorClass: "text-[#2563EB]",
             icon: <BanknotesIcon className='size-4' />
         },
         {
             title: "Total Unpaid",
-            value: formatCurrency(totalUnpaid),
+            value: formatCurrency(summary?.total_unpaid || 0),
             description: "Pending payments",
             colorClass: "text-[#F97316]",
             icon: <CurrencyDollarIcon className='size-4' />
         },
         {
             title: "Overdue",
-            value: formatCurrency(overdue),
+            value: formatCurrency(summary?.overdue || 0),
             description: "Overdue amount",
             colorClass: "text-[#DC2626]",
             icon: <ExclamationCircleIcon className='size-4' />
@@ -143,44 +70,59 @@ const SalesReportView = () => {
     const filterItems = [
         {
             type: 'dateRange' as const,
-            label: 'Date Range',
-            placeholder: 'Select date range'
-        },
-        {
-            type: 'dropdown' as const,
-            label: 'Brand: All',
-            startContent: <StackIcon className="text-slate-400" />,
-            showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: 'Lenovo', key: 'lenovo' },
-                { label: 'Beats', key: 'beats' },
-                { label: 'Nike', key: 'nike' },
-                { label: 'Apple', key: 'apple' }
-            ],
-            value: '',
-            onChange: (key: string) => {
-                console.log('Brand changed:', key)
+            startDate: queryParams.startDate ? new Date(queryParams.startDate) : undefined,
+            endDate: queryParams.endDate ? new Date(queryParams.endDate) : undefined,
+            onChange: (value: Date | { startDate: Date; endDate: Date }) => {
+                if ('startDate' in value && 'endDate' in value) {
+                    updateQueryParams({
+                        startDate: value.startDate.toISOString().split('T')[0],
+                        endDate: value.endDate.toISOString().split('T')[0],
+                        page: 1
+                    });
+                }
             }
         },
         {
             type: 'dropdown' as const,
-            label: 'Category: All',
+            label: selectedBrand ? `Brand: ${selectedBrand.name}` : 'Brand: All',
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
             items: [
                 { label: 'All', key: 'all' },
-                { label: 'Computers', key: 'computers' },
-                { label: 'Electronics', key: 'electronics' },
-                { label: 'Shoe', key: 'shoe' },
-                { label: 'Furniture', key: 'furniture' }
+                ...brands.map((brand) => ({
+                    label: brand.name,
+                    key: String(brand.id)
+                }))
             ],
-            value: '',
+            value: queryParams.brand_id ? String(queryParams.brand_id) : 'all',
             onChange: (key: string) => {
-                console.log('Category changed:', key)
+                updateQueryParams({
+                    brand_id: key === 'all' ? null : key,
+                    page: 1
+                });
+            }
+        },
+        {
+            type: 'dropdown' as const,
+            label: selectedCategory ? `Category: ${selectedCategory.category_name}` : 'Category: All',
+            startContent: <StackIcon className="text-slate-400" />,
+            showChevron: false,
+            items: [
+                { label: 'All', key: 'all' },
+                ...categories.map((category) => ({
+                    label: category.category_name,
+                    key: String(category.category_id)
+                }))
+            ],
+            value: queryParams.category_id ? String(queryParams.category_id) : 'all',
+            onChange: (key: string) => {
+                updateQueryParams({
+                    category_id: key === 'all' ? null : key,
+                    page: 1
+                });
             }
         }
-    ]
+    ];
 
     return (
         <>
@@ -211,27 +153,34 @@ const SalesReportView = () => {
                     <FilterBar
                         searchInput={{
                             placeholder: 'Search by SKU, product name, or brand',
-                            className: 'w-full md:w-72'
+                            className: 'w-full md:w-72',
+                            onSearch: (value: string) => {
+                                updateQueryParams({
+                                    search: value || null,
+                                    page: 1
+                                });
+                            }
                         }}
                         items={filterItems}
-                        endContent={<ExportButton />}
                     />
 
                     {/* ================= TABLE ================= */}
                     <SalesReportTable
                         data={productSalesData}
+                        loading={isLoading}
                     />
 
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={productSalesData.length}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={(page) => {
-                            setCurrentPage(page)
-                            console.log('Page changed:', page)
-                        }}
-                        showingText="Products"
-                    />
+                    {pagination && (
+                        <Pagination
+                            currentPage={pagination.page}
+                            totalItems={pagination.total}
+                            itemsPerPage={pagination.limit}
+                            onPageChange={(page) => {
+                                updateQueryParams({ page });
+                            }}
+                            showingText="Products"
+                        />
+                    )}
 
                 </DashboardCard>
 

@@ -20,6 +20,7 @@ interface PurchaseData {
 
 interface PurchaseReportTableProps {
     data: PurchaseData[]
+    loading?: boolean
 }
 
 const columns = [
@@ -33,7 +34,7 @@ const columns = [
     { key: 'purchaseAmount', title: 'PURCHASE AMOUNT' }
 ]
 
-const PurchaseReportTable = ({ data }: PurchaseReportTableProps) => {
+const PurchaseReportTable = ({ data, loading = false }: PurchaseReportTableProps) => {
 
     const renderRow = (item: PurchaseData) => {
         return (
@@ -88,7 +89,7 @@ const PurchaseReportTable = ({ data }: PurchaseReportTableProps) => {
             rowKey={(item) => item.id}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={loading}
         />
     )
 }

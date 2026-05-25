@@ -5,7 +5,17 @@ import { DashboardCard, ChartLegend, AreaChart } from '@/components'
 import { formatCurrency } from '@/lib'
 import { ArrowTrendingUpIcon } from '@heroicons/react/24/outline'
 
-const ProfitLossTrend = () => {
+interface ProfitLossTrendProps {
+    labels: string[]
+    data: Array<{
+        grossProfit: number
+        totalExpense: number
+        netProfit: number
+    }>
+    loading?: boolean
+}
+
+const ProfitLossTrend = ({ labels, data, loading = false }: ProfitLossTrendProps) => {
     const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({
         grossProfit: true,
         totalExpense: true,
@@ -19,21 +29,12 @@ const ProfitLossTrend = () => {
         }));
     };
 
-    // ================= Chart Data =================
-    const chartData = [
-        { month: 'Jan', grossProfit: 5000, totalExpense: 12000, netProfit: 20000 },
-        { month: 'Feb', grossProfit: 6500, totalExpense: 13500, netProfit: 22000 },
-        { month: 'Mar', grossProfit: 4500, totalExpense: 11000, netProfit: 19000 },
-        { month: 'Apr', grossProfit: 7000, totalExpense: 14000, netProfit: 24000 },
-        { month: 'May', grossProfit: 5500, totalExpense: 12500, netProfit: 21000 },
-        { month: 'Jun', grossProfit: 8000, totalExpense: 15000, netProfit: 26000 },
-        { month: 'Jul', grossProfit: 6000, totalExpense: 13000, netProfit: 23000 },
-        { month: 'Aug', grossProfit: 7500, totalExpense: 14500, netProfit: 25000 },
-        { month: 'Sep', grossProfit: 5200, totalExpense: 12200, netProfit: 20500 },
-        { month: 'Oct', grossProfit: 6800, totalExpense: 13800, netProfit: 23500 },
-        { month: 'Nov', grossProfit: 8500, totalExpense: 15500, netProfit: 27000 },
-        { month: 'Dec', grossProfit: 6200, totalExpense: 13200, netProfit: 22500 },
-    ]
+    const chartData = labels.map((label, index) => ({
+        month: label,
+        grossProfit: data[index]?.grossProfit ?? 0,
+        totalExpense: data[index]?.totalExpense ?? 0,
+        netProfit: data[index]?.netProfit ?? 0,
+    }))
 
     const legendItems = [
         {
@@ -155,17 +156,18 @@ const ProfitLossTrend = () => {
                 />
             }
         >
-            <AreaChart
-                data={chartData}
-                xAxisKey="month"
-                series={areaSeries}
-                customTooltip={CustomTooltip}
-                yAxisFormatter={(value) => {
-                    const thousands = Math.round(value / 1000);
-                    return formatCurrency(thousands).replace(/\.\d+/, '') + 'k';
-                }}
-                height={300}
-            />
+            {loading ? (
+                <div className="h-[300px] w-full rounded-xl bg-slate-100 animate-pulse" />
+            ) : (
+                <AreaChart
+                    data={chartData}
+                    xAxisKey="month"
+                    series={areaSeries}
+                    customTooltip={CustomTooltip}
+                    yAxisFormatter={(value) => formatCurrency(value)}
+                    height={300}
+                />
+            )}
         </DashboardCard>
     )
 }

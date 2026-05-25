@@ -16,6 +16,7 @@ interface ExpenseData {
 
 interface ExpensesReportTableProps {
     data: ExpenseData[]
+    loading?: boolean
 }
 
 const columns = [
@@ -27,7 +28,7 @@ const columns = [
     { key: 'status', title: 'STATUS' }
 ]
 
-const ExpensesReportTable = ({ data }: ExpensesReportTableProps) => {
+const ExpensesReportTable = ({ data, loading = false }: ExpensesReportTableProps) => {
 
     const renderRow = (item: ExpenseData) => {
         return (
@@ -66,7 +67,7 @@ const ExpensesReportTable = ({ data }: ExpensesReportTableProps) => {
             rowKey={(item) => item.id}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={loading}
         />
     )
 }

@@ -25,4 +25,5 @@ export * from './expense-categories';
 export * from './expenses';
 export * from './transfers';
 export * from './users';
+export * from './reports';
 export type { AdjustmentQueryParams } from '@/types';

@@ -70,6 +70,18 @@ export const ENDPOINT = {
     TRANSFERS: '/transfers',
     PURCHASES_RETURN: '/purchases-return',
     SALES_RETURN: '/sales-return',
+    REPORTS: {
+        ANNUAL: '/reports/annual',
+        EXPENSES: '/reports/expenses',
+        TAX: '/reports/tax',
+        CUSTOMERS: '/reports/customers',
+        INVENTORY: '/reports/inventory',
+        PROFIT_LOSS: '/reports/profit-loss',
+        SALES: '/reports/sales',
+        SOLD_STOCK: '/reports/sold-stock',
+        STOCK_HISTORY: '/reports/stock-history',
+        PURCHASES: '/reports/purchases',
+    },
     DASHBOARD: {
         BASE: '/dashboard',
         WEEKLY_TREND: '/dashboard/trend',

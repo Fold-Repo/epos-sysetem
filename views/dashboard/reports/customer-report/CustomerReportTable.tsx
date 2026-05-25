@@ -2,25 +2,22 @@
 
 import { TableCell, TableComponent } from '@/components'
 import { formatCurrency } from '@/lib'
-import { Avatar } from '@heroui/react'
 
 interface CustomerData {
     id: string
     reference: string
     code: string
     customerName: string
-    customerImage: string
-    phone: string
     totalOrders: number
     amount: number
     paid: number
     due: number
     paymentMethod: string
-    status: string
 }
 
 interface CustomerReportTableProps {
     data: CustomerData[]
+    loading?: boolean
 }
 
 const columns = [
@@ -34,7 +31,7 @@ const columns = [
     { key: 'paymentMethod', title: 'PAYMENT METHOD' }
 ]
 
-const CustomerReportTable = ({ data }: CustomerReportTableProps) => {
+const CustomerReportTable = ({ data, loading = false }: CustomerReportTableProps) => {
 
     const renderRow = (item: CustomerData) => {
         return (
@@ -46,18 +43,7 @@ const CustomerReportTable = ({ data }: CustomerReportTableProps) => {
                     <span className='text-xs'>{item.code}</span>
                 </TableCell>
                 <TableCell>
-                    <div className="flex items-center gap-2">
-                        <Avatar 
-                            src={item.customerImage} 
-                            name={item.customerName}
-                            size="sm"
-                            className="flex-shrink-0"
-                        />
-                        <div className="flex flex-col">
-                            <span className='text-xs'>{item.customerName}</span>
-                            <span className='text-xs text-gray-500'>{item.phone}</span>
-                        </div>
-                    </div>
+                    <span className='text-xs'>{item.customerName}</span>
                 </TableCell>
                 <TableCell>
                     <span className='text-xs font-medium'>{item.totalOrders}</span>
@@ -92,7 +78,7 @@ const CustomerReportTable = ({ data }: CustomerReportTableProps) => {
             rowKey={(item) => item.id}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={loading}
         />
     )
 }

@@ -1,104 +1,63 @@
 'use client'
 
-import { ExportButton, FilterBar, Pagination, StackIcon, TableCell, TableComponent } from '@/components'
-import { useState } from 'react'
+import { FilterBar, Pagination, StackIcon, TableCell, TableComponent } from '@/components'
+import { useQueryParams } from '@/hooks'
 import Image from 'next/image'
+import { StockHistoryReportQueryParams, useGetCategories, useGetStockHistoryReport } from '@/services'
 
 const StockHistoryTab = () => {
-    const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 25
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const categoryIdParam = searchParams.get('category_id')
+    const parsedCategoryId = categoryIdParam ? parseInt(categoryIdParam, 10) : undefined
 
-    // Hardcoded stock history data
-    const stockHistoryData = [
-        {
-            id: '1',
-            sku: 'PT001',
-            productName: 'Lenovo IdeaPad 3',
-            productImage: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&h=100&fit=crop',
-            initialQty: 6000,
-            addedQty: 100,
-            soldQty: 100,
-            defectiveQty: 100,
-            finalQty: 100
-        },
-        {
-            id: '2',
-            sku: 'PT002',
-            productName: 'Beats Pro',
-            productImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop',
-            initialQty: 10,
-            addedQty: 140,
-            soldQty: 140,
-            defectiveQty: 140,
-            finalQty: 140
-        },
-        {
-            id: '3',
-            sku: 'PT003',
-            productName: 'Nike Jordan',
-            productImage: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
-            initialQty: 8,
-            addedQty: 300,
-            soldQty: 300,
-            defectiveQty: 300,
-            finalQty: 300
-        },
-        {
-            id: '4',
-            sku: 'PT004',
-            productName: 'Apple Series 5 Watch',
-            productImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop',
-            initialQty: 10,
-            addedQty: 450,
-            soldQty: 450,
-            defectiveQty: 450,
-            finalQty: 450
-        },
-        {
-            id: '5',
-            sku: 'PT005',
-            productName: 'Amazon Echo Dot',
-            productImage: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=100&h=100&fit=crop',
-            initialQty: 5,
-            addedQty: 320,
-            soldQty: 320,
-            defectiveQty: 320,
-            finalQty: 320
-        },
-        {
-            id: '6',
-            sku: 'PT006',
-            productName: 'Sanford Chair Sofa',
-            productImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=100&h=100&fit=crop',
-            initialQty: 7,
-            addedQty: 650,
-            soldQty: 650,
-            defectiveQty: 650,
-            finalQty: 650
-        }
-    ]
+    const queryParams: StockHistoryReportQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: parseInt(searchParams.get('limit') || '10', 10),
+        search: searchParams.get('search') || undefined,
+        category_id: parsedCategoryId && !Number.isNaN(parsedCategoryId) ? parsedCategoryId : undefined,
+        startDate: searchParams.get('startDate') || undefined,
+        endDate: searchParams.get('endDate') || undefined,
+    }
+
+    const { data, isLoading } = useGetStockHistoryReport(queryParams)
+    const { data: categories } = useGetCategories(1, 200)
+    const stockHistoryData = data?.stockHistoryReport ?? []
+    const pagination = data?.pagination
+    const selectedCategory = categories.find((item) => item.category_id === queryParams.category_id)
 
     const filterItems = [
         {
             type: 'dateRange' as const,
-            label: 'Date Range',
-            placeholder: 'Select date range'
+            startDate: queryParams.startDate ? new Date(queryParams.startDate) : undefined,
+            endDate: queryParams.endDate ? new Date(queryParams.endDate) : undefined,
+            onChange: (value: Date | { startDate: Date; endDate: Date }) => {
+                if ('startDate' in value && 'endDate' in value) {
+                    updateQueryParams({
+                        startDate: value.startDate.toISOString().split('T')[0],
+                        endDate: value.endDate.toISOString().split('T')[0],
+                        page: 1
+                    })
+                }
+            }
         },
         {
             type: 'dropdown' as const,
-            label: 'Category: All',
+            label: selectedCategory ? `Category: ${selectedCategory.category_name}` : 'Category: All',
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
             items: [
                 { label: 'All', key: 'all' },
-                { label: 'Computers', key: 'computers' },
-                { label: 'Electronics', key: 'electronics' },
-                { label: 'Shoe', key: 'shoe' },
-                { label: 'Furniture', key: 'furniture' }
+                ...categories.map((category) => ({
+                    label: category.category_name,
+                    key: String(category.category_id)
+                }))
             ],
-            value: '',
+            value: queryParams.category_id ? String(queryParams.category_id) : 'all',
             onChange: (key: string) => {
-                console.log('Category changed:', key)
+                updateQueryParams({
+                    category_id: key === 'all' ? null : key,
+                    page: 1
+                })
             }
         }
     ]
@@ -113,7 +72,7 @@ const StockHistoryTab = () => {
         { key: 'finalQty', title: 'FINAL QUANTITY' }
     ]
 
-    const renderRow = (item: typeof stockHistoryData[0]) => {
+    const renderRow = (item: (typeof stockHistoryData)[number]) => {
         return (
             <>
                 <TableCell>
@@ -156,10 +115,15 @@ const StockHistoryTab = () => {
             <FilterBar
                 searchInput={{
                     placeholder: 'Search by SKU or product name',
-                    className: 'w-full md:w-72'
+                    className: 'w-full md:w-72',
+                    onSearch: (value: string) => {
+                        updateQueryParams({
+                            search: value || null,
+                            page: 1
+                        })
+                    }
                 }}
                 items={filterItems}
-                endContent={<ExportButton />}
             />
 
             <TableComponent
@@ -169,22 +133,22 @@ const StockHistoryTab = () => {
                 rowKey={(item) => item.id}
                 renderRow={renderRow}
                 withCheckbox={false}
-                loading={false}
+                loading={isLoading}
             />
 
-            <Pagination
-                currentPage={currentPage}
-                totalItems={stockHistoryData.length}
-                itemsPerPage={itemsPerPage}
-                onPageChange={(page) => {
-                    setCurrentPage(page)
-                    console.log('Page changed:', page)
-                }}
-                showingText="Products"
-            />
+            {pagination && (
+                <Pagination
+                    currentPage={pagination.page}
+                    totalItems={pagination.total}
+                    itemsPerPage={pagination.limit}
+                    onPageChange={(page) => {
+                        updateQueryParams({ page })
+                    }}
+                    showingText="Products"
+                />
+            )}
         </div>
     )
 }
 
 export default StockHistoryTab
-

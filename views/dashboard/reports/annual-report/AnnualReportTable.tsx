@@ -16,6 +16,7 @@ interface AnnualData {
 
 interface AnnualReportTableProps {
     data: AnnualData[]
+    loading?: boolean
 }
 
 const columns = [
@@ -28,7 +29,7 @@ const columns = [
     { key: 'growth', title: 'GROWTH' }
 ]
 
-const AnnualReportTable = ({ data }: AnnualReportTableProps) => {
+const AnnualReportTable = ({ data, loading = false }: AnnualReportTableProps) => {
 
     const renderRow = (item: AnnualData) => {
         return (
@@ -62,8 +63,8 @@ const AnnualReportTable = ({ data }: AnnualReportTableProps) => {
                     </span>
                 </TableCell>
                 <TableCell>
-                    <StatusChip 
-                        status={item.growth > 0 ? 'approved' : 'rejected'} 
+                    <StatusChip
+                        status={item.growth > 0 ? 'approved' : item.growth < 0 ? 'rejected' : 'pending'}
                         label={`${item.growth > 0 ? '+' : ''}${item.growth.toFixed(1)}%`}
                     />
                 </TableCell>
@@ -79,7 +80,7 @@ const AnnualReportTable = ({ data }: AnnualReportTableProps) => {
             rowKey={(item) => item.id}
             renderRow={renderRow}
             withCheckbox={false}
-            loading={false}
+            loading={loading}
         />
     )
 }

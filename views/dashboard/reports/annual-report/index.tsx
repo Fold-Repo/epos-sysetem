@@ -1,93 +1,56 @@
 'use client'
 
-import { DashboardBreadCrumb, MetricCard, FilterBar, Pagination, DashboardCard, StackIcon, ExportButton } from '@/components'
+import { DashboardBreadCrumb, MetricCard, FilterBar, Pagination, DashboardCard, StackIcon } from '@/components'
 import { CurrencyDollarIcon, ChartBarIcon, BanknotesIcon } from '@heroicons/react/24/solid';
 import { ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { formatCurrency } from '@/lib';
 import AnnualReportTable from './AnnualReportTable';
+import { useGetAnnualReport, AnnualReportQueryParams } from '@/services';
+import { useQueryParams } from '@/hooks';
 
 const AnnualReportView = () => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 25;
+    
+    const { searchParams, updateQueryParams } = useQueryParams();
+    const yearParam = searchParams.get('year');
+    const parsedYear = yearParam ? parseInt(yearParam, 10) : undefined;
 
-    // Hardcoded annual report data
-    const annualData = [
-        {
-            id: '1',
-            year: '2024',
-            totalSales: 650000,
-            totalPurchases: 420000,
-            totalExpenses: 85000,
-            totalIncome: 230000,
-            netProfit: 145000,
-            growth: 12.5
-        },
-        {
-            id: '2',
-            year: '2023',
-            totalSales: 580000,
-            totalPurchases: 380000,
-            totalExpenses: 75000,
-            totalIncome: 200000,
-            netProfit: 125000,
-            growth: 8.3
-        },
-        {
-            id: '3',
-            year: '2022',
-            totalSales: 535000,
-            totalPurchases: 350000,
-            totalExpenses: 70000,
-            totalIncome: 185000,
-            netProfit: 115000,
-            growth: 5.2
-        },
-        {
-            id: '4',
-            year: '2021',
-            totalSales: 510000,
-            totalPurchases: 330000,
-            totalExpenses: 65000,
-            totalIncome: 180000,
-            netProfit: 115000,
-            growth: 3.8
-        },
-        {
-            id: '5',
-            year: '2020',
-            totalSales: 490000,
-            totalPurchases: 320000,
-            totalExpenses: 60000,
-            totalIncome: 170000,
-            netProfit: 110000,
-            growth: -2.1
-        }
-    ]
+    const queryParams: AnnualReportQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: parseInt(searchParams.get('limit') || '10', 10),
+        year: parsedYear && !Number.isNaN(parsedYear) ? parsedYear : undefined,
+        search: searchParams.get('search') || undefined
+    };
 
-    // Calculate stats
-    const currentYear = annualData[0]
-    const totalYears = annualData.length
-    const averageProfit = annualData.reduce((sum, item) => sum + item.netProfit, 0) / totalYears
-    const totalRevenue = annualData.reduce((sum, item) => sum + item.totalSales, 0)
+    const { data, isLoading } = useGetAnnualReport(queryParams);
+    const annualData = data?.annualReport ?? [];
+    const summary = data?.summary;
+    const pagination = data?.pagination;
+
+    const yearOptions = useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        const yearCount = Math.max(pagination?.total || 0, 5);
+        const dynamicYears = Array.from({ length: yearCount }, (_, index) => String(currentYear - index));
+
+        return [
+            { label: 'All', key: 'all' },
+            ...dynamicYears.map((year) => ({ label: year, key: year }))
+        ];
+    }, [pagination?.total]);
 
     const filterItems = [
         {
             type: 'dropdown' as const,
-            label: 'Year: All',
+            label: queryParams.year ? `Year: ${queryParams.year}` : 'Year: All',
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
-            items: [
-                { label: 'All', key: 'all' },
-                { label: '2024', key: '2024' },
-                { label: '2023', key: '2023' },
-                { label: '2022', key: '2022' },
-                { label: '2021', key: '2021' },
-                { label: '2020', key: '2020' }
-            ],
-            value: '',
+            items: yearOptions,
+            value: queryParams.year ? String(queryParams.year) : 'all',
             onChange: (key: string) => {
-                console.log('Year changed:', key)
+                updateQueryParams({
+                    year: key === 'all' ? null : key,
+                    page: 1
+                })
             }
         }
     ]
@@ -104,50 +67,44 @@ const AnnualReportView = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <MetricCard
                         title="Current Year Sales"
-                        value={formatCurrency(currentYear.totalSales)}
+                        value={formatCurrency(summary?.current_year_sales || 0)}
                         icon={<CurrencyDollarIcon className="size-6" />}
-                        description={`${currentYear.growth > 0 ? '+' : ''}${currentYear.growth.toFixed(1)}% growth`}
                     />
                     <MetricCard
                         title="Current Year Profit"
-                        value={formatCurrency(currentYear.netProfit)}
+                        value={formatCurrency(summary?.current_year_profit || 0)}
                         icon={<BanknotesIcon className="size-6" />}
-                        description={`${currentYear.growth > 0 ? '+' : ''}${currentYear.growth.toFixed(1)}% growth`}
                     />
                     <MetricCard
                         title="Average Annual Profit"
-                        value={formatCurrency(averageProfit)}
+                        value={formatCurrency(summary?.average_annual_profit || 0)}
                         icon={<ChartBarIcon className="size-6" />}
                     />
                     <MetricCard
                         title="Total Revenue (5 Years)"
-                        value={formatCurrency(totalRevenue)}
+                        value={formatCurrency(summary?.total_revenue_5_years || 0)}
                         icon={<ArrowTrendingUpIcon className="size-6" />}
                     />
                 </div>
 
                 <DashboardCard bodyClassName='space-y-4'>
                     <FilterBar
-                        searchInput={{
-                            placeholder: 'Search by year',
-                            className: 'w-full md:w-72'
-                        }}
                         items={filterItems}
-                        endContent={<ExportButton />}
                     />
 
-                    <AnnualReportTable data={annualData} />
+                    <AnnualReportTable data={annualData} loading={isLoading} />
 
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={annualData.length}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={(page) => {
-                            setCurrentPage(page)
-                            console.log('Page changed:', page)
-                        }}
-                        showingText="Years"
-                    />
+                    {pagination && (
+                        <Pagination
+                            currentPage={pagination.page}
+                            totalItems={pagination.total}
+                            itemsPerPage={pagination.limit}
+                            onPageChange={(page) => {
+                                updateQueryParams({ page })
+                            }}
+                            showingText="Years"
+                        />
+                    )}
                 </DashboardCard>
             </div>
         </>

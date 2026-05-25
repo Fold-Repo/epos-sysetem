@@ -1,110 +1,64 @@
 'use client'
 
 import { ExportButton, FilterBar, Pagination, StackIcon, TableCell, TableComponent } from '@/components'
-import { useState } from 'react'
+import { useQueryParams } from '@/hooks'
 import { formatCurrency } from '@/lib'
 import Image from 'next/image'
+import { SoldStockReportQueryParams, useGetCategories, useGetSoldStockReport } from '@/services'
 
 const SoldStockTab = () => {
-    const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 25
+    const { searchParams, updateQueryParams } = useQueryParams()
+    const categoryIdParam = searchParams.get('category_id')
+    const parsedCategoryId = categoryIdParam ? parseInt(categoryIdParam, 10) : undefined
 
-    // Hardcoded sold stock data
-    const soldStockData = [
-        {
-            id: '1',
-            sku: 'PT001',
-            productName: 'Lenovo IdeaPad 3',
-            productImage: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&h=100&fit=crop',
-            unit: 6000,
-            quantity: 100,
-            taxValue: 300,
-            total: 300
-        },
-        {
-            id: '2',
-            sku: 'PT002',
-            productName: 'Beats Pro',
-            productImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop',
-            unit: 10,
-            quantity: 140,
-            taxValue: 10,
-            total: 1600
-        },
-        {
-            id: '3',
-            sku: 'PT003',
-            productName: 'Nike Jordan',
-            productImage: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
-            unit: 8,
-            quantity: 300,
-            taxValue: 80,
-            total: 880
-        },
-        {
-            id: '4',
-            sku: 'PT004',
-            productName: 'Apple Series 5 Watch',
-            productImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop',
-            unit: 10,
-            quantity: 450,
-            taxValue: 100,
-            total: 1200
-        },
-        {
-            id: '5',
-            sku: 'PT005',
-            productName: 'Amazon Echo Dot',
-            productImage: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=100&h=100&fit=crop',
-            unit: 5,
-            quantity: 320,
-            taxValue: 400,
-            total: 400
-        },
-        {
-            id: '6',
-            sku: 'PT006',
-            productName: 'Sanford Chair Sofa',
-            productImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=100&h=100&fit=crop',
-            unit: 7,
-            quantity: 650,
-            taxValue: 220,
-            total: 2240
-        },
-        {
-            id: '7',
-            sku: 'PT007',
-            productName: 'Red Premium Satchel',
-            productImage: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=100&h=100&fit=crop',
-            unit: 15,
-            quantity: 700,
-            taxValue: 90,
-            total: 900
-        }
-    ]
+    const queryParams: SoldStockReportQueryParams = {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: parseInt(searchParams.get('limit') || '10', 10),
+        search: searchParams.get('search') || undefined,
+        category_id: parsedCategoryId && !Number.isNaN(parsedCategoryId) ? parsedCategoryId : undefined,
+        startDate: searchParams.get('startDate') || undefined,
+        endDate: searchParams.get('endDate') || undefined,
+    }
+
+    const { data, isLoading } = useGetSoldStockReport(queryParams)
+    const { data: categories } = useGetCategories(1, 200)
+    const soldStockData = data?.soldStockReport ?? []
+    const pagination = data?.pagination
+    const selectedCategory = categories.find((item) => item.category_id === queryParams.category_id)
 
     const filterItems = [
         {
             type: 'dateRange' as const,
-            label: 'Date Range',
-            placeholder: 'Select date range'
+            startDate: queryParams.startDate ? new Date(queryParams.startDate) : undefined,
+            endDate: queryParams.endDate ? new Date(queryParams.endDate) : undefined,
+            onChange: (value: Date | { startDate: Date; endDate: Date }) => {
+                if ('startDate' in value && 'endDate' in value) {
+                    updateQueryParams({
+                        startDate: value.startDate.toISOString().split('T')[0],
+                        endDate: value.endDate.toISOString().split('T')[0],
+                        page: 1
+                    })
+                }
+            }
         },
         {
             type: 'dropdown' as const,
-            label: 'Category: All',
+            label: selectedCategory ? `Category: ${selectedCategory.category_name}` : 'Category: All',
             startContent: <StackIcon className="text-slate-400" />,
             showChevron: false,
             items: [
                 { label: 'All', key: 'all' },
-                { label: 'Computers', key: 'computers' },
-                { label: 'Electronics', key: 'electronics' },
-                { label: 'Shoe', key: 'shoe' },
-                { label: 'Furniture', key: 'furniture' },
-                { label: 'Bags', key: 'bags' }
+                ...categories.map((category) => ({
+                    label: category.category_name,
+                    key: String(category.category_id)
+                }))
             ],
-            value: '',
+            value: queryParams.category_id ? String(queryParams.category_id) : 'all',
             onChange: (key: string) => {
-                console.log('Category changed:', key)
+                updateQueryParams({
+                    category_id: key === 'all' ? null : key,
+                    page: 1
+                })
             }
         }
     ]
@@ -118,7 +72,7 @@ const SoldStockTab = () => {
         { key: 'total', title: 'TOTAL' }
     ]
 
-    const renderRow = (item: typeof soldStockData[0]) => {
+    const renderRow = (item: (typeof soldStockData)[number]) => {
         return (
             <>
                 <TableCell>
@@ -162,7 +116,13 @@ const SoldStockTab = () => {
             <FilterBar
                 searchInput={{
                     placeholder: 'Search by SKU or product name',
-                    className: 'w-full md:w-72'
+                    className: 'w-full md:w-72',
+                    onSearch: (value: string) => {
+                        updateQueryParams({
+                            search: value || null,
+                            page: 1
+                        })
+                    }
                 }}
                 items={filterItems}
                 endContent={<ExportButton />}
@@ -175,19 +135,20 @@ const SoldStockTab = () => {
                 rowKey={(item) => item.id}
                 renderRow={renderRow}
                 withCheckbox={false}
-                loading={false}
+                loading={isLoading}
             />
 
-            <Pagination
-                currentPage={currentPage}
-                totalItems={soldStockData.length}
-                itemsPerPage={itemsPerPage}
-                onPageChange={(page) => {
-                    setCurrentPage(page)
-                    console.log('Page changed:', page)
-                }}
-                showingText="Products"
-            />
+            {pagination && (
+                <Pagination
+                    currentPage={pagination.page}
+                    totalItems={pagination.total}
+                    itemsPerPage={pagination.limit}
+                    onPageChange={(page) => {
+                        updateQueryParams({ page })
+                    }}
+                    showingText="Products"
+                />
+            )}
         </div>
     )
 }
