@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{PROJECT}} — Test Reports</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+      }
+      body {
+        max-width: 720px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+      }
+      p {
+        color: #666;
+        margin-top: 0;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        margin: 0.75rem 0;
+      }
+      a {
+        display: block;
+        padding: 1rem 1.25rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+      }
+      a:hover {
+        border-color: #888;
+        background: rgba(127, 127, 127, 0.08);
+      }
+      .label {
+        font-weight: 600;
+      }
+      .desc {
+        font-size: 0.875rem;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{PROJECT}} Test Reports</h1>
+    <p>API tests generated from <code>services/</code> and <code>constants/ENDPOINT.ts</code></p>
+    <p><small>Open via <code>yarn test:report:serve</code> (http://localhost:4173) — do not open HTML files directly from Finder.</small></p>
+    <ul>
+      <li>
+        <a href="./smoke/report.html">
+          <span class="label">Smoke tests</span>
+          <span class="desc">GET endpoints — quick health checks</span>
+        </a>
+      </li>
+      <li>
+        <a href="./integration/report.html">
+          <span class="label">Integration tests</span>
+          <span class="desc">POST / PUT / PATCH / DELETE endpoints (skipped by default on live API)</span>
+        </a>
+      </li>
+      <li>
+        <a href="./e2e/index.html">
+          <span class="label">Browser smoke (E2E)</span>
+          <span class="desc">Playwright — run <code>yarn test:e2e</code> first to generate this report</span>
+        </a>
+      </li>
+    </ul>
+  </body>
+</html>
